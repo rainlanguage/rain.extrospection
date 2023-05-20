@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.18;
 
-import {ERC165CheckerUpgradeable as ERC165Checker} from
-    "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
+import {ERC165Checker} from
+    "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
 /// @title Extrospection
 /// @notice Exposes certain information available to evm opcodes as public
