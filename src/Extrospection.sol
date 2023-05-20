@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.18;
 
-import {ERC165Checker} from
-    "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {ERC165Checker} from "openzeppelin-contracts/contracts/utils/introspection/ERC165Checker.sol";
 
 /// @title Extrospection
 /// @notice Exposes certain information available to evm opcodes as public
@@ -38,7 +37,7 @@ contract Extrospection {
         );
     }
 
-    function bytecodeOpScanner(address account) public returns (uint256 ops) {
+    function bytecodeOpScanner(address account) public view returns (uint256 ops) {
         assembly ("memory-safe") {
             let length := extcodesize(account)
             let m := mod(length, 0x40)
@@ -48,211 +47,215 @@ contract Extrospection {
                 let a := mload(cursor)
                 ops :=
                     or(
+                        shl(and(a, 0xFF), 1),
                         or(
+                            shl(and(shr(8, a), 0xFF), 1),
                             or(
+                                shl(and(shr(16, a), 0xFF), 1),
                                 or(
+                                    shl(and(shr(24, a), 0xFF), 1),
                                     or(
+                                        shl(and(shr(32, a), 0xFF), 1),
                                         or(
+                                            shl(and(shr(40, a), 0xFF), 1),
                                             or(
+                                                shl(and(shr(48, a), 0xFF), 1),
                                                 or(
+                                                    shl(and(shr(56, a), 0xFF), 1),
                                                     or(
+                                                        shl(and(shr(64, a), 0xFF), 1),
                                                         or(
+                                                            shl(and(shr(72, a), 0xFF), 1),
                                                             or(
+                                                                shl(and(shr(80, a), 0xFF), 1),
                                                                 or(
+                                                                    shl(and(shr(88, a), 0xFF), 1),
                                                                     or(
+                                                                        shl(and(shr(96, a), 0xFF), 1),
                                                                         or(
+                                                                            shl(and(shr(104, a), 0xFF), 1),
                                                                             or(
+                                                                                shl(and(shr(112, a), 0xFF), 1),
                                                                                 or(
+                                                                                    shl(and(shr(120, a), 0xFF), 1),
                                                                                     or(
+                                                                                        shl(and(shr(128, a), 0xFF), 1),
                                                                                         or(
+                                                                                            shl(and(shr(136, a), 0xFF), 1),
                                                                                             or(
+                                                                                                shl(
+                                                                                                    and(shr(144, a), 0xFF),
+                                                                                                    1
+                                                                                                ),
                                                                                                 or(
+                                                                                                    shl(
+                                                                                                        and(
+                                                                                                            shr(152, a),
+                                                                                                            0xFF
+                                                                                                        ),
+                                                                                                        1
+                                                                                                    ),
                                                                                                     or(
-                                                                                                        or(
-                                                                                                            or(
-                                                                                                                or(
-                                                                                                                    or(
-                                                                                                                        or(
-                                                                                                                            or(
-                                                                                                                                or(
-                                                                                                                                    or(
-                                                                                                                                        or(
-                                                                                                                                            or(
-                                                                                                                                                or(
-                                                                                                                                                    shl(
-                                                                                                                                                        and(
-                                                                                                                                                            a,
-                                                                                                                                                            0xFF
-                                                                                                                                                        ),
-                                                                                                                                                        1
-                                                                                                                                                    )
-                                                                                                                                                ),
-                                                                                                                                                shl(
-                                                                                                                                                    and(
-                                                                                                                                                        shr(
-                                                                                                                                                            8,
-                                                                                                                                                            a
-                                                                                                                                                        ),
-                                                                                                                                                        0xFF
-                                                                                                                                                    ),
-                                                                                                                                                    1
-                                                                                                                                                )
-                                                                                                                                            ),
-                                                                                                                                            shl(
-                                                                                                                                                and(
-                                                                                                                                                    shr(
-                                                                                                                                                        16,
-                                                                                                                                                        a
-                                                                                                                                                    ),
-                                                                                                                                                    0xFF
-                                                                                                                                                ),
-                                                                                                                                                1
-                                                                                                                                            )
-                                                                                                                                        ),
-                                                                                                                                        shl(
-                                                                                                                                            and(
-                                                                                                                                                shr(
-                                                                                                                                                    24,
-                                                                                                                                                    a
-                                                                                                                                                ),
-                                                                                                                                                0xFF
-                                                                                                                                            ),
-                                                                                                                                            1
-                                                                                                                                        )
-                                                                                                                                    ),
-                                                                                                                                    shl(
-                                                                                                                                        and(
-                                                                                                                                            shr(
-                                                                                                                                                32,
-                                                                                                                                                a
-                                                                                                                                            ),
-                                                                                                                                            0xFF
-                                                                                                                                        ),
-                                                                                                                                        1
-                                                                                                                                    )
-                                                                                                                                ),
-                                                                                                                                shl(
-                                                                                                                                    and(
-                                                                                                                                        shr(
-                                                                                                                                            40,
-                                                                                                                                            a
-                                                                                                                                        ),
-                                                                                                                                        0xFF
-                                                                                                                                    ),
-                                                                                                                                    1
-                                                                                                                                )
-                                                                                                                            ),
-                                                                                                                            shl(
-                                                                                                                                and(
-                                                                                                                                    shr(
-                                                                                                                                        48,
-                                                                                                                                        a
-                                                                                                                                    ),
-                                                                                                                                    0xFF
-                                                                                                                                ),
-                                                                                                                                1
-                                                                                                                            )
-                                                                                                                        ),
-                                                                                                                        shl(
-                                                                                                                            and(
-                                                                                                                                shr(
-                                                                                                                                    56,
-                                                                                                                                    a
-                                                                                                                                ),
-                                                                                                                                0xFF
-                                                                                                                            ),
-                                                                                                                            1
-                                                                                                                        )
-                                                                                                                    ),
-                                                                                                                    shl(
-                                                                                                                        and(
-                                                                                                                            shr(
-                                                                                                                                64,
-                                                                                                                                a
-                                                                                                                            ),
-                                                                                                                            0xFF
-                                                                                                                        ),
-                                                                                                                        1
-                                                                                                                    )
-                                                                                                                ),
-                                                                                                                shl(
-                                                                                                                    and(
-                                                                                                                        shr(
-                                                                                                                            72,
-                                                                                                                            a
-                                                                                                                        ),
-                                                                                                                        0xFF
-                                                                                                                    ),
-                                                                                                                    1
-                                                                                                                )
+                                                                                                        shl(
+                                                                                                            and(
+                                                                                                                shr(160, a),
+                                                                                                                0xFF
                                                                                                             ),
+                                                                                                            1
+                                                                                                        ),
+                                                                                                        or(
                                                                                                             shl(
                                                                                                                 and(
                                                                                                                     shr(
-                                                                                                                        80,
+                                                                                                                        168,
                                                                                                                         a
                                                                                                                     ),
                                                                                                                     0xFF
                                                                                                                 ),
                                                                                                                 1
-                                                                                                            )
-                                                                                                        ),
-                                                                                                        shl(
-                                                                                                            and(
-                                                                                                                shr(88, a),
-                                                                                                                0xFF
                                                                                                             ),
-                                                                                                            1
+                                                                                                            or(
+                                                                                                                shl(
+                                                                                                                    and(
+                                                                                                                        shr(
+                                                                                                                            176,
+                                                                                                                            a
+                                                                                                                        ),
+                                                                                                                        0xFF
+                                                                                                                    ),
+                                                                                                                    1
+                                                                                                                ),
+                                                                                                                or(
+                                                                                                                    shl(
+                                                                                                                        and(
+                                                                                                                            shr(
+                                                                                                                                184,
+                                                                                                                                a
+                                                                                                                            ),
+                                                                                                                            0xFF
+                                                                                                                        ),
+                                                                                                                        1
+                                                                                                                    ),
+                                                                                                                    or(
+                                                                                                                        shl(
+                                                                                                                            and(
+                                                                                                                                shr(
+                                                                                                                                    192,
+                                                                                                                                    a
+                                                                                                                                ),
+                                                                                                                                0xFF
+                                                                                                                            ),
+                                                                                                                            1
+                                                                                                                        ),
+                                                                                                                        or(
+                                                                                                                            shl(
+                                                                                                                                and(
+                                                                                                                                    shr(
+                                                                                                                                        200,
+                                                                                                                                        a
+                                                                                                                                    ),
+                                                                                                                                    0xFF
+                                                                                                                                ),
+                                                                                                                                1
+                                                                                                                            ),
+                                                                                                                            or(
+                                                                                                                                shl(
+                                                                                                                                    and(
+                                                                                                                                        shr(
+                                                                                                                                            208,
+                                                                                                                                            a
+                                                                                                                                        ),
+                                                                                                                                        0xFF
+                                                                                                                                    ),
+                                                                                                                                    1
+                                                                                                                                ),
+                                                                                                                                or(
+                                                                                                                                    shl(
+                                                                                                                                        and(
+                                                                                                                                            shr(
+                                                                                                                                                216,
+                                                                                                                                                a
+                                                                                                                                            ),
+                                                                                                                                            0xFF
+                                                                                                                                        ),
+                                                                                                                                        1
+                                                                                                                                    ),
+                                                                                                                                    or(
+                                                                                                                                        shl(
+                                                                                                                                            and(
+                                                                                                                                                shr(
+                                                                                                                                                    224,
+                                                                                                                                                    a
+                                                                                                                                                ),
+                                                                                                                                                0xFF
+                                                                                                                                            ),
+                                                                                                                                            1
+                                                                                                                                        ),
+                                                                                                                                        or(
+                                                                                                                                            shl(
+                                                                                                                                                and(
+                                                                                                                                                    shr(
+                                                                                                                                                        232,
+                                                                                                                                                        a
+                                                                                                                                                    ),
+                                                                                                                                                    0xFF
+                                                                                                                                                ),
+                                                                                                                                                1
+                                                                                                                                            ),
+                                                                                                                                            or(
+                                                                                                                                                shl(
+                                                                                                                                                    and(
+                                                                                                                                                        shr(
+                                                                                                                                                            240,
+                                                                                                                                                            a
+                                                                                                                                                        ),
+                                                                                                                                                        0xFF
+                                                                                                                                                    ),
+                                                                                                                                                    1
+                                                                                                                                                ),
+                                                                                                                                                shl(
+                                                                                                                                                    shr(
+                                                                                                                                                        248,
+                                                                                                                                                        a
+                                                                                                                                                    ),
+                                                                                                                                                    1
+                                                                                                                                                )
+                                                                                                                                            )
+                                                                                                                                        )
+                                                                                                                                    )
+                                                                                                                                )
+                                                                                                                            )
+                                                                                                                        )
+                                                                                                                    )
+                                                                                                                )
+                                                                                                            )
                                                                                                         )
-                                                                                                    ),
-                                                                                                    shl(
-                                                                                                        and(
-                                                                                                            shr(96, a), 0xFF
-                                                                                                        ),
-                                                                                                        1
                                                                                                     )
-                                                                                                ),
-                                                                                                shl(
-                                                                                                    and(shr(104, a), 0xFF),
-                                                                                                    1
                                                                                                 )
-                                                                                            ),
-                                                                                            shl(and(shr(112, a), 0xFF), 1)
-                                                                                        ),
-                                                                                        shl(and(shr(120, a), 0xFF), 1)
-                                                                                    ),
-                                                                                    shl(and(shr(128, a), 0xFF), 1)
-                                                                                ),
-                                                                                shl(and(shr(136, a), 0xFF), 1)
-                                                                            ),
-                                                                            shl(and(shr(144, a), 0xFF), 1)
-                                                                        ),
-                                                                        shl(and(shr(152, a), 0xFF), 1)
-                                                                    ),
-                                                                    shl(and(shr(160, a), 0xFF), 1)
-                                                                ),
-                                                                shl(and(shr(168, a), 0xFF), 1)
-                                                            ),
-                                                            shl(and(shr(176, a), 0xFF), 1)
-                                                        ),
-                                                        shl(and(shr(184, a), 0xFF), 1)
-                                                    ),
-                                                    shl(and(shr(192, a), 0xFF), 1)
-                                                ),
-                                                shl(and(shr(200, a), 0xFF), 1)
-                                            ),
-                                            shl(and(shr(208, a), 0xFF), 1)
-                                        ),
-                                        shl(and(shr(216, a), 0xFF), 1)
-                                    ),
-                                    shl(and(shr(224, a), 0xFF), 1)
-                                ),
-                                shl(and(shr(232, a), 0xFF), 1)
-                            ),
-                            shl(and(shr(240, a), 0xFF), 1)
-                        ),
-                        shl(shr(248, a), 1)
+                                                                                            )
+                                                                                        )
+                                                                                    )
+                                                                                )
+                                                                            )
+                                                                        )
+                                                                    )
+                                                                )
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
                     )
+            }
+            cursor := sub(cursor, 0x20)
+            end := add(cursor, m)
+            for {} lt(cursor, end) {cursor := add(cursor, 1)} {
+                ops := or(ops, shl(and(mload(cursor), 0xFF), 1))
             }
         }
     }
