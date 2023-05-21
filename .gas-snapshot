@@ -1,0 +1,5 @@
+ExtrospectionTest:testCreates() (gas: 378482)
+ExtrospectionTest:testNoops() (gas: 338041)
+LibExtrospectionScanEVMOpcodesPresentTest:testScanEVMOpcodesPresentPush1() (gas: 676)
+LibExtrospectionScanEVMOpcodesPresentTest:testScanEVMOpcodesPresentReference(bytes) (runs: 2048, μ: 10215, ~: 12452)
+LibExtrospectionScanEVMOpcodesPresentTest:testScanEVMOpcodesPresentSimple() (gas: 846)
