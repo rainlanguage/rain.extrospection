@@ -12,6 +12,7 @@ library LibExtrospection {
                 cursor := add(cursor, 1)
 
                 let op := and(mload(cursor), 0xFF)
+                //slither-disable-next-line incorrect-shift
                 bytesPresent := or(bytesPresent, shl(op, 1))
 
                 let push := sub(op, 0x60)
