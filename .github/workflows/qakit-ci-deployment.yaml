@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         contract: [
-          "src/Foo.sol:Foo"
+          "src/Extrospection.sol:Extrospection"
         ]
     runs-on: ubuntu-latest
     steps:

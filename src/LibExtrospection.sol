@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.18;
 
+import "sol.lib.memory/LibPointer.sol";
+
 library LibExtrospection {
-    function scanBytesPresent(Pointer cursor, uint256 length) internal pure returns (uint256 bytesPresent) {
+    function scanEVMOpcodesPresent(Pointer cursor, uint256 length) internal pure returns (uint256 bytesPresent) {
         assembly ("memory-safe") {
             cursor := sub(cursor, 0x20)
             let end := add(cursor, length)
@@ -13,7 +15,7 @@ library LibExtrospection {
                 bytesPresent := or(bytesPresent, shl(op, 1))
 
                 let push := sub(op, 0x60)
-                if lt(push, 0x20) { cursor := add(cursor, push) }
+                if lt(push, 0x20) { cursor := add(cursor, add(push, 1)) }
             }
         }
     }

@@ -2,6 +2,9 @@
 pragma solidity =0.8.18;
 
 import {ERC165Checker} from "openzeppelin-contracts/contracts/utils/introspection/ERC165Checker.sol";
+import "sol.lib.memory/LibPointer.sol";
+
+import "./LibExtrospection.sol";
 
 /// @title Extrospection
 /// @notice Exposes certain information available to evm opcodes as public
@@ -78,7 +81,7 @@ contract Extrospection {
             cursor := mload(0x40)
             extcodecopy(account, cursor, 0, length)
         }
-        return LibExtrospection.scanBytesPresent(Pointer.wrap(cursor), length);
+        return LibExtrospection.scanEVMOpcodesPresent(cursor, length);
     }
 
     function interpreterAllowedOps(address interpreter) public view returns (bool) {
