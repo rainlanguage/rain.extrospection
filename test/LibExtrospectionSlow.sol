@@ -2,7 +2,7 @@
 pragma solidity =0.8.18;
 
 library LibExtrospectionSlow {
-    function scanEVMOpcodesPresentSlow(bytes memory data) internal pure returns (uint256) {
+    function scanEVMOpcodesPresentInMemorySlow(bytes memory data) internal pure returns (uint256) {
         uint256 scan = 0;
         for (uint256 i = 0; i < data.length; i++) {
             uint8 op = uint8(data[i]);

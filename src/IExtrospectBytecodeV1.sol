@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: CAL
+pragma solidity ^0.8.18;
+
+/// @title IExtrospectBytecodeV1
+/// @notice External functions for offchain processing to conveniently access the
+/// view on contract code that is exposed to EVM opcodes. Generally this is NOT
+/// useful onchain as all contracts have access to the same opcodes, so would be
+/// more gas efficient and convenient calling the opcodes internally than an
+/// external call to an extrospection contract.
+interface IExtrospectBytecodeV1 {
+    /// Emitted by `emitBytecodeHash`
+    /// @param sender The `msg.sender` calling to emit this event.
+    /// @param account The account the bytecode hash is for the code of.
+    /// @param bytecodeHash The hash of the code of `account`.
+    event BytecodeHashV1(address sender, address account, bytes32 bytecodeHash);
+
+    /// Return the bytecode for an address.
+    ///
+    /// Equivalent to `extcodecopy(account, pointer, 0, extcodesize(account))`
+    /// then returning everything copied to `pointer`.
+    ///
+    /// @param account The account to get bytecode for.
+    /// @return The bytecode of `account`. Will be `0` length for non-contract
+    /// accounts.
+    function bytecode(address account) external view returns (bytes memory);
+
+    /// Return the hash of the complete bytecode for an address.
+    ///
+    /// Equivalent to `extcodehash(account)`.
+    ///
+    /// @param account The account to get the bytecode hash for.
+    /// @return The hash of the bytecode of `account`. Will be the hash of empty
+    /// bytes for non-contract accounts.
+    function bytecodeHash(address account) external view returns (bytes32);
+
+    /// Emits the bytecode hash for an address as a `BytecodeHashV1` event.
+    /// The hash in the event MUST be equivalent to calling `bytecode`.
+    /// @param account The account to emit the bytecode hash for.
+    function emitBytecodeHash(address account) external;
+
+    /// Scan every byte of the bytecode in some account and return an encoded
+    /// list of every opcode present in that account's code. The list is encoded
+    /// as a single `uint256` where each bit is a flag representing the presence
+    /// of an opcode in the source bytecode. The opcode byte is the literal
+    /// bitwise offset in the final output, starting from least significant bits.
+    ///
+    /// E.g. opcode `0` sets the 0th bit, i.e. `2 ** 0`, i.e. `1`, i.e. `1 << 0`.
+    /// opcode `0x50` sets the `0x50`th bit, i.e. `2 ** 0x50`, i.e. `1 << 0x50`.
+    ///
+    /// The final output can be bitwise `&` against a reference set of bit flags
+    /// to check for the presence of a list of (un)desired opcodes in a single
+    /// logical operation. This allows for fewer branching operations (expensive)
+    /// per byte, but precludes the ability to break the loop early upon
+    /// discovering the prescence of a specific opcode.
+    ///
+    /// The scan MUST respect the inline skip behaviour of the `PUSH*` family of
+    /// evm opcodes, starting from opcode `0x60` through `0x7F` inclusive. These
+    /// opcodes are followed by literal bytes that will be pushed to the EVM
+    /// stack at runtime and so are NOT opcodes themselves. Even though each byte
+    /// of the data following a `PUSH*` is assigned program counter, it DOES NOT
+    /// run as an opcode. Therefore, the scanner MUST ignore all push data,
+    /// otherwise it will report false positives from stack data being treated as
+    /// opcodes. The relative index of each `PUSH` opcode signifies how many
+    /// bytes to skip, e.g. `0x60` skips 1 byte, `0x61` skips 2 bytes, etc.
+    function scanEVMOpcodesPresentInAccount(address account) external view returns (uint256 scan);
+}

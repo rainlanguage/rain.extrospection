@@ -5,10 +5,10 @@ import "forge-std/Test.sol";
 
 import "sol.lib.memory/LibBytes.sol";
 
-import "src/LibExtrospection.sol";
+import "src/LibExtrospectBytecode.sol";
 import "./LibExtrospectionSlow.sol";
 
-contract LibExtrospectionScanEVMOpcodesPresentTest is Test {
+contract LibExtrospectScanEVMOpcodesPresentInMemoryTest is Test {
     using LibBytes for bytes;
 
     function testScanEVMOpcodesPresentSimple() public {
@@ -16,7 +16,7 @@ contract LibExtrospectionScanEVMOpcodesPresentTest is Test {
             mstore(0x20, hex"04050607")
         }
 
-        assertEq(LibExtrospection.scanEVMOpcodesPresent(Pointer.wrap(0x20), 4), 0xF0);
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInMemory(Pointer.wrap(0x20), 4), 0xF0);
     }
 
     function testScanEVMOpcodesPresentPush1() public {
@@ -25,13 +25,13 @@ contract LibExtrospectionScanEVMOpcodesPresentTest is Test {
             mstore(0x20, hex"60016002")
         }
 
-        assertEq(LibExtrospection.scanEVMOpcodesPresent(Pointer.wrap(0x20), 4), 2 ** 0x60);
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInMemory(Pointer.wrap(0x20), 4), 2 ** 0x60);
     }
 
     function testScanEVMOpcodesPresentReference(bytes memory data) public {
         assertEq(
-            LibExtrospection.scanEVMOpcodesPresent(data.dataPointer(), data.length),
-            LibExtrospectionSlow.scanEVMOpcodesPresentSlow(data)
+            LibExtrospectBytecode.scanEVMOpcodesPresentInMemory(data.dataPointer(), data.length),
+            LibExtrospectionSlow.scanEVMOpcodesPresentInMemorySlow(data)
         );
     }
 }

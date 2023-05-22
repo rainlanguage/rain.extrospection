@@ -4,16 +4,14 @@ pragma solidity =0.8.18;
 import {ERC165Checker} from "openzeppelin-contracts/contracts/utils/introspection/ERC165Checker.sol";
 import "sol.lib.memory/LibPointer.sol";
 
-import "./LibExtrospection.sol";
+import "./LibExtrospectBytecode.sol";
+import "./IExtrospectBytecodeV1.sol";
+import "./IExtrospectERC165V1.sol";
 
 /// @title Extrospection
 /// @notice Exposes certain information available to evm opcodes as public
 /// functions that are world callable.
-contract Extrospection {
-    event BytecodeHash(address sender, address account, bytes32 bytecodeHash);
-
-    event SupportsInterface(address sender, address account, bytes4 interfaceId, bool supportsInterface);
-
+contract Extrospection is IExtrospectBytecodeV1, IExtrospectERC165V1 {
     /// https://eips.ethereum.org/EIPS/eip-214#specification
     uint256 constant NON_STATIC_OPS =
     // CREATE
@@ -47,14 +45,12 @@ contract Extrospection {
     // CALL
     | (0xF1);
 
-    /// This is probably only useful in general for offchain processing/indexing
-    /// as the bytes MAY be large and cost much gas to retrieve onchain.
-    /// @param account_ The account to get bytecode for.
-    /// @return The bytecode.
+    /// @inheritdoc IExtrospectBytecodeV1
     function bytecode(address account_) external view returns (bytes memory) {
         return account_.code;
     }
 
+    /// @inheritdoc IExtrospectBytecodeV1
     function bytecodeHash(address account_) public view returns (bytes32) {
         bytes32 hash_;
         assembly ("memory-safe") {
@@ -63,28 +59,38 @@ contract Extrospection {
         return hash_;
     }
 
+    /// @inheritdoc IExtrospectBytecodeV1
     function emitBytecodeHash(address account_) external {
-        emit BytecodeHash(msg.sender, account_, bytecodeHash(account_));
+        emit BytecodeHashV1(msg.sender, account_, bytecodeHash(account_));
     }
 
-    function emitSupportsInterface(address account_, bytes4 interfaceId_) external {
-        emit SupportsInterface(
-            msg.sender, account_, interfaceId_, ERC165Checker.supportsInterface(account_, interfaceId_)
-        );
-    }
-
-    function bytecodeOpScanner(address account) public view returns (uint256) {
-        Pointer cursor;
-        uint256 length;
+    /// @inheritdoc IExtrospectBytecodeV1
+    function scanEVMOpcodesPresentInAccount(address account_) public view returns (uint256) {
+        Pointer cursor_;
+        uint256 length_;
         assembly ("memory-safe") {
-            length := extcodesize(account)
-            cursor := mload(0x40)
-            extcodecopy(account, cursor, 0, length)
+            length_ := extcodesize(account_)
+            cursor_ := mload(0x40)
+            // new "memory end" including padding
+            mstore(0x40, add(cursor_, and(add(length_, 0x1f), not(0x1f))))
+            extcodecopy(account_, cursor_, 0, length_)
         }
-        return LibExtrospection.scanEVMOpcodesPresent(cursor, length);
+        return LibExtrospectBytecode.scanEVMOpcodesPresentInMemory(cursor_, length_);
     }
 
-    function interpreterAllowedOps(address interpreter) public view returns (bool) {
-        return bytecodeOpScanner(interpreter) & INTERPRETER_DISALLOWED_OPS == 0;
+    function interpreterAllowedOps(address interpreter_) public view returns (bool) {
+        return scanEVMOpcodesPresentInAccount(interpreter_) & INTERPRETER_DISALLOWED_OPS == 0;
+    }
+
+    /// @inheritdoc IExtrospectERC165V1
+    function accountSupportsInterface(address account_, bytes4 interfaceId_) public view returns (bool) {
+        return ERC165Checker.supportsInterface(account_, interfaceId_);
+    }
+
+    /// @inheritdoc IExtrospectERC165V1
+    function emitAccountSupportsInterface(address account_, bytes4 interfaceId_) external {
+        emit AccountSupportsInterfaceV1(
+            msg.sender, account_, interfaceId_, accountSupportsInterface(account_, interfaceId_)
+        );
     }
 }
