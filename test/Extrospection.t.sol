@@ -61,7 +61,7 @@ contract ExtrospectionTest is Test {
 
         Extrospection extrospection = new Extrospection();
 
-        assertTrue(extrospection.interpreterAllowedOps(address(noop)));
+        assertTrue(extrospection.scanOnlyAllowedInterpreterEVMOpcodes(address(noop)));
     }
 
     function testCreates() public {
@@ -69,6 +69,6 @@ contract ExtrospectionTest is Test {
 
         Extrospection extrospection = new Extrospection();
 
-        assertTrue(!extrospection.interpreterAllowedOps(address(tc)));
+        assertTrue(!extrospection.scanOnlyAllowedInterpreterEVMOpcodes(address(tc)));
     }
 }
