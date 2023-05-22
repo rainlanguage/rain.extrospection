@@ -8,12 +8,6 @@ pragma solidity ^0.8.18;
 /// more gas efficient and convenient calling the opcodes internally than an
 /// external call to an extrospection contract.
 interface IExtrospectBytecodeV1 {
-    /// Emitted by `emitBytecodeHash`
-    /// @param sender The `msg.sender` calling to emit this event.
-    /// @param account The account the bytecode hash is for the code of.
-    /// @param bytecodeHash The hash of the code of `account`.
-    event BytecodeHashV1(address sender, address account, bytes32 bytecodeHash);
-
     /// Return the bytecode for an address.
     ///
     /// Equivalent to `extcodecopy(account, pointer, 0, extcodesize(account))`
@@ -32,11 +26,6 @@ interface IExtrospectBytecodeV1 {
     /// @return The hash of the bytecode of `account`. Will be the hash of empty
     /// bytes for non-contract accounts.
     function bytecodeHash(address account) external view returns (bytes32);
-
-    /// Emits the bytecode hash for an address as a `BytecodeHashV1` event.
-    /// The hash in the event MUST be equivalent to calling `bytecode`.
-    /// @param account The account to emit the bytecode hash for.
-    function emitBytecodeHash(address account) external;
 
     /// Scan every byte of the bytecode in some account and return an encoded
     /// list of every opcode present in that account's code. The list is encoded

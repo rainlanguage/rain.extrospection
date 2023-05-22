@@ -6,12 +6,11 @@ import "sol.lib.memory/LibPointer.sol";
 
 import "./LibExtrospectBytecode.sol";
 import "./IExtrospectBytecodeV1.sol";
-import "./IExtrospectERC165V1.sol";
 
 /// @title Extrospection
 /// @notice Exposes certain information available to evm opcodes as public
 /// functions that are world callable.
-contract Extrospection is IExtrospectBytecodeV1, IExtrospectERC165V1 {
+contract Extrospection is IExtrospectBytecodeV1 {
     /// https://eips.ethereum.org/EIPS/eip-214#specification
     uint256 constant NON_STATIC_OPS =
     // CREATE
@@ -60,11 +59,6 @@ contract Extrospection is IExtrospectBytecodeV1, IExtrospectERC165V1 {
     }
 
     /// @inheritdoc IExtrospectBytecodeV1
-    function emitBytecodeHash(address account_) external {
-        emit BytecodeHashV1(msg.sender, account_, bytecodeHash(account_));
-    }
-
-    /// @inheritdoc IExtrospectBytecodeV1
     function scanEVMOpcodesPresentInAccount(address account_) public view returns (uint256) {
         Pointer cursor_;
         uint256 length_;
@@ -80,17 +74,5 @@ contract Extrospection is IExtrospectBytecodeV1, IExtrospectERC165V1 {
 
     function interpreterAllowedOps(address interpreter_) public view returns (bool) {
         return scanEVMOpcodesPresentInAccount(interpreter_) & INTERPRETER_DISALLOWED_OPS == 0;
-    }
-
-    /// @inheritdoc IExtrospectERC165V1
-    function accountSupportsInterface(address account_, bytes4 interfaceId_) public view returns (bool) {
-        return ERC165Checker.supportsInterface(account_, interfaceId_);
-    }
-
-    /// @inheritdoc IExtrospectERC165V1
-    function emitAccountSupportsInterface(address account_, bytes4 interfaceId_) external {
-        emit AccountSupportsInterfaceV1(
-            msg.sender, account_, interfaceId_, accountSupportsInterface(account_, interfaceId_)
-        );
     }
 }
