@@ -10,8 +10,7 @@ import "./IExtrospectBytecodeV1.sol";
 import "./IExtrospectInterpreterV1.sol";
 
 /// @title Extrospection
-/// @notice Exposes certain information available to evm opcodes as public
-/// functions that are world callable.
+/// @notice Implements all extrospection interfaces.
 contract Extrospection is IExtrospectBytecodeV1, IExtrospectInterpreterV1 {
     using LibBytes for bytes;
 

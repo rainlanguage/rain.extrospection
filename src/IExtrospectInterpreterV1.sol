@@ -19,6 +19,7 @@ uint256 constant INTERPRETER_DISALLOWED_OPS = NON_STATIC_OPS
 // Interpreter MUST use static call only.
 | (1 << uint256(EVM_OP_CALLCODE))
 // Interpreter MUST use static call only.
+// Redundant with static list for clarity as static list allows 0 value calls.
 | (1 << uint256(EVM_OP_CALL));
 
 /// @title IExtrospectInterpreterV1

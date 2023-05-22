@@ -10,8 +10,7 @@ pragma solidity ^0.8.18;
 interface IExtrospectBytecodeV1 {
     /// Return the bytecode for an address.
     ///
-    /// Equivalent to `extcodecopy(account, pointer, 0, extcodesize(account))`
-    /// then returning everything copied to `pointer`.
+    /// Equivalent to `account.code`.
     ///
     /// @param account The account to get bytecode for.
     /// @return The bytecode of `account`. Will be `0` length for non-contract
@@ -20,11 +19,11 @@ interface IExtrospectBytecodeV1 {
 
     /// Return the hash of the complete bytecode for an address.
     ///
-    /// Equivalent to `extcodehash(account)`.
+    /// Equivalent to `account.codehash`.
     ///
     /// @param account The account to get the bytecode hash for.
-    /// @return The hash of the bytecode of `account`. Will be the hash of empty
-    /// bytes for non-contract accounts.
+    /// @return The hash of the bytecode of `account`. Will be `0` (NOT the hash
+    /// of empty bytes) for non-contract accounts.
     function bytecodeHash(address account) external view returns (bytes32);
 
     /// Scan every byte of the bytecode in some account and return an encoded
