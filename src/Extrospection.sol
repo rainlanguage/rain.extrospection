@@ -5,32 +5,36 @@ import "sol.lib.memory/LibPointer.sol";
 import "sol.lib.memory/LibBytes.sol";
 
 import "./LibExtrospectBytecode.sol";
-import "./IExtrospectBytecodeV1.sol";
+import "./IExtrospectBytecodeV2.sol";
 import "./IExtrospectInterpreterV1.sol";
 
 /// @title Extrospection
 /// @notice Implements all extrospection interfaces.
-contract Extrospection is IExtrospectBytecodeV1, IExtrospectInterpreterV1 {
+contract Extrospection is IExtrospectBytecodeV2, IExtrospectInterpreterV1 {
     using LibBytes for bytes;
 
-    /// @inheritdoc IExtrospectBytecodeV1
-    function bytecode(address account_) external view returns (bytes memory) {
-        return account_.code;
+    /// @inheritdoc IExtrospectBytecodeV2
+    function bytecode(address account) external view returns (bytes memory) {
+        return account.code;
     }
 
-    /// @inheritdoc IExtrospectBytecodeV1
-    function bytecodeHash(address account_) external view returns (bytes32) {
-        return account_.codehash;
+    /// @inheritdoc IExtrospectBytecodeV2
+    function bytecodeHash(address account) external view returns (bytes32) {
+        return account.codehash;
     }
 
-    /// @inheritdoc IExtrospectBytecodeV1
-    function scanEVMOpcodesPresentInAccount(address account_) public view returns (uint256) {
-        bytes memory code_ = account_.code;
-        return LibExtrospectBytecode.scanEVMOpcodesPresentInMemory(code_.dataPointer(), code_.length);
+    /// @inheritdoc IExtrospectBytecodeV2
+    function scanEVMOpcodesPresentInAccount(address account) public view returns (uint256) {
+        return LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(account.code);
+    }
+
+    /// @inheritdoc IExtrospectBytecodeV2
+    function scanEVMOpcodesReachableInAccount(address account) public view returns (uint256) {
+        return LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(account.code);
     }
 
     /// @inheritdoc IExtrospectInterpreterV1
-    function scanOnlyAllowedInterpreterEVMOpcodes(address interpreter_) external view returns (bool) {
-        return scanEVMOpcodesPresentInAccount(interpreter_) & INTERPRETER_DISALLOWED_OPS == 0;
+    function scanOnlyAllowedInterpreterEVMOpcodes(address interpreter) external view returns (bool) {
+        return scanEVMOpcodesReachableInAccount(interpreter) & INTERPRETER_DISALLOWED_OPS == 0;
     }
 }

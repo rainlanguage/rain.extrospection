@@ -12,10 +12,7 @@ optimizer_runs = 100000
 bytecode_hash = "none"
 cbor_metadata = false
 
-fuzz.runs = 2048
-
-[profile.default.model_checker]
-contracts = {'src/Extrospection.sol' = ['Extrospection']}
-engine = 'chc'
-timeout = 10000
-targets = ['assert', 'underflow', 'overflow', 'divByZero', 'constantCondition', 'popEmptyArray', 'outOfBounds']
+[fuzz]
+runs = 2048
+# https://github.com/foundry-rs/foundry/issues/5199#issuecomment-1602609141
+seed = '0x3e8'
