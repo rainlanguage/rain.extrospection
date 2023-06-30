@@ -2,6 +2,7 @@
 pragma solidity ^0.8.18;
 
 import "sol.lib.memory/LibPointer.sol";
+import "sol.lib.memory/LibBytes.sol";
 import "./EVMOpcodes.sol";
 
 /// @title LibExtrospectBytecode
@@ -9,13 +10,16 @@ import "./EVMOpcodes.sol";
 /// opcode scanning needs special care, as the other bytecode functions are mere
 /// wrappers around native EVM features.
 library LibExtrospectBytecode {
+    using LibBytes for bytes;
+
     /// Scans for opcodes that are reachable during execution of a contract.
     /// Adapted from https://github.com/MrLuit/selfdestruct-detect/blob/master/src/index.ts
-    function scanEVMOpcodesReachableInMemory(Pointer cursor, uint256 length)
-        internal
-        pure
-        returns (uint256 bytesReachable)
-    {
+    /// @param bytecode The bytecode to scan.
+    /// @return bytesReachable A `uint256` where each bit represents the presence
+    /// of a reachable opcode in the source bytecode.
+    function scanEVMOpcodesReachableInBytecode(bytes memory bytecode) internal pure returns (uint256 bytesReachable) {
+        Pointer cursor = bytecode.dataPointer();
+        uint256 length = bytecode.length;
         Pointer end;
         uint256 opJumpDest = EVM_OP_JUMPDEST;
         uint256 haltingMask = HALTING_BITMAP;
@@ -62,11 +66,12 @@ library LibExtrospectBytecode {
     /// MUST point to the first byte of a region of memory that contract code has
     /// already been copied to, e.g. with `extcodecopy`.
     /// https://github.com/a16z/metamorphic-contract-detector/blob/main/metamorphic_detect/opcodes.py#L52
-    function scanEVMOpcodesPresentInMemory(Pointer cursor, uint256 length)
-        internal
-        pure
-        returns (uint256 bytesPresent)
-    {
+    /// @param bytecode The bytecode to scan.
+    /// @return bytesPresent A `uint256` where each bit represents the presence
+    /// of an opcode in the source bytecode.
+    function scanEVMOpcodesPresentInBytecode(bytes memory bytecode) internal pure returns (uint256 bytesPresent) {
+        Pointer cursor = bytecode.dataPointer();
+        uint256 length = bytecode.length;
         assembly ("memory-safe") {
             cursor := sub(cursor, 0x20)
             let end := add(cursor, length)

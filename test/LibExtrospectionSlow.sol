@@ -4,7 +4,7 @@ pragma solidity =0.8.18;
 import "src/EVMOpcodes.sol";
 
 library LibExtrospectionSlow {
-    function scanEVMOpcodesPresentInMemorySlow(bytes memory data) internal pure returns (uint256) {
+    function scanEVMOpcodesPresentInBytecodeSlow(bytes memory data) internal pure returns (uint256) {
         uint256 scan = 0;
         for (uint256 i = 0; i < data.length; i++) {
             uint8 op = uint8(data[i]);
@@ -17,7 +17,7 @@ library LibExtrospectionSlow {
         return scan;
     }
 
-    function scanEVMOpcodesReachableInMemorySlow(bytes memory data) internal pure returns (uint256) {
+    function scanEVMOpcodesReachableInBytecodeSlow(bytes memory data) internal pure returns (uint256) {
         uint256 scan = 0;
         bool halted = false;
         for (uint256 i = 0; i < data.length; i++) {

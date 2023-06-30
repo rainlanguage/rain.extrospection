@@ -25,14 +25,12 @@ contract Extrospection is IExtrospectBytecodeV2, IExtrospectInterpreterV1 {
 
     /// @inheritdoc IExtrospectBytecodeV2
     function scanEVMOpcodesPresentInAccount(address account) public view returns (uint256) {
-        bytes memory code = account.code;
-        return LibExtrospectBytecode.scanEVMOpcodesPresentInMemory(code.dataPointer(), code.length);
+        return LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(account.code);
     }
 
     /// @inheritdoc IExtrospectBytecodeV2
     function scanEVMOpcodesReachableInAccount(address account) public view returns (uint256) {
-        bytes memory code = account.code;
-        return LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(code.dataPointer(), code.length);
+        return LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(account.code);
     }
 
     /// @inheritdoc IExtrospectInterpreterV1

@@ -26,10 +26,18 @@ contract ExtrospectionBytecodeTest is Test {
     function testScanEVMOpcodesPresentInAccount(address account) external {
         Extrospection extrospection = new Extrospection();
 
-        bytes memory code = account.code;
         assertEq(
-            LibExtrospectBytecode.scanEVMOpcodesPresentInMemory(code.dataPointer(), code.length),
+            LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(account.code),
             extrospection.scanEVMOpcodesPresentInAccount(account)
+        );
+    }
+
+    function testScanEVMOpcodesReachableInAccount(address account) external {
+        Extrospection extrospection = new Extrospection();
+
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(account.code),
+            extrospection.scanEVMOpcodesReachableInAccount(account)
         );
     }
 }

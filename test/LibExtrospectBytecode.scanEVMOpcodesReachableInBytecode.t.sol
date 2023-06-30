@@ -8,86 +8,44 @@ import "src/LibExtrospectBytecode.sol";
 import "./LibExtrospectBytecode.testConstants.sol";
 import "./LibExtrospectionSlow.sol";
 
-contract LibExtrospectScanEVMOpcodesReachableInMemoryTest is Test {
+contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
     using LibBytes for bytes;
 
     /// Test that the simple case of a few standard opcodes works.
     function testScanEVMOpcodesReachableSimple() public {
-        Pointer ptr;
-        assembly ("memory-safe") {
-            ptr := mload(0x40)
-            mstore(ptr, hex"04050607")
-        }
-
-        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(ptr, 4), 0xF0);
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"04050607"), 0xF0);
     }
 
     // Test that stop opcode halts scanning.
     function testScanEVMOpcodesReachableStop() public {
-        Pointer ptr;
-        assembly ("memory-safe") {
-            ptr := mload(0x40)
-            mstore(ptr, hex"00010203")
-        }
-
-        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(ptr, 4), 1 << EVM_OP_STOP);
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"00010203"), 1 << EVM_OP_STOP);
     }
 
     // Test that return opcode halts scanning.
     function testScanEVMOpcodesReachableReturn() public {
-        Pointer ptr;
-        assembly ("memory-safe") {
-            ptr := mload(0x40)
-            mstore(ptr, hex"f300010203")
-        }
-
-        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(ptr, 5), 1 << EVM_OP_RETURN);
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"f300010203"), 1 << EVM_OP_RETURN);
     }
 
     // Test that revert opcode halts scanning.
     function testScanEVMOpcodesReachableRevert() public {
-        Pointer ptr;
-        assembly ("memory-safe") {
-            ptr := mload(0x40)
-            mstore(ptr, hex"fd00010203")
-        }
-
-        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(ptr, 5), 1 << EVM_OP_REVERT);
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"fd00010203"), 1 << EVM_OP_REVERT);
     }
 
     // Test that invalid opcode halts scanning.
     function testScanEVMOpcodesReachableInvalid() public {
-        Pointer ptr;
-        assembly ("memory-safe") {
-            ptr := mload(0x40)
-            mstore(ptr, hex"fe00010203")
-        }
-
-        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(ptr, 5), 1 << EVM_OP_INVALID);
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"fe00010203"), 1 << EVM_OP_INVALID);
     }
 
     // Test that selfdestruct opcode halts scanning.
     function testScanEVMOpcodesReachableSelfdestruct() public {
-        Pointer ptr;
-        assembly ("memory-safe") {
-            ptr := mload(0x40)
-            mstore(ptr, hex"ff00010203")
-        }
-
-        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(ptr, 5), 1 << EVM_OP_SELFDESTRUCT);
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"ff00010203"), 1 << EVM_OP_SELFDESTRUCT);
     }
 
     // Test that jumpdest opcode resumes scanning.
     function testScanEVMOpcodesReachableJumpdest() public {
-        Pointer ptr;
-        assembly ("memory-safe") {
-            ptr := mload(0x40)
-            // eq + revert + ignore 4 bytes + jumpdest + mulmod + exp + signextend
-            mstore(ptr, hex"14fdff0102035b090a0b")
-        }
-
+        // eq + revert + ignore 4 bytes + jumpdest + mulmod + exp + signextend
         assertEq(
-            LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(ptr, 10),
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"14fdff0102035b090a0b"),
             // 0x14
             (1 << EVM_OP_EQ)
             // 0xfd
@@ -105,33 +63,23 @@ contract LibExtrospectScanEVMOpcodesReachableInMemoryTest is Test {
 
     /// Test that push opcode arguments are skipped.
     function testScanEVMOpcodesReachablePush1() public {
-        Pointer ptr;
-        assembly ("memory-safe") {
-            // PUSH1 01
-            ptr := mload(0x40)
-            mstore(ptr, hex"60016002")
-        }
-
-        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(ptr, 4), 2 ** 0x60);
+        // PUSH1 01
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"60016002"), 2 ** 0x60);
     }
 
     /// Test that push opcode arguments are skipped.
     function testScanEVMOpcodesReachablePush4() public {
-        Pointer ptr;
-        assembly ("memory-safe") {
-            // PUSH4 01 02 03 04 PUSH1 01 PUSH1 05
-            ptr := mload(0x40)
-            mstore(ptr, hex"630102030460016005")
-        }
-
-        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(ptr, 9), (1 << 0x63) | (1 << 0x60));
+        // PUSH4 01 02 03 04 PUSH1 01 PUSH1 05
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"630102030460016005"), (1 << 0x63) | (1 << 0x60)
+        );
     }
 
     /// Compare the output of the fast and reference implementations.
     function testScanEVMOpcodesReachableReference(bytes memory data) public {
         assertEq(
-            LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(data.dataPointer(), data.length),
-            LibExtrospectionSlow.scanEVMOpcodesReachableInMemorySlow(data)
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(data),
+            LibExtrospectionSlow.scanEVMOpcodesReachableInBytecodeSlow(data)
         );
     }
 
@@ -139,11 +87,7 @@ contract LibExtrospectScanEVMOpcodesReachableInMemoryTest is Test {
     /// implementation. Test that it is not present in our implementation.
     /// This tests the construction code found on etherscan.io.
     function testScanEVMOpcodesReachableReportedFalsePositive() public {
-        bytes memory reportedFalsePositive = REPORTED_FALSE_POSITIVE;
-
-        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(
-            reportedFalsePositive.dataPointer(), reportedFalsePositive.length
-        );
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(REPORTED_FALSE_POSITIVE);
         assertEq(scan, 0x240a0000000000000000001a01ff0fff801d6dff0cff00846afc00011eff005f);
         assertEq(scan & (1 << EVM_OP_SELFDESTRUCT), 0);
     }
@@ -152,11 +96,7 @@ contract LibExtrospectScanEVMOpcodesReachableInMemoryTest is Test {
     /// implementation. Test that it is not present in our implementation.
     /// This tests the deployed bytecode found onchain on mainnet.
     function testScanEVMOpcodesReachableReportedFalsePositiveBytecode() public {
-        bytes memory reportedFalsePositiveBytecode = REPORTED_FALSE_POSITIVE_BYTECODE;
-
-        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(
-            reportedFalsePositiveBytecode.dataPointer(), reportedFalsePositiveBytecode.length
-        );
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(REPORTED_FALSE_POSITIVE_BYTECODE);
         assertEq(scan, 0x240a0000000000000000001a01ff0fff801d6dff0cff008468fc00011eff005f);
         assertEq(scan & (1 << EVM_OP_SELFDESTRUCT), 0);
     }
@@ -165,10 +105,7 @@ contract LibExtrospectScanEVMOpcodesReachableInMemoryTest is Test {
     /// hidden in its metadata. We also need to be sure that we don't simply
     /// treat the metadata as code, as that would be a false positive.
     function testScanMetamorphicMetadata() public {
-        bytes memory metamorphicMetadata = METAMORPHIC_METADATA;
-        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInMemory(
-            metamorphicMetadata.dataPointer(), metamorphicMetadata.length
-        );
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(METAMORPHIC_METADATA);
         assertEq(scan, 0xa00000000000000000000000000700378000000b08c50000007000001075000b);
         // There IS a selfdestruct in this bytecode, it is hidden in the metadata.
         // It IS reachable, but would be near invisible on etherscan.io or a
