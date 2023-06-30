@@ -4,9 +4,6 @@ pragma solidity ^0.8.18;
 import "sol.lib.memory/LibPointer.sol";
 import "./EVMOpcodes.sol";
 
-uint256 constant HALTING_BITMAP =
-    (1 << EVM_OP_STOP) | (1 << EVM_OP_RETURN) | (1 << EVM_OP_REVERT) | (1 << EVM_OP_INVALID) | (1 << EVM_OP_SELFDESTRUCT);
-
 /// @title LibExtrospectBytecode
 /// @notice Internal algorithms for extrospecting bytecode. Notably the EVM
 /// opcode scanning needs special care, as the other bytecode functions are mere
@@ -19,11 +16,12 @@ library LibExtrospectBytecode {
         pure
         returns (uint256 bytesReachable)
     {
+        Pointer end;
         uint256 opJumpDest = EVM_OP_JUMPDEST;
         uint256 haltingMask = HALTING_BITMAP;
         assembly ("memory-safe") {
             cursor := sub(cursor, 0x20)
-            let end := add(cursor, length)
+            end := add(cursor, length)
             let halted := 0
             for {} lt(cursor, end) {} {
                 cursor := add(cursor, 1)
@@ -42,8 +40,16 @@ library LibExtrospectBytecode {
                     // data and NOT opcodes.
                     let push := sub(op, 0x60)
                     if lt(push, 0x20) { cursor := add(cursor, add(push, 1)) }
+                    continue
                 }
-                case 1 { if eq(op, opJumpDest) { halted := 0 } }
+                case 1 {
+                    if eq(op, opJumpDest) {
+                        halted := 0
+                        //slither-disable-next-line incorrect-shift
+                        bytesReachable := or(bytesReachable, shl(op, 1))
+                    }
+                    continue
+                }
                 // Can't happen, but the compiler doesn't know that.
                 default { revert(0, 0) }
             }

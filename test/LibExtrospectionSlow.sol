@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.18;
 
+import "src/EVMOpcodes.sol";
+
 library LibExtrospectionSlow {
     function scanEVMOpcodesPresentInMemorySlow(bytes memory data) internal pure returns (uint256) {
         uint256 scan = 0;
@@ -10,6 +12,26 @@ library LibExtrospectionSlow {
 
             if (0x60 <= op && op < 0x80) {
                 i += op - 0x5f;
+            }
+        }
+        return scan;
+    }
+
+    function scanEVMOpcodesReachableInMemorySlow(bytes memory data) internal pure returns (uint256) {
+        uint256 scan = 0;
+        bool halted = false;
+        for (uint256 i = 0; i < data.length; i++) {
+            uint8 op = uint8(data[i]);
+            if (!halted) {
+                scan = scan | (uint256(1) << uint256(op));
+                if ((HALTING_BITMAP & (uint256(1) << uint256(op))) > 0) {
+                    halted = true;
+                } else if (0x60 <= op && op < 0x80) {
+                    i += op - 0x5f;
+                }
+            } else if (op == EVM_OP_JUMPDEST) {
+                halted = false;
+                scan = scan | (uint256(1) << uint256(op));
             }
         }
         return scan;
