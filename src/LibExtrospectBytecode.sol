@@ -31,6 +31,7 @@ library LibExtrospectBytecode {
                     //slither-disable-next-line incorrect-shift
                     bytesReachable := or(bytesReachable, shl(op, 1))
 
+                    //slither-disable-next-line incorrect-shift
                     if and(shl(op, 1), haltingMask) {
                         halted := 1
                         continue
