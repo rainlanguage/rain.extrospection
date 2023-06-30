@@ -14,3 +14,5 @@ cbor_metadata = false
 
 [fuzz]
 runs = 2048
+# https://github.com/foundry-rs/foundry/issues/5199#issuecomment-1602609141
+seed = '0x3e8'
