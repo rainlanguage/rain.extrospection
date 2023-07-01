@@ -3,27 +3,23 @@ on: [push]
 
 jobs:
   deploy:
-    strategy:
-      matrix:
-        contract: [
-          "src/Extrospection.sol:Extrospection"
-        ]
     runs-on: ubuntu-latest
+    env:
+      DEPLOYMENT_KEY: ${{ github.ref == 'refs/heads/main' && secrets.PRIVATE_KEY || secrets.PRIVATE_KEY_DEV }}
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v4
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
       - name: Report public key to make it easy to send funds for deployments
-        env:
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-        run: cast wallet address "${PRIVATE_KEY}"
-      - name: Forge deploy contract to mumbai(wip)
+        run: cast wallet address "${DEPLOYMENT_KEY}"
+      - name: Forge deploy contract to mumbai
         env:
           CI_DEPLOY_RPC_URL: ${{ secrets.CI_DEPLOY_RPC_URL }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           EXPLORER_VERIFICATION_KEY: ${{ secrets.EXPLORER_VERIFICATION_KEY }}
-        run: forge create --rpc-url "${CI_DEPLOY_RPC_URL}" --private-key "${PRIVATE_KEY}" --etherscan-api-key "${EXPLORER_VERIFICATION_KEY}" --verify ${{ matrix.contract }}
+        run: forge build --force && forge script script/DeployExtrospection.sol:DeployExtrospection --legacy --verify --broadcast --rpc-url "${CI_DEPLOY_RPC_URL}" --etherscan-api-key "${EXPLORER_VERIFICATION_KEY}"
