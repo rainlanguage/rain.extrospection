@@ -71,7 +71,6 @@ library LibExtrospectionSlow {
         for (uint256 i = 0; i < 20; i++) {
             implementationAddressBytes[i] = bytecode[10 + i];
         }
-        address implementationAddress;
         uint256 implementationAddressMask = type(uint160).max;
         assembly {
             implementationAddress := and(mload(add(implementationAddressBytes, 20)), implementationAddressMask)

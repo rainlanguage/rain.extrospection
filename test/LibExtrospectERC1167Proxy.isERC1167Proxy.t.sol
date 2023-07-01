@@ -44,7 +44,7 @@ contract LibExtrospectERC1167ProxyTest is Test {
     }
 
     /// Compare the fail case of the slow implementation to the fast.
-    function testIsERC1167ProxySlowFail(bytes memory bytecode, address implementation) external {
+    function testIsERC1167ProxySlowFail(bytes memory bytecode) external {
         (bool result, address implementationResult) = LibExtrospectionSlow.isERC1167ProxySlow(bytecode);
         (bool resultFast, address implementationResultFast) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
         vm.assume(!result);
