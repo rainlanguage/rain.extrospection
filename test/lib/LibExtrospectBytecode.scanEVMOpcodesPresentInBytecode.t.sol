@@ -5,8 +5,8 @@ import "forge-std/Test.sol";
 
 import "sol.lib.memory/LibBytes.sol";
 
-import "src/LibExtrospectBytecode.sol";
-import "./LibExtrospectionSlow.sol";
+import "src/lib/LibExtrospectBytecode.sol";
+import "test/lib/LibExtrospectionSlow.sol";
 
 contract LibExtrospectScanEVMOpcodesPresentInBytecodeTest is Test {
     using LibBytes for bytes;

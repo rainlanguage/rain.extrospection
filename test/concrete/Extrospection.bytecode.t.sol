@@ -4,7 +4,7 @@ pragma solidity =0.8.18;
 import "forge-std/Test.sol";
 import "sol.lib.memory/LibBytes.sol";
 
-import "src/Extrospection.sol";
+import "src/concrete/Extrospection.sol";
 
 /// @title ExtrospectionBytecodeTest
 /// @notice Tests the Extrospection contract implementation of

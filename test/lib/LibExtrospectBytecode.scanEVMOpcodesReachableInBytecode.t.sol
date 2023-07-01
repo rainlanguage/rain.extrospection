@@ -4,9 +4,9 @@ pragma solidity =0.8.18;
 import "forge-std/Test.sol";
 import "sol.lib.memory/LibPointer.sol";
 import "sol.lib.memory/LibBytes.sol";
-import "src/LibExtrospectBytecode.sol";
-import "./LibExtrospectBytecode.testConstants.sol";
-import "./LibExtrospectionSlow.sol";
+import "src/lib/LibExtrospectBytecode.sol";
+import "test/lib/LibExtrospectBytecode.testConstants.sol";
+import "test/lib/LibExtrospectionSlow.sol";
 
 contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
     using LibBytes for bytes;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CAL
 pragma solidity ^0.8.18;
 
-import "./EVMOpcodes.sol";
+import "../lib/EVMOpcodes.sol";
 
 /// @dev https://eips.ethereum.org/EIPS/eip-214#specification
 uint256 constant NON_STATIC_OPS = (1 << uint256(EVM_OP_CREATE)) | (1 << uint256(EVM_OP_CREATE2))
