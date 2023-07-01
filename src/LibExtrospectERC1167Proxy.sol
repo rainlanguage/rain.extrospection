@@ -42,8 +42,17 @@ library LibExtrospectERC1167Proxy {
     function isERC1167Proxy(bytes memory bytecode) internal pure returns (bool result, address implementationAddress) {
         unchecked {
             {
-                // The bytecode must be the correct length.
-                result = bytecode.length == ERC1167_PROXY_LENGTH;
+                // The bytecode must be the correct length. As the majority of
+                // accounts onchain are EOAs or contracts that are not ERC1167
+                // proxies, this is a cheap check to perform first and return
+                // early if it fails.
+                if (bytecode.length != ERC1167_PROXY_LENGTH) {
+                    return (false, address(0));
+                } else {
+                    // Assume the bytecode is an ERC1167 proxy. If any of the
+                    // checks fail, this will be set to false.
+                    result = true;
+                }
             }
 
             // The bytecode must start with the prefix.

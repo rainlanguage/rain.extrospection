@@ -2,8 +2,10 @@
 pragma solidity =0.8.18;
 
 import "src/EVMOpcodes.sol";
+import "src/LibExtrospectERC1167Proxy.sol";
 
 library LibExtrospectionSlow {
+    /// KISS implementation of a presence scan.
     function scanEVMOpcodesPresentInBytecodeSlow(bytes memory data) internal pure returns (uint256) {
         uint256 scan = 0;
         for (uint256 i = 0; i < data.length; i++) {
@@ -17,6 +19,7 @@ library LibExtrospectionSlow {
         return scan;
     }
 
+    /// KISS implementation of a reachability scan.
     function scanEVMOpcodesReachableInBytecodeSlow(bytes memory data) internal pure returns (uint256) {
         uint256 scan = 0;
         bool halted = false;
@@ -35,5 +38,44 @@ library LibExtrospectionSlow {
             }
         }
         return scan;
+    }
+
+    /// KISS implementation of ERC1167 proxy detection.
+    function isERC1167ProxySlow(bytes memory bytecode)
+        internal
+        pure
+        returns (bool result, address implementationAddress)
+    {
+        if (bytecode.length != 45) {
+            return (false, address(0));
+        }
+
+        bytes memory bytecodePrefix = new bytes(10);
+        for (uint256 i = 0; i < 10; i++) {
+            bytecodePrefix[i] = bytecode[i];
+        }
+        bytes memory bytecodeSuffix = new bytes(15);
+        for (uint256 i = 0; i < 15; i++) {
+            bytecodeSuffix[i] = bytecode[30 + i];
+        }
+
+        if (keccak256(bytecodePrefix) != ERC1167_PREFIX_HASH) {
+            return (false, address(0));
+        }
+
+        if (keccak256(bytecodeSuffix) != ERC1167_SUFFIX_HASH) {
+            return (false, address(0));
+        }
+
+        bytes memory implementationAddressBytes = new bytes(20);
+        for (uint256 i = 0; i < 20; i++) {
+            implementationAddressBytes[i] = bytecode[10 + i];
+        }
+        address implementationAddress;
+        uint256 implementationAddressMask = type(uint160).max;
+        assembly {
+            implementationAddress := and(mload(add(implementationAddressBytes, 20)), implementationAddressMask)
+        }
+        return (true, implementationAddress);
     }
 }

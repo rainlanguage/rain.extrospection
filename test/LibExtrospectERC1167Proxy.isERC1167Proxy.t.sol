@@ -3,6 +3,7 @@ pragma solidity =0.8.18;
 
 import "forge-std/Test.sol";
 import "src/LibExtrospectERC1167Proxy.sol";
+import "test/LibExtrospectionSlow.sol";
 
 /// @title LibExtrospectERC1167ProxyTest
 /// @notice Tests the LibExtrospectERC1167Proxy library.
@@ -40,5 +41,59 @@ contract LibExtrospectERC1167ProxyTest is Test {
         (bool result, address implementationResult) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
         assertTrue(result);
         assertEq(implementationResult, implementation);
+    }
+
+    /// Compare the fail case of the slow implementation to the fast.
+    function testIsERC1167ProxySlowFail(bytes memory bytecode, address implementation) external {
+        (bool result, address implementationResult) = LibExtrospectionSlow.isERC1167ProxySlow(bytecode);
+        (bool resultFast, address implementationResultFast) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        vm.assume(!result);
+        assertEq(result, resultFast);
+        assertEq(implementationResult, implementationResultFast);
+    }
+
+    /// Compare the success case of the slow implementation to the fast.
+    function testIsERC1167ProxySlowSuccess(address implementation) external {
+        bytes memory bytecode = abi.encodePacked(ERC1167_PREFIX, implementation, ERC1167_SUFFIX);
+        (bool result, address implementationResult) = LibExtrospectionSlow.isERC1167ProxySlow(bytecode);
+        (bool resultFast, address implementationResultFast) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        assertTrue(result);
+        assertEq(result, resultFast);
+        assertEq(implementationResult, implementationResultFast);
+    }
+
+    /// Gas cost of the fast implementation failing on length.
+    function testIsERC1167ProxyGasFailLength() external pure {
+        (bool result, address implementationResult) = LibExtrospectERC1167Proxy.isERC1167Proxy("");
+        (result);
+        (implementationResult);
+    }
+
+    /// Gas cost of the fast implementation failing on prefix.
+    function testIsERC1167ProxyGasFailPrefix() external pure {
+        (bool result, address implementationResult) = LibExtrospectERC1167Proxy.isERC1167Proxy(
+            // 45 bytes
+            hex"000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        );
+        (result);
+        (implementationResult);
+    }
+
+    /// Gas cost of the fast implementation failing on suffix.
+    function testIsERC1167ProxyGasFailSuffix() external pure {
+        (bool result, address implementationResult) = LibExtrospectERC1167Proxy.isERC1167Proxy(
+            hex"363d3d373d3d3d363d730000000000000000000000000000000000000000000000000000000000000000000000"
+        );
+        (result);
+        (implementationResult);
+    }
+
+    /// Gas cost of the fast implementation succeeding.
+    function testIsERC1167ProxyGasSuccess() external pure {
+        (bool result, address implementationResult) = LibExtrospectERC1167Proxy.isERC1167Proxy(
+            hex"363d3d373d3d3d363d7300000000000000000000000000000000000000005af43d82803e903d91602b57fd5bf3"
+        );
+        (result);
+        (implementationResult);
     }
 }
