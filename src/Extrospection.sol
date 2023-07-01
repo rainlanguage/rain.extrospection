@@ -43,6 +43,8 @@ contract Extrospection is IExtrospectBytecodeV2, IExtrospectInterpreterV1, IExtr
 
     /// @inheritdoc IExtrospectERC1167ProxyV1
     function isERC1167Proxy(address account) external view returns (bool result, address implementationAddress) {
+        // Slither false positive. We do use the return value... by returning it.
+        //slither-disable-next-line unused-return
         return LibExtrospectERC1167Proxy.isERC1167Proxy(account.code);
     }
 }
