@@ -6,9 +6,13 @@ import "sol.lib.memory/LibBytes.sol";
 
 import "src/Extrospection.sol";
 
+/// @title ExtrospectionBytecodeTest
+/// @notice Tests the Extrospection contract implementation of
+/// `IExtrospectBytecodeV2`.
 contract ExtrospectionBytecodeTest is Test {
     using LibBytes for bytes;
 
+    /// Extrospection can return the bytecode of any account.
     function testBytecode(address account) external {
         Extrospection extrospection = new Extrospection();
 
@@ -16,6 +20,7 @@ contract ExtrospectionBytecodeTest is Test {
         assertEq("", extrospection.bytecode(address(0)));
     }
 
+    /// Extrospection can return the bytecode hash of any account.
     function testBytecodeHash(address account) external {
         Extrospection extrospection = new Extrospection();
 
@@ -23,6 +28,8 @@ contract ExtrospectionBytecodeTest is Test {
         assertEq(0, extrospection.bytecodeHash(address(0)));
     }
 
+    /// Extrospection can return the EVM opcodes present in any account as a
+    /// scan bitmap.
     function testScanEVMOpcodesPresentInAccount(address account) external {
         Extrospection extrospection = new Extrospection();
 
@@ -32,6 +39,8 @@ contract ExtrospectionBytecodeTest is Test {
         );
     }
 
+    /// Extrospection can return the EVM opcodes reachable during EVM execution
+    /// in any account as a scan bitmap.
     function testScanEVMOpcodesReachableInAccount(address account) external {
         Extrospection extrospection = new Extrospection();
 
