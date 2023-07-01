@@ -4,12 +4,12 @@ pragma solidity =0.8.18;
 import "sol.lib.memory/LibPointer.sol";
 import "sol.lib.memory/LibBytes.sol";
 
-import "./IExtrospectBytecodeV2.sol";
-import "./IExtrospectInterpreterV1.sol";
-import "./IExtrospectERC1167ProxyV1.sol";
+import "../interface/IExtrospectBytecodeV2.sol";
+import "../interface/IExtrospectInterpreterV1.sol";
+import "../interface/IExtrospectERC1167ProxyV1.sol";
 
-import "./LibExtrospectBytecode.sol";
-import "./LibExtrospectERC1167Proxy.sol";
+import "../lib/LibExtrospectBytecode.sol";
+import "../lib/LibExtrospectERC1167Proxy.sol";
 
 /// @title Extrospection
 /// @notice Implements all extrospection interfaces.

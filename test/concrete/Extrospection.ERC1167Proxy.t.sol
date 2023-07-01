@@ -3,9 +3,9 @@ pragma solidity =0.8.18;
 
 import "forge-std/Test.sol";
 
-import "src/LibExtrospectERC1167Proxy.sol";
+import "src/lib/LibExtrospectERC1167Proxy.sol";
 
-import "src/Extrospection.sol";
+import "src/concrete/Extrospection.sol";
 
 /// @title ExtrospectionERC1167ProxyTest
 /// @notice Tests the Extrospection contract implementation of

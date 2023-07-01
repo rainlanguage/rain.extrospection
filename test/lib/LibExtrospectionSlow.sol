@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.18;
 
-import "src/EVMOpcodes.sol";
-import "src/LibExtrospectERC1167Proxy.sol";
+import "src/lib/EVMOpcodes.sol";
+import "src/lib/LibExtrospectERC1167Proxy.sol";
 
 library LibExtrospectionSlow {
     /// KISS implementation of a presence scan.

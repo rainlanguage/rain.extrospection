@@ -2,7 +2,7 @@
 pragma solidity =0.8.18;
 
 import "forge-std/Script.sol";
-import "src/concrete/CloneFactory.sol";
+import "src/concrete/Extrospection.sol";
 
 /// @title DeployExtrospection
 /// @notice A script that deploys Extrospection. This is intended to be run on
