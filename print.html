@@ -1,0 +1,1150 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title></title>
+        <meta name="robots" content="noindex" />
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="book.css">
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item "><a href="index.html">Home</a></li><li class="chapter-item affix "><li class="part-title">src</li><li class="chapter-item "><a href="src/concrete/index.html">❱ concrete</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="src/concrete/Extrospection.sol/contract.Extrospection.html">Extrospection</a></li></ol></li><li class="chapter-item "><a href="src/interface/index.html">❱ interface</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="src/interface/deprecated/index.html">❱ deprecated</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="src/interface/deprecated/IExtrospectBytecodeV1.sol/interface.IExtrospectBytecodeV1.html">IExtrospectBytecodeV1</a></li></ol></li><li class="chapter-item "><a href="src/interface/IExtrospectBytecodeV2.sol/interface.IExtrospectBytecodeV2.html">IExtrospectBytecodeV2</a></li><li class="chapter-item "><a href="src/interface/IExtrospectERC1167ProxyV1.sol/interface.IExtrospectERC1167ProxyV1.html">IExtrospectERC1167ProxyV1</a></li><li class="chapter-item "><a href="src/interface/IExtrospectInterpreterV1.sol/interface.IExtrospectInterpreterV1.html">IExtrospectInterpreterV1</a></li><li class="chapter-item "><a href="src/interface/IExtrospectInterpreterV1.sol/constants.IExtrospectInterpreterV1.html">IExtrospectInterpreterV1 constants</a></li></ol></li><li class="chapter-item "><a href="src/lib/index.html">❱ lib</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="src/lib/EVMOpcodes.sol/constants.EVMOpcodes.html">EVMOpcodes constants</a></li><li class="chapter-item "><a href="src/lib/LibExtrospectBytecode.sol/library.LibExtrospectBytecode.html">LibExtrospectBytecode</a></li><li class="chapter-item "><a href="src/lib/LibExtrospectERC1167Proxy.sol/library.LibExtrospectERC1167Proxy.html">LibExtrospectERC1167Proxy</a></li><li class="chapter-item "><a href="src/lib/LibExtrospectERC1167Proxy.sol/constants.LibExtrospectERC1167Proxy.html">LibExtrospectERC1167Proxy constants</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title"></h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rainprotocol/rain.extrospection" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="rainextrospection"><a class="header" href="#rainextrospection">rain.extrospection</a></h1>
+<p>Docs at https://rainprotocol.github.io/rain.extrospection</p>
+<h2 id="extrospection"><a class="header" href="#extrospection">Extrospection</a></h2>
+<p>Extrospection is a collection of interfaces, libraries and an implementation
+contract that expose onchain logic to offchain tooling.</p>
+<p>Focus is on analysing the bytecode of contracts directly, such as deciding
+whether we can prove that an address is immutable due to the absence of all state
+changing opcodes.</p>
+<p>Efforts have been made to implement the logic efficiently but it is expected that
+the primary execution environment will be offchain, so there are somewhat gas
+intensive algorithms in this repository.</p>
+<h3 id="iextrospectbytecodev2"><a class="header" href="#iextrospectbytecodev2"><code>IExtrospectBytecodeV2</code></a></h3>
+<p>Tools to read and get a basic understanding of what opcodes are used in the
+bytecode of some address.</p>
+<p>The most basic functions <code>bytecode</code> and <code>bytecodeHash</code> simply expose the
+underlying native evm logic for each.</p>
+<p>The more sophisticated <code>scanEVMOpcodesPresentInAccount</code> and
+<code>scanEVMOpcodesReachableInAccount</code> build a bitmap of all the opcodes that are
+present in the scanned contract. This bitmap is built as <code>1 &lt;&lt; opcode</code> where
+opcode is a single byte, and the scan is a <code>uint256</code> so the space of all opcodes
+as a <code>uint8</code> maps perfectly to all the bits in an EVM word.</p>
+<p>The &quot;present in&quot; scan simply loops over the entire bytecode, but is <code>PUSH*</code> aware
+so knows that the inline argument to any <code>PUSH</code> opcode is not itself an opcode.
+This is the most conservative scan but can easily trigger false positives, such
+as due to bytes in the CBOR metadata commonly appended to contracts by solidity.</p>
+<p>CBOR metadata MAY be disabled in newer versions of Solidity and is not present
+in other EVM language compilers.</p>
+<p>The &quot;reachable in&quot; scan understands enough about the EVM execution environment to
+ignore data that is not reachable by a <code>JUMPDEST</code>. This is achieved by pausing
+the scanner after any opcode that halts execution, then resuming it once a jump
+destination is found. This scan DOES NOT cause false positives due to metdata or
+similar &quot;data only&quot; regions of a contract, however it is susceptible to breakages
+if the EVM execution model ever changes. For example, if the set of halting ops
+ever changes, or a new <code>JUMPDEST</code> alternative is invented, the scanner will
+require an entirely new implementation and redeployment to support this.</p>
+<h3 id="iextrospecterc1167proxyv1"><a class="header" href="#iextrospecterc1167proxyv1"><code>IExtrospectERC1167ProxyV1</code></a></h3>
+<p>Check if a given account is an <code>ERC1167</code> minimal proxy contract.</p>
+<p>https://eips.ethereum.org/EIPS/eip-1167</p>
+<p>The minimal proxy contract has exact bytecode so we can easily check if any
+account is a proxy and extract the implementation address that is being proxied.</p>
+<p>Having a canonical onchain check for this simplifies downstream tooling and
+minimises the surface area for implementation bugs.</p>
+<h3 id="iextrospectinterpreterv1"><a class="header" href="#iextrospectinterpreterv1"><code>IExtrospectInterpreterV1</code></a></h3>
+<p>Check if a candidate interpreter contract is fundamentally UNSAFE due to
+mutation.</p>
+<p>One fundamental hard requirement of an interpreter is that it is NOT mutable.
+Most obviously this includes <code>SELFDESTRUCT</code> as that would allow for things like
+metamorphic languages, which would completely undermine the integrity of any
+expression that runs on the interpreter.</p>
+<p>Less obviously, every opcode that would fail a standard static call is also
+disallowed within interpreters. This gives interpreters a guaranteed familiar
+set of security guarantees without needing to consider their internal
+implementation.</p>
+<p>Pragmatically this is a thin wrapper around the bytecode scanning tools that
+check for reachability of dangerous opcodes in the underlying.</p>
+<p>This interface and/or concrete implementations are subject to change if/when new
+opcodes are supported by the EVM due to future hard forks.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contents"><a class="header" href="#contents">Contents</a></h1>
+<ul>
+<li><a href="src/concrete/Extrospection.sol/contract.Extrospection.html">Extrospection</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="extrospection-1"><a class="header" href="#extrospection-1">Extrospection</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/concrete/Extrospection.sol">Git Source</a></p>
+<p><strong>Inherits:</strong>
+<a href="src/concrete/Extrospection.sol//src/interface/IExtrospectBytecodeV2.sol/interface.IExtrospectBytecodeV2.html">IExtrospectBytecodeV2</a>, <a href="src/concrete/Extrospection.sol//src/interface/IExtrospectInterpreterV1.sol/interface.IExtrospectInterpreterV1.html">IExtrospectInterpreterV1</a>, <a href="src/concrete/Extrospection.sol//src/interface/IExtrospectERC1167ProxyV1.sol/interface.IExtrospectERC1167ProxyV1.html">IExtrospectERC1167ProxyV1</a></p>
+<p>Implements all extrospection interfaces.</p>
+<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+<h3 id="bytecode"><a class="header" href="#bytecode">bytecode</a></h3>
+<p>Return the bytecode for an address.
+Equivalent to <code>account.code</code>.</p>
+<pre><code class="language-solidity">function bytecode(address account) external view returns (bytes memory);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The account to get bytecode for.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>bytes</code></td><td>The bytecode of <code>account</code>. Will be <code>0</code> length for non-contract accounts.</td></tr>
+</tbody></table>
+</div>
+<h3 id="bytecodehash"><a class="header" href="#bytecodehash">bytecodeHash</a></h3>
+<p>Return the hash of the complete bytecode for an address.
+Equivalent to <code>account.codehash</code>.</p>
+<pre><code class="language-solidity">function bytecodeHash(address account) external view returns (bytes32);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The account to get the bytecode hash for.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>bytes32</code></td><td>The hash of the bytecode of <code>account</code>. Will be <code>0</code> (NOT the hash of empty bytes) for non-contract accounts.</td></tr>
+</tbody></table>
+</div>
+<h3 id="scanevmopcodespresentinaccount"><a class="header" href="#scanevmopcodespresentinaccount">scanEVMOpcodesPresentInAccount</a></h3>
+<p>Scan every byte of the bytecode in some account and return an encoded
+list of every opcode present in that account's code. The list is encoded
+as a single <code>uint256</code> where each bit is a flag representing the presence
+of an opcode in the source bytecode. The opcode byte is the literal
+bitwise offset in the final output, starting from least significant bits.
+E.g. opcode <code>0</code> sets the 0th bit, i.e. <code>2 ** 0</code>, i.e. <code>1</code>, i.e. <code>1 &lt;&lt; 0</code>.
+opcode <code>0x50</code> sets the <code>0x50</code>th bit, i.e. <code>2 ** 0x50</code>, i.e. <code>1 &lt;&lt; 0x50</code>.
+The final output can be bitwise <code>&amp;</code> against a reference set of bit flags
+to check for the presence of a list of (un)desired opcodes in a single
+logical operation. This allows for fewer branching operations (expensive)
+per byte, but precludes the ability to break the loop early upon
+discovering the prescence of a specific opcode.
+The scan MUST respect the inline skip behaviour of the <code>PUSH*</code> family of
+evm opcodes, starting from opcode <code>0x60</code> through <code>0x7F</code> inclusive. These
+opcodes are followed by literal bytes that will be pushed to the EVM
+stack at runtime and so are NOT opcodes themselves. Even though each byte
+of the data following a <code>PUSH*</code> is assigned program counter, it DOES NOT
+run as an opcode. Therefore, the scanner MUST ignore all push data,
+otherwise it will report false positives from stack data being treated as
+opcodes. The relative index of each <code>PUSH</code> opcode signifies how many
+bytes to skip, e.g. <code>0x60</code> skips 1 byte, <code>0x61</code> skips 2 bytes, etc.</p>
+<pre><code class="language-solidity">function scanEVMOpcodesPresentInAccount(address account) public view returns (uint256);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The account to scan for opcodes.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>uint256</code></td><td>scan A single <code>uint256</code> where each bit represents the presence of an opcode in the source bytecode.</td></tr>
+</tbody></table>
+</div>
+<h3 id="scanevmopcodesreachableinaccount"><a class="header" href="#scanevmopcodesreachableinaccount">scanEVMOpcodesReachableInAccount</a></h3>
+<p>Identical to <code>scanEVMOpcodesPresentInAccount</code> except that it skips the
+regions of the bytecode that are unreachable by the EVM. This is
+generally achieved by pausing the scan any time a halting opcode is
+encountered then resuming the scan at the next jump destination. This
+scan results in fewer false positives but is less conservative as it
+relies on details of the EVM execution model that may change in the
+future, and is a more complex algorithm so more susceptible to potential
+implementation bugs.</p>
+<pre><code class="language-solidity">function scanEVMOpcodesReachableInAccount(address account) public view returns (uint256);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The account to scan for opcodes.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>uint256</code></td><td>scan A single <code>uint256</code> where each bit represents the presence of a reachable opcode in the source bytecode.</td></tr>
+</tbody></table>
+</div>
+<h3 id="scanonlyallowedinterpreterevmopcodes"><a class="header" href="#scanonlyallowedinterpreterevmopcodes">scanOnlyAllowedInterpreterEVMOpcodes</a></h3>
+<p>Scan the EVM opcodes present in the account's code to determine if there
+are any opcodes that would disqualify the interpreter from being safely
+used. In general any opcodes that would allow the interpreter to mutate
+its own code or storage or are disallowed by static calls are all in
+scope of the scan. The implementation is free to be more or less strict
+in how it determines which bytes to include in the scan, e.g. whether to
+consider reachable opcodes only or all opcodes.</p>
+<pre><code class="language-solidity">function scanOnlyAllowedInterpreterEVMOpcodes(address interpreter) external view returns (bool);
+</code></pre>
+<h3 id="iserc1167proxy"><a class="header" href="#iserc1167proxy">isERC1167Proxy</a></h3>
+<p>Checks if the given address is an ERC1167 proxy. The caller MUST check
+the result is true before using the implementation address, otherwise
+a valid proxy to <code>address(0)</code> and an invalid proxy will be
+indistinguishable.</p>
+<pre><code class="language-solidity">function isERC1167Proxy(address account) external view returns (bool result, address implementationAddress);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The address to check.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>result</code></td><td><code>bool</code></td><td>True if the address is an ERC1167 proxy.</td></tr>
+<tr><td><code>implementationAddress</code></td><td><code>address</code></td><td>The address of the implementation contract. This is only valid if <code>result</code> is true, else it is zero.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="contents-1"><a class="header" href="#contents-1">Contents</a></h1>
+<ul>
+<li><a href="src/interface//src/interface/deprecated">deprecated</a></li>
+<li><a href="src/interface/IExtrospectBytecodeV2.sol/interface.IExtrospectBytecodeV2.html">IExtrospectBytecodeV2</a></li>
+<li><a href="src/interface/IExtrospectERC1167ProxyV1.sol/interface.IExtrospectERC1167ProxyV1.html">IExtrospectERC1167ProxyV1</a></li>
+<li><a href="src/interface/IExtrospectInterpreterV1.sol/interface.IExtrospectInterpreterV1.html">IExtrospectInterpreterV1</a></li>
+<li><a href="src/interface/IExtrospectInterpreterV1.sol/constants.IExtrospectInterpreterV1.html">IExtrospectInterpreterV1 constants</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contents-2"><a class="header" href="#contents-2">Contents</a></h1>
+<ul>
+<li><a href="src/interface/deprecated/IExtrospectBytecodeV1.sol/interface.IExtrospectBytecodeV1.html">IExtrospectBytecodeV1</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="iextrospectbytecodev1"><a class="header" href="#iextrospectbytecodev1">IExtrospectBytecodeV1</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/interface/deprecated/IExtrospectBytecodeV1.sol">Git Source</a></p>
+<p>External functions for offchain processing to conveniently access the
+view on contract code that is exposed to EVM opcodes. Generally this is NOT
+useful onchain as all contracts have access to the same opcodes, so would be
+more gas efficient and convenient calling the opcodes internally than an
+external call to an extrospection contract.</p>
+<h2 id="functions-1"><a class="header" href="#functions-1">Functions</a></h2>
+<h3 id="bytecode-1"><a class="header" href="#bytecode-1">bytecode</a></h3>
+<p>Return the bytecode for an address.
+Equivalent to <code>account.code</code>.</p>
+<pre><code class="language-solidity">function bytecode(address account) external view returns (bytes memory);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The account to get bytecode for.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>bytes</code></td><td>The bytecode of <code>account</code>. Will be <code>0</code> length for non-contract accounts.</td></tr>
+</tbody></table>
+</div>
+<h3 id="bytecodehash-1"><a class="header" href="#bytecodehash-1">bytecodeHash</a></h3>
+<p>Return the hash of the complete bytecode for an address.
+Equivalent to <code>account.codehash</code>.</p>
+<pre><code class="language-solidity">function bytecodeHash(address account) external view returns (bytes32);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The account to get the bytecode hash for.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>bytes32</code></td><td>The hash of the bytecode of <code>account</code>. Will be <code>0</code> (NOT the hash of empty bytes) for non-contract accounts.</td></tr>
+</tbody></table>
+</div>
+<h3 id="scanevmopcodespresentinaccount-1"><a class="header" href="#scanevmopcodespresentinaccount-1">scanEVMOpcodesPresentInAccount</a></h3>
+<p>Scan every byte of the bytecode in some account and return an encoded
+list of every opcode present in that account's code. The list is encoded
+as a single <code>uint256</code> where each bit is a flag representing the presence
+of an opcode in the source bytecode. The opcode byte is the literal
+bitwise offset in the final output, starting from least significant bits.
+E.g. opcode <code>0</code> sets the 0th bit, i.e. <code>2 ** 0</code>, i.e. <code>1</code>, i.e. <code>1 &lt;&lt; 0</code>.
+opcode <code>0x50</code> sets the <code>0x50</code>th bit, i.e. <code>2 ** 0x50</code>, i.e. <code>1 &lt;&lt; 0x50</code>.
+The final output can be bitwise <code>&amp;</code> against a reference set of bit flags
+to check for the presence of a list of (un)desired opcodes in a single
+logical operation. This allows for fewer branching operations (expensive)
+per byte, but precludes the ability to break the loop early upon
+discovering the prescence of a specific opcode.
+The scan MUST respect the inline skip behaviour of the <code>PUSH*</code> family of
+evm opcodes, starting from opcode <code>0x60</code> through <code>0x7F</code> inclusive. These
+opcodes are followed by literal bytes that will be pushed to the EVM
+stack at runtime and so are NOT opcodes themselves. Even though each byte
+of the data following a <code>PUSH*</code> is assigned program counter, it DOES NOT
+run as an opcode. Therefore, the scanner MUST ignore all push data,
+otherwise it will report false positives from stack data being treated as
+opcodes. The relative index of each <code>PUSH</code> opcode signifies how many
+bytes to skip, e.g. <code>0x60</code> skips 1 byte, <code>0x61</code> skips 2 bytes, etc.</p>
+<pre><code class="language-solidity">function scanEVMOpcodesPresentInAccount(address account) external view returns (uint256 scan);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="iextrospectbytecodev2-1"><a class="header" href="#iextrospectbytecodev2-1">IExtrospectBytecodeV2</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/interface/IExtrospectBytecodeV2.sol">Git Source</a></p>
+<p>External functions for offchain processing to conveniently access the
+view on contract code that is exposed to EVM opcodes. Generally this is NOT
+useful onchain as all contracts have access to the same opcodes, so would be
+more gas efficient and convenient calling the opcodes internally than an
+external call to an extrospection contract.</p>
+<h2 id="functions-2"><a class="header" href="#functions-2">Functions</a></h2>
+<h3 id="bytecode-2"><a class="header" href="#bytecode-2">bytecode</a></h3>
+<p>Return the bytecode for an address.
+Equivalent to <code>account.code</code>.</p>
+<pre><code class="language-solidity">function bytecode(address account) external view returns (bytes memory);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The account to get bytecode for.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>bytes</code></td><td>The bytecode of <code>account</code>. Will be <code>0</code> length for non-contract accounts.</td></tr>
+</tbody></table>
+</div>
+<h3 id="bytecodehash-2"><a class="header" href="#bytecodehash-2">bytecodeHash</a></h3>
+<p>Return the hash of the complete bytecode for an address.
+Equivalent to <code>account.codehash</code>.</p>
+<pre><code class="language-solidity">function bytecodeHash(address account) external view returns (bytes32);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The account to get the bytecode hash for.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>bytes32</code></td><td>The hash of the bytecode of <code>account</code>. Will be <code>0</code> (NOT the hash of empty bytes) for non-contract accounts.</td></tr>
+</tbody></table>
+</div>
+<h3 id="scanevmopcodespresentinaccount-2"><a class="header" href="#scanevmopcodespresentinaccount-2">scanEVMOpcodesPresentInAccount</a></h3>
+<p>Scan every byte of the bytecode in some account and return an encoded
+list of every opcode present in that account's code. The list is encoded
+as a single <code>uint256</code> where each bit is a flag representing the presence
+of an opcode in the source bytecode. The opcode byte is the literal
+bitwise offset in the final output, starting from least significant bits.
+E.g. opcode <code>0</code> sets the 0th bit, i.e. <code>2 ** 0</code>, i.e. <code>1</code>, i.e. <code>1 &lt;&lt; 0</code>.
+opcode <code>0x50</code> sets the <code>0x50</code>th bit, i.e. <code>2 ** 0x50</code>, i.e. <code>1 &lt;&lt; 0x50</code>.
+The final output can be bitwise <code>&amp;</code> against a reference set of bit flags
+to check for the presence of a list of (un)desired opcodes in a single
+logical operation. This allows for fewer branching operations (expensive)
+per byte, but precludes the ability to break the loop early upon
+discovering the prescence of a specific opcode.
+The scan MUST respect the inline skip behaviour of the <code>PUSH*</code> family of
+evm opcodes, starting from opcode <code>0x60</code> through <code>0x7F</code> inclusive. These
+opcodes are followed by literal bytes that will be pushed to the EVM
+stack at runtime and so are NOT opcodes themselves. Even though each byte
+of the data following a <code>PUSH*</code> is assigned program counter, it DOES NOT
+run as an opcode. Therefore, the scanner MUST ignore all push data,
+otherwise it will report false positives from stack data being treated as
+opcodes. The relative index of each <code>PUSH</code> opcode signifies how many
+bytes to skip, e.g. <code>0x60</code> skips 1 byte, <code>0x61</code> skips 2 bytes, etc.</p>
+<pre><code class="language-solidity">function scanEVMOpcodesPresentInAccount(address account) external view returns (uint256 scan);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The account to scan for opcodes.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>scan</code></td><td><code>uint256</code></td><td>A single <code>uint256</code> where each bit represents the presence of an opcode in the source bytecode.</td></tr>
+</tbody></table>
+</div>
+<h3 id="scanevmopcodesreachableinaccount-1"><a class="header" href="#scanevmopcodesreachableinaccount-1">scanEVMOpcodesReachableInAccount</a></h3>
+<p>Identical to <code>scanEVMOpcodesPresentInAccount</code> except that it skips the
+regions of the bytecode that are unreachable by the EVM. This is
+generally achieved by pausing the scan any time a halting opcode is
+encountered then resuming the scan at the next jump destination. This
+scan results in fewer false positives but is less conservative as it
+relies on details of the EVM execution model that may change in the
+future, and is a more complex algorithm so more susceptible to potential
+implementation bugs.</p>
+<pre><code class="language-solidity">function scanEVMOpcodesReachableInAccount(address account) external view returns (uint256 scan);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The account to scan for opcodes.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>scan</code></td><td><code>uint256</code></td><td>A single <code>uint256</code> where each bit represents the presence of a reachable opcode in the source bytecode.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="iextrospecterc1167proxyv1-1"><a class="header" href="#iextrospecterc1167proxyv1-1">IExtrospectERC1167ProxyV1</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/interface/IExtrospectERC1167ProxyV1.sol">Git Source</a></p>
+<p>External functions for offchain processing to determine if any given
+address is an ERC1167 proxy and if so, what the implementation address is.
+ERC1167 proxies are a known bytecode so there is no possibility of a false
+positive outside of a bug in the implementation of this interface.
+https://eips.ethereum.org/EIPS/eip-1167</p>
+<h2 id="functions-3"><a class="header" href="#functions-3">Functions</a></h2>
+<h3 id="iserc1167proxy-1"><a class="header" href="#iserc1167proxy-1">isERC1167Proxy</a></h3>
+<p>Checks if the given address is an ERC1167 proxy. The caller MUST check
+the result is true before using the implementation address, otherwise
+a valid proxy to <code>address(0)</code> and an invalid proxy will be
+indistinguishable.</p>
+<pre><code class="language-solidity">function isERC1167Proxy(address account) external view returns (bool result, address implementationAddress);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The address to check.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>result</code></td><td><code>bool</code></td><td>True if the address is an ERC1167 proxy.</td></tr>
+<tr><td><code>implementationAddress</code></td><td><code>address</code></td><td>The address of the implementation contract. This is only valid if <code>result</code> is true, else it is zero.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="iextrospectinterpreterv1-1"><a class="header" href="#iextrospectinterpreterv1-1">IExtrospectInterpreterV1</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/interface/IExtrospectInterpreterV1.sol">Git Source</a></p>
+<p>External functions for offchain processing to determine if an
+interpreter contract is definitely UNSAFE to use. There is no way to simply
+determine if a contract is safe to use, so this interface focuses on
+detecting reasons why a contract is definitely UNSAFE to use.</p>
+<h2 id="functions-4"><a class="header" href="#functions-4">Functions</a></h2>
+<h3 id="scanonlyallowedinterpreterevmopcodes-1"><a class="header" href="#scanonlyallowedinterpreterevmopcodes-1">scanOnlyAllowedInterpreterEVMOpcodes</a></h3>
+<p>Scan the EVM opcodes present in the account's code to determine if there
+are any opcodes that would disqualify the interpreter from being safely
+used. In general any opcodes that would allow the interpreter to mutate
+its own code or storage or are disallowed by static calls are all in
+scope of the scan. The implementation is free to be more or less strict
+in how it determines which bytes to include in the scan, e.g. whether to
+consider reachable opcodes only or all opcodes.</p>
+<pre><code class="language-solidity">function scanOnlyAllowedInterpreterEVMOpcodes(address interpreter) external view returns (bool);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="constants"><a class="header" href="#constants">Constants</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/interface/IExtrospectInterpreterV1.sol">Git Source</a></p>
+<h3 id="non_static_ops"><a class="header" href="#non_static_ops">NON_STATIC_OPS</a></h3>
+<p><em>https://eips.ethereum.org/EIPS/eip-214#specification</em></p>
+<pre><code class="language-solidity">uint256 constant NON_STATIC_OPS = (1 &lt;&lt; uint256(EVM_OP_CREATE)) | (1 &lt;&lt; uint256(EVM_OP_CREATE2))
+    | (1 &lt;&lt; uint256(EVM_OP_LOG0)) | (1 &lt;&lt; uint256(EVM_OP_LOG1)) | (1 &lt;&lt; uint256(EVM_OP_LOG2)) | (1 &lt;&lt; uint256(EVM_OP_LOG3))
+    | (1 &lt;&lt; uint256(EVM_OP_LOG4)) | (1 &lt;&lt; uint256(EVM_OP_SSTORE)) | (1 &lt;&lt; uint256(EVM_OP_SELFDESTRUCT))
+    | (1 &lt;&lt; uint256(EVM_OP_CALL));
+</code></pre>
+<h3 id="interpreter_disallowed_ops"><a class="header" href="#interpreter_disallowed_ops">INTERPRETER_DISALLOWED_OPS</a></h3>
+<p><em>The interpreter ops allowlist is stricter than the static ops list.</em></p>
+<pre><code class="language-solidity">uint256 constant INTERPRETER_DISALLOWED_OPS = NON_STATIC_OPS | (1 &lt;&lt; uint256(EVM_OP_SLOAD))
+    | (1 &lt;&lt; uint256(EVM_OP_DELEGATECALL)) | (1 &lt;&lt; uint256(EVM_OP_CALLCODE)) | (1 &lt;&lt; uint256(EVM_OP_CALL));
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contents-3"><a class="header" href="#contents-3">Contents</a></h1>
+<ul>
+<li><a href="src/lib/EVMOpcodes.sol/constants.EVMOpcodes.html">EVMOpcodes constants</a></li>
+<li><a href="src/lib/LibExtrospectBytecode.sol/library.LibExtrospectBytecode.html">LibExtrospectBytecode</a></li>
+<li><a href="src/lib/LibExtrospectERC1167Proxy.sol/library.LibExtrospectERC1167Proxy.html">LibExtrospectERC1167Proxy</a></li>
+<li><a href="src/lib/LibExtrospectERC1167Proxy.sol/constants.LibExtrospectERC1167Proxy.html">LibExtrospectERC1167Proxy constants</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="constants-1"><a class="header" href="#constants-1">Constants</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/lib/EVMOpcodes.sol">Git Source</a></p>
+<h3 id="evm_op_stop"><a class="header" href="#evm_op_stop">EVM_OP_STOP</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_STOP = 0x00;
+</code></pre>
+<h3 id="evm_op_add"><a class="header" href="#evm_op_add">EVM_OP_ADD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_ADD = 0x01;
+</code></pre>
+<h3 id="evm_op_mul"><a class="header" href="#evm_op_mul">EVM_OP_MUL</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MUL = 0x02;
+</code></pre>
+<h3 id="evm_op_sub"><a class="header" href="#evm_op_sub">EVM_OP_SUB</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SUB = 0x03;
+</code></pre>
+<h3 id="evm_op_div"><a class="header" href="#evm_op_div">EVM_OP_DIV</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DIV = 0x04;
+</code></pre>
+<h3 id="evm_op_sdiv"><a class="header" href="#evm_op_sdiv">EVM_OP_SDIV</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SDIV = 0x05;
+</code></pre>
+<h3 id="evm_op_mod"><a class="header" href="#evm_op_mod">EVM_OP_MOD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MOD = 0x06;
+</code></pre>
+<h3 id="evm_op_smod"><a class="header" href="#evm_op_smod">EVM_OP_SMOD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SMOD = 0x07;
+</code></pre>
+<h3 id="evm_op_addmod"><a class="header" href="#evm_op_addmod">EVM_OP_ADDMOD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_ADDMOD = 0x08;
+</code></pre>
+<h3 id="evm_op_mulmod"><a class="header" href="#evm_op_mulmod">EVM_OP_MULMOD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MULMOD = 0x09;
+</code></pre>
+<h3 id="evm_op_exp"><a class="header" href="#evm_op_exp">EVM_OP_EXP</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_EXP = 0x0A;
+</code></pre>
+<h3 id="evm_op_signextend"><a class="header" href="#evm_op_signextend">EVM_OP_SIGNEXTEND</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SIGNEXTEND = 0x0B;
+</code></pre>
+<h3 id="evm_op_lt"><a class="header" href="#evm_op_lt">EVM_OP_LT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_LT = 0x10;
+</code></pre>
+<h3 id="evm_op_gt"><a class="header" href="#evm_op_gt">EVM_OP_GT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_GT = 0x11;
+</code></pre>
+<h3 id="evm_op_slt"><a class="header" href="#evm_op_slt">EVM_OP_SLT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SLT = 0x12;
+</code></pre>
+<h3 id="evm_op_sgt"><a class="header" href="#evm_op_sgt">EVM_OP_SGT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SGT = 0x13;
+</code></pre>
+<h3 id="evm_op_eq"><a class="header" href="#evm_op_eq">EVM_OP_EQ</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_EQ = 0x14;
+</code></pre>
+<h3 id="evm_op_iszero"><a class="header" href="#evm_op_iszero">EVM_OP_ISZERO</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_ISZERO = 0x15;
+</code></pre>
+<h3 id="evm_op_and"><a class="header" href="#evm_op_and">EVM_OP_AND</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_AND = 0x16;
+</code></pre>
+<h3 id="evm_op_or"><a class="header" href="#evm_op_or">EVM_OP_OR</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_OR = 0x17;
+</code></pre>
+<h3 id="evm_op_xor"><a class="header" href="#evm_op_xor">EVM_OP_XOR</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_XOR = 0x18;
+</code></pre>
+<h3 id="evm_op_not"><a class="header" href="#evm_op_not">EVM_OP_NOT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_NOT = 0x19;
+</code></pre>
+<h3 id="evm_op_byte"><a class="header" href="#evm_op_byte">EVM_OP_BYTE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_BYTE = 0x1A;
+</code></pre>
+<h3 id="evm_op_shl"><a class="header" href="#evm_op_shl">EVM_OP_SHL</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SHL = 0x1B;
+</code></pre>
+<h3 id="evm_op_shr"><a class="header" href="#evm_op_shr">EVM_OP_SHR</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SHR = 0x1C;
+</code></pre>
+<h3 id="evm_op_sar"><a class="header" href="#evm_op_sar">EVM_OP_SAR</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SAR = 0x1D;
+</code></pre>
+<h3 id="evm_op_sha3"><a class="header" href="#evm_op_sha3">EVM_OP_SHA3</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SHA3 = 0x20;
+</code></pre>
+<h3 id="evm_op_address"><a class="header" href="#evm_op_address">EVM_OP_ADDRESS</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_ADDRESS = 0x30;
+</code></pre>
+<h3 id="evm_op_balance"><a class="header" href="#evm_op_balance">EVM_OP_BALANCE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_BALANCE = 0x31;
+</code></pre>
+<h3 id="evm_op_origin"><a class="header" href="#evm_op_origin">EVM_OP_ORIGIN</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_ORIGIN = 0x32;
+</code></pre>
+<h3 id="evm_op_caller"><a class="header" href="#evm_op_caller">EVM_OP_CALLER</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALLER = 0x33;
+</code></pre>
+<h3 id="evm_op_callvalue"><a class="header" href="#evm_op_callvalue">EVM_OP_CALLVALUE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALLVALUE = 0x34;
+</code></pre>
+<h3 id="evm_op_calldataload"><a class="header" href="#evm_op_calldataload">EVM_OP_CALLDATALOAD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALLDATALOAD = 0x35;
+</code></pre>
+<h3 id="evm_op_calldatasize"><a class="header" href="#evm_op_calldatasize">EVM_OP_CALLDATASIZE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALLDATASIZE = 0x36;
+</code></pre>
+<h3 id="evm_op_calldatacopy"><a class="header" href="#evm_op_calldatacopy">EVM_OP_CALLDATACOPY</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALLDATACOPY = 0x37;
+</code></pre>
+<h3 id="evm_op_codesize"><a class="header" href="#evm_op_codesize">EVM_OP_CODESIZE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CODESIZE = 0x38;
+</code></pre>
+<h3 id="evm_op_codecopy"><a class="header" href="#evm_op_codecopy">EVM_OP_CODECOPY</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CODECOPY = 0x39;
+</code></pre>
+<h3 id="evm_op_gasprice"><a class="header" href="#evm_op_gasprice">EVM_OP_GASPRICE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_GASPRICE = 0x3A;
+</code></pre>
+<h3 id="evm_op_extcodesize"><a class="header" href="#evm_op_extcodesize">EVM_OP_EXTCODESIZE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_EXTCODESIZE = 0x3B;
+</code></pre>
+<h3 id="evm_op_extcodecopy"><a class="header" href="#evm_op_extcodecopy">EVM_OP_EXTCODECOPY</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_EXTCODECOPY = 0x3C;
+</code></pre>
+<h3 id="evm_op_returndatasize"><a class="header" href="#evm_op_returndatasize">EVM_OP_RETURNDATASIZE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_RETURNDATASIZE = 0x3D;
+</code></pre>
+<h3 id="evm_op_returndatacopy"><a class="header" href="#evm_op_returndatacopy">EVM_OP_RETURNDATACOPY</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_RETURNDATACOPY = 0x3E;
+</code></pre>
+<h3 id="evm_op_extcodehash"><a class="header" href="#evm_op_extcodehash">EVM_OP_EXTCODEHASH</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_EXTCODEHASH = 0x3F;
+</code></pre>
+<h3 id="evm_op_blockhash"><a class="header" href="#evm_op_blockhash">EVM_OP_BLOCKHASH</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_BLOCKHASH = 0x40;
+</code></pre>
+<h3 id="evm_op_coinbase"><a class="header" href="#evm_op_coinbase">EVM_OP_COINBASE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_COINBASE = 0x41;
+</code></pre>
+<h3 id="evm_op_timestamp"><a class="header" href="#evm_op_timestamp">EVM_OP_TIMESTAMP</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_TIMESTAMP = 0x42;
+</code></pre>
+<h3 id="evm_op_number"><a class="header" href="#evm_op_number">EVM_OP_NUMBER</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_NUMBER = 0x43;
+</code></pre>
+<h3 id="evm_op_difficulty"><a class="header" href="#evm_op_difficulty">EVM_OP_DIFFICULTY</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DIFFICULTY = 0x44;
+</code></pre>
+<h3 id="evm_op_gaslimit"><a class="header" href="#evm_op_gaslimit">EVM_OP_GASLIMIT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_GASLIMIT = 0x45;
+</code></pre>
+<h3 id="evm_op_chainid"><a class="header" href="#evm_op_chainid">EVM_OP_CHAINID</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CHAINID = 0x46;
+</code></pre>
+<h3 id="evm_op_selfbalance"><a class="header" href="#evm_op_selfbalance">EVM_OP_SELFBALANCE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SELFBALANCE = 0x47;
+</code></pre>
+<h3 id="evm_op_basefee"><a class="header" href="#evm_op_basefee">EVM_OP_BASEFEE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_BASEFEE = 0x48;
+</code></pre>
+<h3 id="evm_op_pop"><a class="header" href="#evm_op_pop">EVM_OP_POP</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_POP = 0x50;
+</code></pre>
+<h3 id="evm_op_mload"><a class="header" href="#evm_op_mload">EVM_OP_MLOAD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MLOAD = 0x51;
+</code></pre>
+<h3 id="evm_op_mstore"><a class="header" href="#evm_op_mstore">EVM_OP_MSTORE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MSTORE = 0x52;
+</code></pre>
+<h3 id="evm_op_mstore8"><a class="header" href="#evm_op_mstore8">EVM_OP_MSTORE8</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MSTORE8 = 0x53;
+</code></pre>
+<h3 id="evm_op_sload"><a class="header" href="#evm_op_sload">EVM_OP_SLOAD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SLOAD = 0x54;
+</code></pre>
+<h3 id="evm_op_sstore"><a class="header" href="#evm_op_sstore">EVM_OP_SSTORE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SSTORE = 0x55;
+</code></pre>
+<h3 id="evm_op_jump"><a class="header" href="#evm_op_jump">EVM_OP_JUMP</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_JUMP = 0x56;
+</code></pre>
+<h3 id="evm_op_jumpi"><a class="header" href="#evm_op_jumpi">EVM_OP_JUMPI</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_JUMPI = 0x57;
+</code></pre>
+<h3 id="evm_op_pc"><a class="header" href="#evm_op_pc">EVM_OP_PC</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PC = 0x58;
+</code></pre>
+<h3 id="evm_op_msize"><a class="header" href="#evm_op_msize">EVM_OP_MSIZE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MSIZE = 0x59;
+</code></pre>
+<h3 id="evm_op_gas"><a class="header" href="#evm_op_gas">EVM_OP_GAS</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_GAS = 0x5A;
+</code></pre>
+<h3 id="evm_op_jumpdest"><a class="header" href="#evm_op_jumpdest">EVM_OP_JUMPDEST</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_JUMPDEST = 0x5B;
+</code></pre>
+<h3 id="evm_op_push0"><a class="header" href="#evm_op_push0">EVM_OP_PUSH0</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH0 = 0x5F;
+</code></pre>
+<h3 id="evm_op_push1"><a class="header" href="#evm_op_push1">EVM_OP_PUSH1</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH1 = 0x60;
+</code></pre>
+<h3 id="evm_op_push2"><a class="header" href="#evm_op_push2">EVM_OP_PUSH2</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH2 = 0x61;
+</code></pre>
+<h3 id="evm_op_push3"><a class="header" href="#evm_op_push3">EVM_OP_PUSH3</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH3 = 0x62;
+</code></pre>
+<h3 id="evm_op_push4"><a class="header" href="#evm_op_push4">EVM_OP_PUSH4</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH4 = 0x63;
+</code></pre>
+<h3 id="evm_op_push5"><a class="header" href="#evm_op_push5">EVM_OP_PUSH5</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH5 = 0x64;
+</code></pre>
+<h3 id="evm_op_push6"><a class="header" href="#evm_op_push6">EVM_OP_PUSH6</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH6 = 0x65;
+</code></pre>
+<h3 id="evm_op_push7"><a class="header" href="#evm_op_push7">EVM_OP_PUSH7</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH7 = 0x66;
+</code></pre>
+<h3 id="evm_op_push8"><a class="header" href="#evm_op_push8">EVM_OP_PUSH8</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH8 = 0x67;
+</code></pre>
+<h3 id="evm_op_push9"><a class="header" href="#evm_op_push9">EVM_OP_PUSH9</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH9 = 0x68;
+</code></pre>
+<h3 id="evm_op_push10"><a class="header" href="#evm_op_push10">EVM_OP_PUSH10</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH10 = 0x69;
+</code></pre>
+<h3 id="evm_op_push11"><a class="header" href="#evm_op_push11">EVM_OP_PUSH11</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH11 = 0x6A;
+</code></pre>
+<h3 id="evm_op_push12"><a class="header" href="#evm_op_push12">EVM_OP_PUSH12</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH12 = 0x6B;
+</code></pre>
+<h3 id="evm_op_push13"><a class="header" href="#evm_op_push13">EVM_OP_PUSH13</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH13 = 0x6C;
+</code></pre>
+<h3 id="evm_op_push14"><a class="header" href="#evm_op_push14">EVM_OP_PUSH14</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH14 = 0x6D;
+</code></pre>
+<h3 id="evm_op_push15"><a class="header" href="#evm_op_push15">EVM_OP_PUSH15</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH15 = 0x6E;
+</code></pre>
+<h3 id="evm_op_push16"><a class="header" href="#evm_op_push16">EVM_OP_PUSH16</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH16 = 0x6F;
+</code></pre>
+<h3 id="evm_op_push17"><a class="header" href="#evm_op_push17">EVM_OP_PUSH17</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH17 = 0x70;
+</code></pre>
+<h3 id="evm_op_push18"><a class="header" href="#evm_op_push18">EVM_OP_PUSH18</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH18 = 0x71;
+</code></pre>
+<h3 id="evm_op_push19"><a class="header" href="#evm_op_push19">EVM_OP_PUSH19</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH19 = 0x72;
+</code></pre>
+<h3 id="evm_op_push20"><a class="header" href="#evm_op_push20">EVM_OP_PUSH20</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH20 = 0x73;
+</code></pre>
+<h3 id="evm_op_push21"><a class="header" href="#evm_op_push21">EVM_OP_PUSH21</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH21 = 0x74;
+</code></pre>
+<h3 id="evm_op_push22"><a class="header" href="#evm_op_push22">EVM_OP_PUSH22</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH22 = 0x75;
+</code></pre>
+<h3 id="evm_op_push23"><a class="header" href="#evm_op_push23">EVM_OP_PUSH23</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH23 = 0x76;
+</code></pre>
+<h3 id="evm_op_push24"><a class="header" href="#evm_op_push24">EVM_OP_PUSH24</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH24 = 0x77;
+</code></pre>
+<h3 id="evm_op_push25"><a class="header" href="#evm_op_push25">EVM_OP_PUSH25</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH25 = 0x78;
+</code></pre>
+<h3 id="evm_op_push26"><a class="header" href="#evm_op_push26">EVM_OP_PUSH26</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH26 = 0x79;
+</code></pre>
+<h3 id="evm_op_push27"><a class="header" href="#evm_op_push27">EVM_OP_PUSH27</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH27 = 0x7A;
+</code></pre>
+<h3 id="evm_op_push28"><a class="header" href="#evm_op_push28">EVM_OP_PUSH28</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH28 = 0x7B;
+</code></pre>
+<h3 id="evm_op_push29"><a class="header" href="#evm_op_push29">EVM_OP_PUSH29</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH29 = 0x7C;
+</code></pre>
+<h3 id="evm_op_push30"><a class="header" href="#evm_op_push30">EVM_OP_PUSH30</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH30 = 0x7D;
+</code></pre>
+<h3 id="evm_op_push31"><a class="header" href="#evm_op_push31">EVM_OP_PUSH31</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH31 = 0x7E;
+</code></pre>
+<h3 id="evm_op_push32"><a class="header" href="#evm_op_push32">EVM_OP_PUSH32</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH32 = 0x7F;
+</code></pre>
+<h3 id="evm_op_dup1"><a class="header" href="#evm_op_dup1">EVM_OP_DUP1</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP1 = 0x80;
+</code></pre>
+<h3 id="evm_op_dup2"><a class="header" href="#evm_op_dup2">EVM_OP_DUP2</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP2 = 0x81;
+</code></pre>
+<h3 id="evm_op_dup3"><a class="header" href="#evm_op_dup3">EVM_OP_DUP3</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP3 = 0x82;
+</code></pre>
+<h3 id="evm_op_dup4"><a class="header" href="#evm_op_dup4">EVM_OP_DUP4</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP4 = 0x83;
+</code></pre>
+<h3 id="evm_op_dup5"><a class="header" href="#evm_op_dup5">EVM_OP_DUP5</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP5 = 0x84;
+</code></pre>
+<h3 id="evm_op_dup6"><a class="header" href="#evm_op_dup6">EVM_OP_DUP6</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP6 = 0x85;
+</code></pre>
+<h3 id="evm_op_dup7"><a class="header" href="#evm_op_dup7">EVM_OP_DUP7</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP7 = 0x86;
+</code></pre>
+<h3 id="evm_op_dup8"><a class="header" href="#evm_op_dup8">EVM_OP_DUP8</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP8 = 0x87;
+</code></pre>
+<h3 id="evm_op_dup9"><a class="header" href="#evm_op_dup9">EVM_OP_DUP9</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP9 = 0x88;
+</code></pre>
+<h3 id="evm_op_dup10"><a class="header" href="#evm_op_dup10">EVM_OP_DUP10</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP10 = 0x89;
+</code></pre>
+<h3 id="evm_op_dup11"><a class="header" href="#evm_op_dup11">EVM_OP_DUP11</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP11 = 0x8A;
+</code></pre>
+<h3 id="evm_op_dup12"><a class="header" href="#evm_op_dup12">EVM_OP_DUP12</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP12 = 0x8B;
+</code></pre>
+<h3 id="evm_op_dup13"><a class="header" href="#evm_op_dup13">EVM_OP_DUP13</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP13 = 0x8C;
+</code></pre>
+<h3 id="evm_op_dup14"><a class="header" href="#evm_op_dup14">EVM_OP_DUP14</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP14 = 0x8D;
+</code></pre>
+<h3 id="evm_op_dup15"><a class="header" href="#evm_op_dup15">EVM_OP_DUP15</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP15 = 0x8E;
+</code></pre>
+<h3 id="evm_op_dup16"><a class="header" href="#evm_op_dup16">EVM_OP_DUP16</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP16 = 0x8F;
+</code></pre>
+<h3 id="evm_op_swap1"><a class="header" href="#evm_op_swap1">EVM_OP_SWAP1</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP1 = 0x90;
+</code></pre>
+<h3 id="evm_op_swap2"><a class="header" href="#evm_op_swap2">EVM_OP_SWAP2</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP2 = 0x91;
+</code></pre>
+<h3 id="evm_op_swap3"><a class="header" href="#evm_op_swap3">EVM_OP_SWAP3</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP3 = 0x92;
+</code></pre>
+<h3 id="evm_op_swap4"><a class="header" href="#evm_op_swap4">EVM_OP_SWAP4</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP4 = 0x93;
+</code></pre>
+<h3 id="evm_op_swap5"><a class="header" href="#evm_op_swap5">EVM_OP_SWAP5</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP5 = 0x94;
+</code></pre>
+<h3 id="evm_op_swap6"><a class="header" href="#evm_op_swap6">EVM_OP_SWAP6</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP6 = 0x95;
+</code></pre>
+<h3 id="evm_op_swap7"><a class="header" href="#evm_op_swap7">EVM_OP_SWAP7</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP7 = 0x96;
+</code></pre>
+<h3 id="evm_op_swap8"><a class="header" href="#evm_op_swap8">EVM_OP_SWAP8</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP8 = 0x97;
+</code></pre>
+<h3 id="evm_op_swap9"><a class="header" href="#evm_op_swap9">EVM_OP_SWAP9</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP9 = 0x98;
+</code></pre>
+<h3 id="evm_op_swap10"><a class="header" href="#evm_op_swap10">EVM_OP_SWAP10</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP10 = 0x99;
+</code></pre>
+<h3 id="evm_op_swap11"><a class="header" href="#evm_op_swap11">EVM_OP_SWAP11</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP11 = 0x9A;
+</code></pre>
+<h3 id="evm_op_swap12"><a class="header" href="#evm_op_swap12">EVM_OP_SWAP12</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP12 = 0x9B;
+</code></pre>
+<h3 id="evm_op_swap13"><a class="header" href="#evm_op_swap13">EVM_OP_SWAP13</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP13 = 0x9C;
+</code></pre>
+<h3 id="evm_op_swap14"><a class="header" href="#evm_op_swap14">EVM_OP_SWAP14</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP14 = 0x9D;
+</code></pre>
+<h3 id="evm_op_swap15"><a class="header" href="#evm_op_swap15">EVM_OP_SWAP15</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP15 = 0x9E;
+</code></pre>
+<h3 id="evm_op_swap16"><a class="header" href="#evm_op_swap16">EVM_OP_SWAP16</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP16 = 0x9F;
+</code></pre>
+<h3 id="evm_op_log0"><a class="header" href="#evm_op_log0">EVM_OP_LOG0</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_LOG0 = 0xA0;
+</code></pre>
+<h3 id="evm_op_log1"><a class="header" href="#evm_op_log1">EVM_OP_LOG1</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_LOG1 = 0xA1;
+</code></pre>
+<h3 id="evm_op_log2"><a class="header" href="#evm_op_log2">EVM_OP_LOG2</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_LOG2 = 0xA2;
+</code></pre>
+<h3 id="evm_op_log3"><a class="header" href="#evm_op_log3">EVM_OP_LOG3</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_LOG3 = 0xA3;
+</code></pre>
+<h3 id="evm_op_log4"><a class="header" href="#evm_op_log4">EVM_OP_LOG4</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_LOG4 = 0xA4;
+</code></pre>
+<h3 id="evm_op_create"><a class="header" href="#evm_op_create">EVM_OP_CREATE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CREATE = 0xF0;
+</code></pre>
+<h3 id="evm_op_call"><a class="header" href="#evm_op_call">EVM_OP_CALL</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALL = 0xF1;
+</code></pre>
+<h3 id="evm_op_callcode"><a class="header" href="#evm_op_callcode">EVM_OP_CALLCODE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALLCODE = 0xF2;
+</code></pre>
+<h3 id="evm_op_return"><a class="header" href="#evm_op_return">EVM_OP_RETURN</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_RETURN = 0xF3;
+</code></pre>
+<h3 id="evm_op_delegatecall"><a class="header" href="#evm_op_delegatecall">EVM_OP_DELEGATECALL</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DELEGATECALL = 0xF4;
+</code></pre>
+<h3 id="evm_op_create2"><a class="header" href="#evm_op_create2">EVM_OP_CREATE2</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CREATE2 = 0xF5;
+</code></pre>
+<h3 id="evm_op_staticcall"><a class="header" href="#evm_op_staticcall">EVM_OP_STATICCALL</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_STATICCALL = 0xFA;
+</code></pre>
+<h3 id="evm_op_revert"><a class="header" href="#evm_op_revert">EVM_OP_REVERT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_REVERT = 0xFD;
+</code></pre>
+<h3 id="evm_op_invalid"><a class="header" href="#evm_op_invalid">EVM_OP_INVALID</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_INVALID = 0xFE;
+</code></pre>
+<h3 id="evm_op_selfdestruct"><a class="header" href="#evm_op_selfdestruct">EVM_OP_SELFDESTRUCT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SELFDESTRUCT = 0xFF;
+</code></pre>
+<h3 id="halting_bitmap"><a class="header" href="#halting_bitmap">HALTING_BITMAP</a></h3>
+<pre><code class="language-solidity">uint256 constant HALTING_BITMAP = (1 &lt;&lt; EVM_OP_STOP) | (1 &lt;&lt; EVM_OP_RETURN) | (1 &lt;&lt; EVM_OP_REVERT)
+    | (1 &lt;&lt; EVM_OP_INVALID) | (1 &lt;&lt; EVM_OP_SELFDESTRUCT);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="libextrospectbytecode"><a class="header" href="#libextrospectbytecode">LibExtrospectBytecode</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/lib/LibExtrospectBytecode.sol">Git Source</a></p>
+<p>Internal algorithms for extrospecting bytecode. Notably the EVM
+opcode scanning needs special care, as the other bytecode functions are mere
+wrappers around native EVM features.</p>
+<h2 id="functions-5"><a class="header" href="#functions-5">Functions</a></h2>
+<h3 id="scanevmopcodesreachableinbytecode"><a class="header" href="#scanevmopcodesreachableinbytecode">scanEVMOpcodesReachableInBytecode</a></h3>
+<p>Scans for opcodes that are reachable during execution of a contract.
+Adapted from https://github.com/MrLuit/selfdestruct-detect/blob/master/src/index.ts</p>
+<pre><code class="language-solidity">function scanEVMOpcodesReachableInBytecode(bytes memory bytecode) internal pure returns (uint256 bytesReachable);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>bytecode</code></td><td><code>bytes</code></td><td>The bytecode to scan.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>bytesReachable</code></td><td><code>uint256</code></td><td>A <code>uint256</code> where each bit represents the presence of a reachable opcode in the source bytecode.</td></tr>
+</tbody></table>
+</div>
+<h3 id="scanevmopcodespresentinbytecode"><a class="header" href="#scanevmopcodespresentinbytecode">scanEVMOpcodesPresentInBytecode</a></h3>
+<p>Scans opcodes present in a region of memory, as per
+<code>IExtrospectBytecodeV1.scanEVMOpcodesPresentInAccount</code>. The start cursor
+MUST point to the first byte of a region of memory that contract code has
+already been copied to, e.g. with <code>extcodecopy</code>.
+https://github.com/a16z/metamorphic-contract-detector/blob/main/metamorphic_detect/opcodes.py#L52</p>
+<pre><code class="language-solidity">function scanEVMOpcodesPresentInBytecode(bytes memory bytecode) internal pure returns (uint256 bytesPresent);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>bytecode</code></td><td><code>bytes</code></td><td>The bytecode to scan.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>bytesPresent</code></td><td><code>uint256</code></td><td>A <code>uint256</code> where each bit represents the presence of an opcode in the source bytecode.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="libextrospecterc1167proxy"><a class="header" href="#libextrospecterc1167proxy">LibExtrospectERC1167Proxy</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/lib/LibExtrospectERC1167Proxy.sol">Git Source</a></p>
+<h2 id="functions-6"><a class="header" href="#functions-6">Functions</a></h2>
+<h3 id="iserc1167proxy-2"><a class="header" href="#iserc1167proxy-2">isERC1167Proxy</a></h3>
+<p>Checks if the given bytecode is an ERC1167 proxy. If so,
+returns the implementation address.</p>
+<pre><code class="language-solidity">function isERC1167Proxy(bytes memory bytecode) internal pure returns (bool result, address implementationAddress);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>bytecode</code></td><td><code>bytes</code></td><td>The bytecode to check.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>result</code></td><td><code>bool</code></td><td>True if the bytecode is an ERC1167 proxy.</td></tr>
+<tr><td><code>implementationAddress</code></td><td><code>address</code></td><td>The address of the implementation contract. This is only valid if <code>result</code> is true, else it is zero.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="constants-2"><a class="header" href="#constants-2">Constants</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/lib/LibExtrospectERC1167Proxy.sol">Git Source</a></p>
+<h3 id="erc1167_prefix"><a class="header" href="#erc1167_prefix">ERC1167_PREFIX</a></h3>
+<p><em>ERC1167 proxy is known bytecode that wraps the implementation address.
+This is the prefix.</em></p>
+<pre><code class="language-solidity">bytes constant ERC1167_PREFIX = hex&quot;363d3d373d3d3d363d73&quot;;
+</code></pre>
+<h3 id="erc1167_suffix"><a class="header" href="#erc1167_suffix">ERC1167_SUFFIX</a></h3>
+<p><em>ERC1167 proxy is known bytecode that wraps the implementation address.
+This is the suffix.</em></p>
+<pre><code class="language-solidity">bytes constant ERC1167_SUFFIX = hex&quot;5af43d82803e903d91602b57fd5bf3&quot;;
+</code></pre>
+<h3 id="erc1167_prefix_hash"><a class="header" href="#erc1167_prefix_hash">ERC1167_PREFIX_HASH</a></h3>
+<p><em>We can more efficiently compare equality of hashes of regions of memory
+than the regions themselves.
+This is the hash of the ERC1167 proxy prefix.</em></p>
+<pre><code class="language-solidity">bytes32 constant ERC1167_PREFIX_HASH = keccak256(ERC1167_PREFIX);
+</code></pre>
+<h3 id="erc1167_suffix_hash"><a class="header" href="#erc1167_suffix_hash">ERC1167_SUFFIX_HASH</a></h3>
+<p><em>We can more efficiently compare equality of hashes of regions of memory
+than the regions themselves.
+This is the hash of the ERC1167 proxy suffix.</em></p>
+<pre><code class="language-solidity">bytes32 constant ERC1167_SUFFIX_HASH = keccak256(ERC1167_SUFFIX);
+</code></pre>
+<h3 id="erc1167_prefix_start"><a class="header" href="#erc1167_prefix_start">ERC1167_PREFIX_START</a></h3>
+<p><em>The bounds of the ERC1167 proxy prefix are constant.
+This is the start offset of the ERC1167 proxy prefix.</em></p>
+<pre><code class="language-solidity">uint256 constant ERC1167_PREFIX_START = 0x20;
+</code></pre>
+<h3 id="erc1167_suffix_start"><a class="header" href="#erc1167_suffix_start">ERC1167_SUFFIX_START</a></h3>
+<p><em>The bounds of the ERC1167 proxy suffix are constant.
+This is the start offset of the ERC1167 proxy suffix.</em></p>
+<pre><code class="language-solidity">uint256 constant ERC1167_SUFFIX_START = 0x20 + ERC1167_PROXY_LENGTH - ERC1167_SUFFIX_LENGTH;
+</code></pre>
+<h3 id="erc1167_prefix_length"><a class="header" href="#erc1167_prefix_length">ERC1167_PREFIX_LENGTH</a></h3>
+<p><em>The ERC1167 proxy prefix is a known length.</em></p>
+<pre><code class="language-solidity">uint256 constant ERC1167_PREFIX_LENGTH = 10;
+</code></pre>
+<h3 id="erc1167_suffix_length"><a class="header" href="#erc1167_suffix_length">ERC1167_SUFFIX_LENGTH</a></h3>
+<p><em>The ERC1167 proxy suffix is a known length.</em></p>
+<pre><code class="language-solidity">uint256 constant ERC1167_SUFFIX_LENGTH = 15;
+</code></pre>
+<h3 id="erc1167_proxy_length"><a class="header" href="#erc1167_proxy_length">ERC1167_PROXY_LENGTH</a></h3>
+<p><em>The length of a proxy contract is constant as the implementation
+address is always 20 bytes.</em></p>
+<pre><code class="language-solidity">uint256 constant ERC1167_PROXY_LENGTH = 20 + ERC1167_PREFIX_LENGTH + ERC1167_SUFFIX_LENGTH;
+</code></pre>
+<h3 id="erc1167_implementation_address_offset"><a class="header" href="#erc1167_implementation_address_offset">ERC1167_IMPLEMENTATION_ADDRESS_OFFSET</a></h3>
+<p><em>The implementation address read offset is constant.</em></p>
+<pre><code class="language-solidity">uint256 constant ERC1167_IMPLEMENTATION_ADDRESS_OFFSET = ERC1167_PREFIX_LENGTH + 20;
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="solidity.min.js"></script>
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </div>
+    </body>
+</html>

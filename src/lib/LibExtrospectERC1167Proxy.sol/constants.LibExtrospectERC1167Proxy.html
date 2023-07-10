@@ -1,0 +1,248 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>LibExtrospectERC1167Proxy constants</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../../../favicon.svg">
+        <link rel="shortcut icon" href="../../../favicon.png">
+        <link rel="stylesheet" href="../../../css/variables.css">
+        <link rel="stylesheet" href="../../../css/general.css">
+        <link rel="stylesheet" href="../../../css/chrome.css">
+        <link rel="stylesheet" href="../../../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../../../highlight.css">
+        <link rel="stylesheet" href="../../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../../../book.css">
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../../../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item "><a href="../../../index.html">Home</a></li><li class="chapter-item affix "><li class="part-title">src</li><li class="chapter-item "><a href="../../../src/concrete/index.html">❱ concrete</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../src/concrete/Extrospection.sol/contract.Extrospection.html">Extrospection</a></li></ol></li><li class="chapter-item "><a href="../../../src/interface/index.html">❱ interface</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../src/interface/deprecated/index.html">❱ deprecated</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../src/interface/deprecated/IExtrospectBytecodeV1.sol/interface.IExtrospectBytecodeV1.html">IExtrospectBytecodeV1</a></li></ol></li><li class="chapter-item "><a href="../../../src/interface/IExtrospectBytecodeV2.sol/interface.IExtrospectBytecodeV2.html">IExtrospectBytecodeV2</a></li><li class="chapter-item "><a href="../../../src/interface/IExtrospectERC1167ProxyV1.sol/interface.IExtrospectERC1167ProxyV1.html">IExtrospectERC1167ProxyV1</a></li><li class="chapter-item "><a href="../../../src/interface/IExtrospectInterpreterV1.sol/interface.IExtrospectInterpreterV1.html">IExtrospectInterpreterV1</a></li><li class="chapter-item "><a href="../../../src/interface/IExtrospectInterpreterV1.sol/constants.IExtrospectInterpreterV1.html">IExtrospectInterpreterV1 constants</a></li></ol></li><li class="chapter-item expanded "><a href="../../../src/lib/index.html">❱ lib</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../src/lib/EVMOpcodes.sol/constants.EVMOpcodes.html">EVMOpcodes constants</a></li><li class="chapter-item "><a href="../../../src/lib/LibExtrospectBytecode.sol/library.LibExtrospectBytecode.html">LibExtrospectBytecode</a></li><li class="chapter-item "><a href="../../../src/lib/LibExtrospectERC1167Proxy.sol/library.LibExtrospectERC1167Proxy.html">LibExtrospectERC1167Proxy</a></li><li class="chapter-item expanded "><a href="../../../src/lib/LibExtrospectERC1167Proxy.sol/constants.LibExtrospectERC1167Proxy.html" class="active">LibExtrospectERC1167Proxy constants</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title"></h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rainprotocol/rain.extrospection" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="constants"><a class="header" href="#constants">Constants</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/lib/LibExtrospectERC1167Proxy.sol">Git Source</a></p>
+<h3 id="erc1167_prefix"><a class="header" href="#erc1167_prefix">ERC1167_PREFIX</a></h3>
+<p><em>ERC1167 proxy is known bytecode that wraps the implementation address.
+This is the prefix.</em></p>
+<pre><code class="language-solidity">bytes constant ERC1167_PREFIX = hex&quot;363d3d373d3d3d363d73&quot;;
+</code></pre>
+<h3 id="erc1167_suffix"><a class="header" href="#erc1167_suffix">ERC1167_SUFFIX</a></h3>
+<p><em>ERC1167 proxy is known bytecode that wraps the implementation address.
+This is the suffix.</em></p>
+<pre><code class="language-solidity">bytes constant ERC1167_SUFFIX = hex&quot;5af43d82803e903d91602b57fd5bf3&quot;;
+</code></pre>
+<h3 id="erc1167_prefix_hash"><a class="header" href="#erc1167_prefix_hash">ERC1167_PREFIX_HASH</a></h3>
+<p><em>We can more efficiently compare equality of hashes of regions of memory
+than the regions themselves.
+This is the hash of the ERC1167 proxy prefix.</em></p>
+<pre><code class="language-solidity">bytes32 constant ERC1167_PREFIX_HASH = keccak256(ERC1167_PREFIX);
+</code></pre>
+<h3 id="erc1167_suffix_hash"><a class="header" href="#erc1167_suffix_hash">ERC1167_SUFFIX_HASH</a></h3>
+<p><em>We can more efficiently compare equality of hashes of regions of memory
+than the regions themselves.
+This is the hash of the ERC1167 proxy suffix.</em></p>
+<pre><code class="language-solidity">bytes32 constant ERC1167_SUFFIX_HASH = keccak256(ERC1167_SUFFIX);
+</code></pre>
+<h3 id="erc1167_prefix_start"><a class="header" href="#erc1167_prefix_start">ERC1167_PREFIX_START</a></h3>
+<p><em>The bounds of the ERC1167 proxy prefix are constant.
+This is the start offset of the ERC1167 proxy prefix.</em></p>
+<pre><code class="language-solidity">uint256 constant ERC1167_PREFIX_START = 0x20;
+</code></pre>
+<h3 id="erc1167_suffix_start"><a class="header" href="#erc1167_suffix_start">ERC1167_SUFFIX_START</a></h3>
+<p><em>The bounds of the ERC1167 proxy suffix are constant.
+This is the start offset of the ERC1167 proxy suffix.</em></p>
+<pre><code class="language-solidity">uint256 constant ERC1167_SUFFIX_START = 0x20 + ERC1167_PROXY_LENGTH - ERC1167_SUFFIX_LENGTH;
+</code></pre>
+<h3 id="erc1167_prefix_length"><a class="header" href="#erc1167_prefix_length">ERC1167_PREFIX_LENGTH</a></h3>
+<p><em>The ERC1167 proxy prefix is a known length.</em></p>
+<pre><code class="language-solidity">uint256 constant ERC1167_PREFIX_LENGTH = 10;
+</code></pre>
+<h3 id="erc1167_suffix_length"><a class="header" href="#erc1167_suffix_length">ERC1167_SUFFIX_LENGTH</a></h3>
+<p><em>The ERC1167 proxy suffix is a known length.</em></p>
+<pre><code class="language-solidity">uint256 constant ERC1167_SUFFIX_LENGTH = 15;
+</code></pre>
+<h3 id="erc1167_proxy_length"><a class="header" href="#erc1167_proxy_length">ERC1167_PROXY_LENGTH</a></h3>
+<p><em>The length of a proxy contract is constant as the implementation
+address is always 20 bytes.</em></p>
+<pre><code class="language-solidity">uint256 constant ERC1167_PROXY_LENGTH = 20 + ERC1167_PREFIX_LENGTH + ERC1167_SUFFIX_LENGTH;
+</code></pre>
+<h3 id="erc1167_implementation_address_offset"><a class="header" href="#erc1167_implementation_address_offset">ERC1167_IMPLEMENTATION_ADDRESS_OFFSET</a></h3>
+<p><em>The implementation address read offset is constant.</em></p>
+<pre><code class="language-solidity">uint256 constant ERC1167_IMPLEMENTATION_ADDRESS_OFFSET = ERC1167_PREFIX_LENGTH + 20;
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../src/lib/LibExtrospectERC1167Proxy.sol/library.LibExtrospectERC1167Proxy.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../src/lib/LibExtrospectERC1167Proxy.sol/library.LibExtrospectERC1167Proxy.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr.min.js"></script>
+        <script src="../../../mark.min.js"></script>
+        <script src="../../../searcher.js"></script>
+
+        <script src="../../../clipboard.min.js"></script>
+        <script src="../../../highlight.js"></script>
+        <script src="../../../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../solidity.min.js"></script>
+
+
+    </div>
+    </body>
+</html>

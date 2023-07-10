@@ -1,0 +1,641 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>EVMOpcodes constants</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../../../favicon.svg">
+        <link rel="shortcut icon" href="../../../favicon.png">
+        <link rel="stylesheet" href="../../../css/variables.css">
+        <link rel="stylesheet" href="../../../css/general.css">
+        <link rel="stylesheet" href="../../../css/chrome.css">
+        <link rel="stylesheet" href="../../../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../../../highlight.css">
+        <link rel="stylesheet" href="../../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../../../book.css">
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../../../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item "><a href="../../../index.html">Home</a></li><li class="chapter-item affix "><li class="part-title">src</li><li class="chapter-item "><a href="../../../src/concrete/index.html">❱ concrete</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../src/concrete/Extrospection.sol/contract.Extrospection.html">Extrospection</a></li></ol></li><li class="chapter-item "><a href="../../../src/interface/index.html">❱ interface</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../src/interface/deprecated/index.html">❱ deprecated</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../src/interface/deprecated/IExtrospectBytecodeV1.sol/interface.IExtrospectBytecodeV1.html">IExtrospectBytecodeV1</a></li></ol></li><li class="chapter-item "><a href="../../../src/interface/IExtrospectBytecodeV2.sol/interface.IExtrospectBytecodeV2.html">IExtrospectBytecodeV2</a></li><li class="chapter-item "><a href="../../../src/interface/IExtrospectERC1167ProxyV1.sol/interface.IExtrospectERC1167ProxyV1.html">IExtrospectERC1167ProxyV1</a></li><li class="chapter-item "><a href="../../../src/interface/IExtrospectInterpreterV1.sol/interface.IExtrospectInterpreterV1.html">IExtrospectInterpreterV1</a></li><li class="chapter-item "><a href="../../../src/interface/IExtrospectInterpreterV1.sol/constants.IExtrospectInterpreterV1.html">IExtrospectInterpreterV1 constants</a></li></ol></li><li class="chapter-item expanded "><a href="../../../src/lib/index.html">❱ lib</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../src/lib/EVMOpcodes.sol/constants.EVMOpcodes.html" class="active">EVMOpcodes constants</a></li><li class="chapter-item "><a href="../../../src/lib/LibExtrospectBytecode.sol/library.LibExtrospectBytecode.html">LibExtrospectBytecode</a></li><li class="chapter-item "><a href="../../../src/lib/LibExtrospectERC1167Proxy.sol/library.LibExtrospectERC1167Proxy.html">LibExtrospectERC1167Proxy</a></li><li class="chapter-item "><a href="../../../src/lib/LibExtrospectERC1167Proxy.sol/constants.LibExtrospectERC1167Proxy.html">LibExtrospectERC1167Proxy constants</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title"></h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rainprotocol/rain.extrospection" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="constants"><a class="header" href="#constants">Constants</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/lib/EVMOpcodes.sol">Git Source</a></p>
+<h3 id="evm_op_stop"><a class="header" href="#evm_op_stop">EVM_OP_STOP</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_STOP = 0x00;
+</code></pre>
+<h3 id="evm_op_add"><a class="header" href="#evm_op_add">EVM_OP_ADD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_ADD = 0x01;
+</code></pre>
+<h3 id="evm_op_mul"><a class="header" href="#evm_op_mul">EVM_OP_MUL</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MUL = 0x02;
+</code></pre>
+<h3 id="evm_op_sub"><a class="header" href="#evm_op_sub">EVM_OP_SUB</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SUB = 0x03;
+</code></pre>
+<h3 id="evm_op_div"><a class="header" href="#evm_op_div">EVM_OP_DIV</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DIV = 0x04;
+</code></pre>
+<h3 id="evm_op_sdiv"><a class="header" href="#evm_op_sdiv">EVM_OP_SDIV</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SDIV = 0x05;
+</code></pre>
+<h3 id="evm_op_mod"><a class="header" href="#evm_op_mod">EVM_OP_MOD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MOD = 0x06;
+</code></pre>
+<h3 id="evm_op_smod"><a class="header" href="#evm_op_smod">EVM_OP_SMOD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SMOD = 0x07;
+</code></pre>
+<h3 id="evm_op_addmod"><a class="header" href="#evm_op_addmod">EVM_OP_ADDMOD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_ADDMOD = 0x08;
+</code></pre>
+<h3 id="evm_op_mulmod"><a class="header" href="#evm_op_mulmod">EVM_OP_MULMOD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MULMOD = 0x09;
+</code></pre>
+<h3 id="evm_op_exp"><a class="header" href="#evm_op_exp">EVM_OP_EXP</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_EXP = 0x0A;
+</code></pre>
+<h3 id="evm_op_signextend"><a class="header" href="#evm_op_signextend">EVM_OP_SIGNEXTEND</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SIGNEXTEND = 0x0B;
+</code></pre>
+<h3 id="evm_op_lt"><a class="header" href="#evm_op_lt">EVM_OP_LT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_LT = 0x10;
+</code></pre>
+<h3 id="evm_op_gt"><a class="header" href="#evm_op_gt">EVM_OP_GT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_GT = 0x11;
+</code></pre>
+<h3 id="evm_op_slt"><a class="header" href="#evm_op_slt">EVM_OP_SLT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SLT = 0x12;
+</code></pre>
+<h3 id="evm_op_sgt"><a class="header" href="#evm_op_sgt">EVM_OP_SGT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SGT = 0x13;
+</code></pre>
+<h3 id="evm_op_eq"><a class="header" href="#evm_op_eq">EVM_OP_EQ</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_EQ = 0x14;
+</code></pre>
+<h3 id="evm_op_iszero"><a class="header" href="#evm_op_iszero">EVM_OP_ISZERO</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_ISZERO = 0x15;
+</code></pre>
+<h3 id="evm_op_and"><a class="header" href="#evm_op_and">EVM_OP_AND</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_AND = 0x16;
+</code></pre>
+<h3 id="evm_op_or"><a class="header" href="#evm_op_or">EVM_OP_OR</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_OR = 0x17;
+</code></pre>
+<h3 id="evm_op_xor"><a class="header" href="#evm_op_xor">EVM_OP_XOR</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_XOR = 0x18;
+</code></pre>
+<h3 id="evm_op_not"><a class="header" href="#evm_op_not">EVM_OP_NOT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_NOT = 0x19;
+</code></pre>
+<h3 id="evm_op_byte"><a class="header" href="#evm_op_byte">EVM_OP_BYTE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_BYTE = 0x1A;
+</code></pre>
+<h3 id="evm_op_shl"><a class="header" href="#evm_op_shl">EVM_OP_SHL</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SHL = 0x1B;
+</code></pre>
+<h3 id="evm_op_shr"><a class="header" href="#evm_op_shr">EVM_OP_SHR</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SHR = 0x1C;
+</code></pre>
+<h3 id="evm_op_sar"><a class="header" href="#evm_op_sar">EVM_OP_SAR</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SAR = 0x1D;
+</code></pre>
+<h3 id="evm_op_sha3"><a class="header" href="#evm_op_sha3">EVM_OP_SHA3</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SHA3 = 0x20;
+</code></pre>
+<h3 id="evm_op_address"><a class="header" href="#evm_op_address">EVM_OP_ADDRESS</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_ADDRESS = 0x30;
+</code></pre>
+<h3 id="evm_op_balance"><a class="header" href="#evm_op_balance">EVM_OP_BALANCE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_BALANCE = 0x31;
+</code></pre>
+<h3 id="evm_op_origin"><a class="header" href="#evm_op_origin">EVM_OP_ORIGIN</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_ORIGIN = 0x32;
+</code></pre>
+<h3 id="evm_op_caller"><a class="header" href="#evm_op_caller">EVM_OP_CALLER</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALLER = 0x33;
+</code></pre>
+<h3 id="evm_op_callvalue"><a class="header" href="#evm_op_callvalue">EVM_OP_CALLVALUE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALLVALUE = 0x34;
+</code></pre>
+<h3 id="evm_op_calldataload"><a class="header" href="#evm_op_calldataload">EVM_OP_CALLDATALOAD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALLDATALOAD = 0x35;
+</code></pre>
+<h3 id="evm_op_calldatasize"><a class="header" href="#evm_op_calldatasize">EVM_OP_CALLDATASIZE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALLDATASIZE = 0x36;
+</code></pre>
+<h3 id="evm_op_calldatacopy"><a class="header" href="#evm_op_calldatacopy">EVM_OP_CALLDATACOPY</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALLDATACOPY = 0x37;
+</code></pre>
+<h3 id="evm_op_codesize"><a class="header" href="#evm_op_codesize">EVM_OP_CODESIZE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CODESIZE = 0x38;
+</code></pre>
+<h3 id="evm_op_codecopy"><a class="header" href="#evm_op_codecopy">EVM_OP_CODECOPY</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CODECOPY = 0x39;
+</code></pre>
+<h3 id="evm_op_gasprice"><a class="header" href="#evm_op_gasprice">EVM_OP_GASPRICE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_GASPRICE = 0x3A;
+</code></pre>
+<h3 id="evm_op_extcodesize"><a class="header" href="#evm_op_extcodesize">EVM_OP_EXTCODESIZE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_EXTCODESIZE = 0x3B;
+</code></pre>
+<h3 id="evm_op_extcodecopy"><a class="header" href="#evm_op_extcodecopy">EVM_OP_EXTCODECOPY</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_EXTCODECOPY = 0x3C;
+</code></pre>
+<h3 id="evm_op_returndatasize"><a class="header" href="#evm_op_returndatasize">EVM_OP_RETURNDATASIZE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_RETURNDATASIZE = 0x3D;
+</code></pre>
+<h3 id="evm_op_returndatacopy"><a class="header" href="#evm_op_returndatacopy">EVM_OP_RETURNDATACOPY</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_RETURNDATACOPY = 0x3E;
+</code></pre>
+<h3 id="evm_op_extcodehash"><a class="header" href="#evm_op_extcodehash">EVM_OP_EXTCODEHASH</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_EXTCODEHASH = 0x3F;
+</code></pre>
+<h3 id="evm_op_blockhash"><a class="header" href="#evm_op_blockhash">EVM_OP_BLOCKHASH</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_BLOCKHASH = 0x40;
+</code></pre>
+<h3 id="evm_op_coinbase"><a class="header" href="#evm_op_coinbase">EVM_OP_COINBASE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_COINBASE = 0x41;
+</code></pre>
+<h3 id="evm_op_timestamp"><a class="header" href="#evm_op_timestamp">EVM_OP_TIMESTAMP</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_TIMESTAMP = 0x42;
+</code></pre>
+<h3 id="evm_op_number"><a class="header" href="#evm_op_number">EVM_OP_NUMBER</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_NUMBER = 0x43;
+</code></pre>
+<h3 id="evm_op_difficulty"><a class="header" href="#evm_op_difficulty">EVM_OP_DIFFICULTY</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DIFFICULTY = 0x44;
+</code></pre>
+<h3 id="evm_op_gaslimit"><a class="header" href="#evm_op_gaslimit">EVM_OP_GASLIMIT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_GASLIMIT = 0x45;
+</code></pre>
+<h3 id="evm_op_chainid"><a class="header" href="#evm_op_chainid">EVM_OP_CHAINID</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CHAINID = 0x46;
+</code></pre>
+<h3 id="evm_op_selfbalance"><a class="header" href="#evm_op_selfbalance">EVM_OP_SELFBALANCE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SELFBALANCE = 0x47;
+</code></pre>
+<h3 id="evm_op_basefee"><a class="header" href="#evm_op_basefee">EVM_OP_BASEFEE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_BASEFEE = 0x48;
+</code></pre>
+<h3 id="evm_op_pop"><a class="header" href="#evm_op_pop">EVM_OP_POP</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_POP = 0x50;
+</code></pre>
+<h3 id="evm_op_mload"><a class="header" href="#evm_op_mload">EVM_OP_MLOAD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MLOAD = 0x51;
+</code></pre>
+<h3 id="evm_op_mstore"><a class="header" href="#evm_op_mstore">EVM_OP_MSTORE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MSTORE = 0x52;
+</code></pre>
+<h3 id="evm_op_mstore8"><a class="header" href="#evm_op_mstore8">EVM_OP_MSTORE8</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MSTORE8 = 0x53;
+</code></pre>
+<h3 id="evm_op_sload"><a class="header" href="#evm_op_sload">EVM_OP_SLOAD</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SLOAD = 0x54;
+</code></pre>
+<h3 id="evm_op_sstore"><a class="header" href="#evm_op_sstore">EVM_OP_SSTORE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SSTORE = 0x55;
+</code></pre>
+<h3 id="evm_op_jump"><a class="header" href="#evm_op_jump">EVM_OP_JUMP</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_JUMP = 0x56;
+</code></pre>
+<h3 id="evm_op_jumpi"><a class="header" href="#evm_op_jumpi">EVM_OP_JUMPI</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_JUMPI = 0x57;
+</code></pre>
+<h3 id="evm_op_pc"><a class="header" href="#evm_op_pc">EVM_OP_PC</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PC = 0x58;
+</code></pre>
+<h3 id="evm_op_msize"><a class="header" href="#evm_op_msize">EVM_OP_MSIZE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_MSIZE = 0x59;
+</code></pre>
+<h3 id="evm_op_gas"><a class="header" href="#evm_op_gas">EVM_OP_GAS</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_GAS = 0x5A;
+</code></pre>
+<h3 id="evm_op_jumpdest"><a class="header" href="#evm_op_jumpdest">EVM_OP_JUMPDEST</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_JUMPDEST = 0x5B;
+</code></pre>
+<h3 id="evm_op_push0"><a class="header" href="#evm_op_push0">EVM_OP_PUSH0</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH0 = 0x5F;
+</code></pre>
+<h3 id="evm_op_push1"><a class="header" href="#evm_op_push1">EVM_OP_PUSH1</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH1 = 0x60;
+</code></pre>
+<h3 id="evm_op_push2"><a class="header" href="#evm_op_push2">EVM_OP_PUSH2</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH2 = 0x61;
+</code></pre>
+<h3 id="evm_op_push3"><a class="header" href="#evm_op_push3">EVM_OP_PUSH3</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH3 = 0x62;
+</code></pre>
+<h3 id="evm_op_push4"><a class="header" href="#evm_op_push4">EVM_OP_PUSH4</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH4 = 0x63;
+</code></pre>
+<h3 id="evm_op_push5"><a class="header" href="#evm_op_push5">EVM_OP_PUSH5</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH5 = 0x64;
+</code></pre>
+<h3 id="evm_op_push6"><a class="header" href="#evm_op_push6">EVM_OP_PUSH6</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH6 = 0x65;
+</code></pre>
+<h3 id="evm_op_push7"><a class="header" href="#evm_op_push7">EVM_OP_PUSH7</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH7 = 0x66;
+</code></pre>
+<h3 id="evm_op_push8"><a class="header" href="#evm_op_push8">EVM_OP_PUSH8</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH8 = 0x67;
+</code></pre>
+<h3 id="evm_op_push9"><a class="header" href="#evm_op_push9">EVM_OP_PUSH9</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH9 = 0x68;
+</code></pre>
+<h3 id="evm_op_push10"><a class="header" href="#evm_op_push10">EVM_OP_PUSH10</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH10 = 0x69;
+</code></pre>
+<h3 id="evm_op_push11"><a class="header" href="#evm_op_push11">EVM_OP_PUSH11</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH11 = 0x6A;
+</code></pre>
+<h3 id="evm_op_push12"><a class="header" href="#evm_op_push12">EVM_OP_PUSH12</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH12 = 0x6B;
+</code></pre>
+<h3 id="evm_op_push13"><a class="header" href="#evm_op_push13">EVM_OP_PUSH13</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH13 = 0x6C;
+</code></pre>
+<h3 id="evm_op_push14"><a class="header" href="#evm_op_push14">EVM_OP_PUSH14</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH14 = 0x6D;
+</code></pre>
+<h3 id="evm_op_push15"><a class="header" href="#evm_op_push15">EVM_OP_PUSH15</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH15 = 0x6E;
+</code></pre>
+<h3 id="evm_op_push16"><a class="header" href="#evm_op_push16">EVM_OP_PUSH16</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH16 = 0x6F;
+</code></pre>
+<h3 id="evm_op_push17"><a class="header" href="#evm_op_push17">EVM_OP_PUSH17</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH17 = 0x70;
+</code></pre>
+<h3 id="evm_op_push18"><a class="header" href="#evm_op_push18">EVM_OP_PUSH18</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH18 = 0x71;
+</code></pre>
+<h3 id="evm_op_push19"><a class="header" href="#evm_op_push19">EVM_OP_PUSH19</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH19 = 0x72;
+</code></pre>
+<h3 id="evm_op_push20"><a class="header" href="#evm_op_push20">EVM_OP_PUSH20</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH20 = 0x73;
+</code></pre>
+<h3 id="evm_op_push21"><a class="header" href="#evm_op_push21">EVM_OP_PUSH21</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH21 = 0x74;
+</code></pre>
+<h3 id="evm_op_push22"><a class="header" href="#evm_op_push22">EVM_OP_PUSH22</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH22 = 0x75;
+</code></pre>
+<h3 id="evm_op_push23"><a class="header" href="#evm_op_push23">EVM_OP_PUSH23</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH23 = 0x76;
+</code></pre>
+<h3 id="evm_op_push24"><a class="header" href="#evm_op_push24">EVM_OP_PUSH24</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH24 = 0x77;
+</code></pre>
+<h3 id="evm_op_push25"><a class="header" href="#evm_op_push25">EVM_OP_PUSH25</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH25 = 0x78;
+</code></pre>
+<h3 id="evm_op_push26"><a class="header" href="#evm_op_push26">EVM_OP_PUSH26</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH26 = 0x79;
+</code></pre>
+<h3 id="evm_op_push27"><a class="header" href="#evm_op_push27">EVM_OP_PUSH27</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH27 = 0x7A;
+</code></pre>
+<h3 id="evm_op_push28"><a class="header" href="#evm_op_push28">EVM_OP_PUSH28</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH28 = 0x7B;
+</code></pre>
+<h3 id="evm_op_push29"><a class="header" href="#evm_op_push29">EVM_OP_PUSH29</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH29 = 0x7C;
+</code></pre>
+<h3 id="evm_op_push30"><a class="header" href="#evm_op_push30">EVM_OP_PUSH30</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH30 = 0x7D;
+</code></pre>
+<h3 id="evm_op_push31"><a class="header" href="#evm_op_push31">EVM_OP_PUSH31</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH31 = 0x7E;
+</code></pre>
+<h3 id="evm_op_push32"><a class="header" href="#evm_op_push32">EVM_OP_PUSH32</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_PUSH32 = 0x7F;
+</code></pre>
+<h3 id="evm_op_dup1"><a class="header" href="#evm_op_dup1">EVM_OP_DUP1</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP1 = 0x80;
+</code></pre>
+<h3 id="evm_op_dup2"><a class="header" href="#evm_op_dup2">EVM_OP_DUP2</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP2 = 0x81;
+</code></pre>
+<h3 id="evm_op_dup3"><a class="header" href="#evm_op_dup3">EVM_OP_DUP3</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP3 = 0x82;
+</code></pre>
+<h3 id="evm_op_dup4"><a class="header" href="#evm_op_dup4">EVM_OP_DUP4</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP4 = 0x83;
+</code></pre>
+<h3 id="evm_op_dup5"><a class="header" href="#evm_op_dup5">EVM_OP_DUP5</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP5 = 0x84;
+</code></pre>
+<h3 id="evm_op_dup6"><a class="header" href="#evm_op_dup6">EVM_OP_DUP6</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP6 = 0x85;
+</code></pre>
+<h3 id="evm_op_dup7"><a class="header" href="#evm_op_dup7">EVM_OP_DUP7</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP7 = 0x86;
+</code></pre>
+<h3 id="evm_op_dup8"><a class="header" href="#evm_op_dup8">EVM_OP_DUP8</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP8 = 0x87;
+</code></pre>
+<h3 id="evm_op_dup9"><a class="header" href="#evm_op_dup9">EVM_OP_DUP9</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP9 = 0x88;
+</code></pre>
+<h3 id="evm_op_dup10"><a class="header" href="#evm_op_dup10">EVM_OP_DUP10</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP10 = 0x89;
+</code></pre>
+<h3 id="evm_op_dup11"><a class="header" href="#evm_op_dup11">EVM_OP_DUP11</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP11 = 0x8A;
+</code></pre>
+<h3 id="evm_op_dup12"><a class="header" href="#evm_op_dup12">EVM_OP_DUP12</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP12 = 0x8B;
+</code></pre>
+<h3 id="evm_op_dup13"><a class="header" href="#evm_op_dup13">EVM_OP_DUP13</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP13 = 0x8C;
+</code></pre>
+<h3 id="evm_op_dup14"><a class="header" href="#evm_op_dup14">EVM_OP_DUP14</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP14 = 0x8D;
+</code></pre>
+<h3 id="evm_op_dup15"><a class="header" href="#evm_op_dup15">EVM_OP_DUP15</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP15 = 0x8E;
+</code></pre>
+<h3 id="evm_op_dup16"><a class="header" href="#evm_op_dup16">EVM_OP_DUP16</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DUP16 = 0x8F;
+</code></pre>
+<h3 id="evm_op_swap1"><a class="header" href="#evm_op_swap1">EVM_OP_SWAP1</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP1 = 0x90;
+</code></pre>
+<h3 id="evm_op_swap2"><a class="header" href="#evm_op_swap2">EVM_OP_SWAP2</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP2 = 0x91;
+</code></pre>
+<h3 id="evm_op_swap3"><a class="header" href="#evm_op_swap3">EVM_OP_SWAP3</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP3 = 0x92;
+</code></pre>
+<h3 id="evm_op_swap4"><a class="header" href="#evm_op_swap4">EVM_OP_SWAP4</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP4 = 0x93;
+</code></pre>
+<h3 id="evm_op_swap5"><a class="header" href="#evm_op_swap5">EVM_OP_SWAP5</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP5 = 0x94;
+</code></pre>
+<h3 id="evm_op_swap6"><a class="header" href="#evm_op_swap6">EVM_OP_SWAP6</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP6 = 0x95;
+</code></pre>
+<h3 id="evm_op_swap7"><a class="header" href="#evm_op_swap7">EVM_OP_SWAP7</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP7 = 0x96;
+</code></pre>
+<h3 id="evm_op_swap8"><a class="header" href="#evm_op_swap8">EVM_OP_SWAP8</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP8 = 0x97;
+</code></pre>
+<h3 id="evm_op_swap9"><a class="header" href="#evm_op_swap9">EVM_OP_SWAP9</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP9 = 0x98;
+</code></pre>
+<h3 id="evm_op_swap10"><a class="header" href="#evm_op_swap10">EVM_OP_SWAP10</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP10 = 0x99;
+</code></pre>
+<h3 id="evm_op_swap11"><a class="header" href="#evm_op_swap11">EVM_OP_SWAP11</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP11 = 0x9A;
+</code></pre>
+<h3 id="evm_op_swap12"><a class="header" href="#evm_op_swap12">EVM_OP_SWAP12</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP12 = 0x9B;
+</code></pre>
+<h3 id="evm_op_swap13"><a class="header" href="#evm_op_swap13">EVM_OP_SWAP13</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP13 = 0x9C;
+</code></pre>
+<h3 id="evm_op_swap14"><a class="header" href="#evm_op_swap14">EVM_OP_SWAP14</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP14 = 0x9D;
+</code></pre>
+<h3 id="evm_op_swap15"><a class="header" href="#evm_op_swap15">EVM_OP_SWAP15</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP15 = 0x9E;
+</code></pre>
+<h3 id="evm_op_swap16"><a class="header" href="#evm_op_swap16">EVM_OP_SWAP16</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SWAP16 = 0x9F;
+</code></pre>
+<h3 id="evm_op_log0"><a class="header" href="#evm_op_log0">EVM_OP_LOG0</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_LOG0 = 0xA0;
+</code></pre>
+<h3 id="evm_op_log1"><a class="header" href="#evm_op_log1">EVM_OP_LOG1</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_LOG1 = 0xA1;
+</code></pre>
+<h3 id="evm_op_log2"><a class="header" href="#evm_op_log2">EVM_OP_LOG2</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_LOG2 = 0xA2;
+</code></pre>
+<h3 id="evm_op_log3"><a class="header" href="#evm_op_log3">EVM_OP_LOG3</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_LOG3 = 0xA3;
+</code></pre>
+<h3 id="evm_op_log4"><a class="header" href="#evm_op_log4">EVM_OP_LOG4</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_LOG4 = 0xA4;
+</code></pre>
+<h3 id="evm_op_create"><a class="header" href="#evm_op_create">EVM_OP_CREATE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CREATE = 0xF0;
+</code></pre>
+<h3 id="evm_op_call"><a class="header" href="#evm_op_call">EVM_OP_CALL</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALL = 0xF1;
+</code></pre>
+<h3 id="evm_op_callcode"><a class="header" href="#evm_op_callcode">EVM_OP_CALLCODE</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CALLCODE = 0xF2;
+</code></pre>
+<h3 id="evm_op_return"><a class="header" href="#evm_op_return">EVM_OP_RETURN</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_RETURN = 0xF3;
+</code></pre>
+<h3 id="evm_op_delegatecall"><a class="header" href="#evm_op_delegatecall">EVM_OP_DELEGATECALL</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_DELEGATECALL = 0xF4;
+</code></pre>
+<h3 id="evm_op_create2"><a class="header" href="#evm_op_create2">EVM_OP_CREATE2</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_CREATE2 = 0xF5;
+</code></pre>
+<h3 id="evm_op_staticcall"><a class="header" href="#evm_op_staticcall">EVM_OP_STATICCALL</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_STATICCALL = 0xFA;
+</code></pre>
+<h3 id="evm_op_revert"><a class="header" href="#evm_op_revert">EVM_OP_REVERT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_REVERT = 0xFD;
+</code></pre>
+<h3 id="evm_op_invalid"><a class="header" href="#evm_op_invalid">EVM_OP_INVALID</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_INVALID = 0xFE;
+</code></pre>
+<h3 id="evm_op_selfdestruct"><a class="header" href="#evm_op_selfdestruct">EVM_OP_SELFDESTRUCT</a></h3>
+<pre><code class="language-solidity">uint8 constant EVM_OP_SELFDESTRUCT = 0xFF;
+</code></pre>
+<h3 id="halting_bitmap"><a class="header" href="#halting_bitmap">HALTING_BITMAP</a></h3>
+<pre><code class="language-solidity">uint256 constant HALTING_BITMAP = (1 &lt;&lt; EVM_OP_STOP) | (1 &lt;&lt; EVM_OP_RETURN) | (1 &lt;&lt; EVM_OP_REVERT)
+    | (1 &lt;&lt; EVM_OP_INVALID) | (1 &lt;&lt; EVM_OP_SELFDESTRUCT);
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../src/lib/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../../../src/lib/LibExtrospectBytecode.sol/library.LibExtrospectBytecode.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../src/lib/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../../../src/lib/LibExtrospectBytecode.sol/library.LibExtrospectBytecode.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../elasticlunr.min.js"></script>
+        <script src="../../../mark.min.js"></script>
+        <script src="../../../searcher.js"></script>
+
+        <script src="../../../clipboard.min.js"></script>
+        <script src="../../../highlight.js"></script>
+        <script src="../../../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../solidity.min.js"></script>
+
+
+    </div>
+    </body>
+</html>

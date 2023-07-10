@@ -1,0 +1,265 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>IExtrospectBytecodeV1</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../../../../favicon.svg">
+        <link rel="shortcut icon" href="../../../../favicon.png">
+        <link rel="stylesheet" href="../../../../css/variables.css">
+        <link rel="stylesheet" href="../../../../css/general.css">
+        <link rel="stylesheet" href="../../../../css/chrome.css">
+        <link rel="stylesheet" href="../../../../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../../../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../../../../highlight.css">
+        <link rel="stylesheet" href="../../../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../../../../book.css">
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../../../../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item "><a href="../../../../index.html">Home</a></li><li class="chapter-item affix "><li class="part-title">src</li><li class="chapter-item "><a href="../../../../src/concrete/index.html">❱ concrete</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../../src/concrete/Extrospection.sol/contract.Extrospection.html">Extrospection</a></li></ol></li><li class="chapter-item expanded "><a href="../../../../src/interface/index.html">❱ interface</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../../src/interface/deprecated/index.html">❱ deprecated</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../../src/interface/deprecated/IExtrospectBytecodeV1.sol/interface.IExtrospectBytecodeV1.html" class="active">IExtrospectBytecodeV1</a></li></ol></li><li class="chapter-item "><a href="../../../../src/interface/IExtrospectBytecodeV2.sol/interface.IExtrospectBytecodeV2.html">IExtrospectBytecodeV2</a></li><li class="chapter-item "><a href="../../../../src/interface/IExtrospectERC1167ProxyV1.sol/interface.IExtrospectERC1167ProxyV1.html">IExtrospectERC1167ProxyV1</a></li><li class="chapter-item "><a href="../../../../src/interface/IExtrospectInterpreterV1.sol/interface.IExtrospectInterpreterV1.html">IExtrospectInterpreterV1</a></li><li class="chapter-item "><a href="../../../../src/interface/IExtrospectInterpreterV1.sol/constants.IExtrospectInterpreterV1.html">IExtrospectInterpreterV1 constants</a></li></ol></li><li class="chapter-item "><a href="../../../../src/lib/index.html">❱ lib</a><a class="toggle"><div>❱</div></a></li><li><ol class="section"><li class="chapter-item "><a href="../../../../src/lib/EVMOpcodes.sol/constants.EVMOpcodes.html">EVMOpcodes constants</a></li><li class="chapter-item "><a href="../../../../src/lib/LibExtrospectBytecode.sol/library.LibExtrospectBytecode.html">LibExtrospectBytecode</a></li><li class="chapter-item "><a href="../../../../src/lib/LibExtrospectERC1167Proxy.sol/library.LibExtrospectERC1167Proxy.html">LibExtrospectERC1167Proxy</a></li><li class="chapter-item "><a href="../../../../src/lib/LibExtrospectERC1167Proxy.sol/constants.LibExtrospectERC1167Proxy.html">LibExtrospectERC1167Proxy constants</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title"></h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rainprotocol/rain.extrospection" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="iextrospectbytecodev1"><a class="header" href="#iextrospectbytecodev1">IExtrospectBytecodeV1</a></h1>
+<p><a href="https://github.com/rainprotocol/rain.extrospection/blob/dbb9902c1f20a32fbeb3ff7942bdf76cf14f9cd4/src/interface/deprecated/IExtrospectBytecodeV1.sol">Git Source</a></p>
+<p>External functions for offchain processing to conveniently access the
+view on contract code that is exposed to EVM opcodes. Generally this is NOT
+useful onchain as all contracts have access to the same opcodes, so would be
+more gas efficient and convenient calling the opcodes internally than an
+external call to an extrospection contract.</p>
+<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+<h3 id="bytecode"><a class="header" href="#bytecode">bytecode</a></h3>
+<p>Return the bytecode for an address.
+Equivalent to <code>account.code</code>.</p>
+<pre><code class="language-solidity">function bytecode(address account) external view returns (bytes memory);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The account to get bytecode for.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>bytes</code></td><td>The bytecode of <code>account</code>. Will be <code>0</code> length for non-contract accounts.</td></tr>
+</tbody></table>
+</div>
+<h3 id="bytecodehash"><a class="header" href="#bytecodehash">bytecodeHash</a></h3>
+<p>Return the hash of the complete bytecode for an address.
+Equivalent to <code>account.codehash</code>.</p>
+<pre><code class="language-solidity">function bytecodeHash(address account) external view returns (bytes32);
+</code></pre>
+<p><strong>Parameters</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>account</code></td><td><code>address</code></td><td>The account to get the bytecode hash for.</td></tr>
+</tbody></table>
+</div>
+<p><strong>Returns</strong></p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>&lt;none&gt;</code></td><td><code>bytes32</code></td><td>The hash of the bytecode of <code>account</code>. Will be <code>0</code> (NOT the hash of empty bytes) for non-contract accounts.</td></tr>
+</tbody></table>
+</div>
+<h3 id="scanevmopcodespresentinaccount"><a class="header" href="#scanevmopcodespresentinaccount">scanEVMOpcodesPresentInAccount</a></h3>
+<p>Scan every byte of the bytecode in some account and return an encoded
+list of every opcode present in that account's code. The list is encoded
+as a single <code>uint256</code> where each bit is a flag representing the presence
+of an opcode in the source bytecode. The opcode byte is the literal
+bitwise offset in the final output, starting from least significant bits.
+E.g. opcode <code>0</code> sets the 0th bit, i.e. <code>2 ** 0</code>, i.e. <code>1</code>, i.e. <code>1 &lt;&lt; 0</code>.
+opcode <code>0x50</code> sets the <code>0x50</code>th bit, i.e. <code>2 ** 0x50</code>, i.e. <code>1 &lt;&lt; 0x50</code>.
+The final output can be bitwise <code>&amp;</code> against a reference set of bit flags
+to check for the presence of a list of (un)desired opcodes in a single
+logical operation. This allows for fewer branching operations (expensive)
+per byte, but precludes the ability to break the loop early upon
+discovering the prescence of a specific opcode.
+The scan MUST respect the inline skip behaviour of the <code>PUSH*</code> family of
+evm opcodes, starting from opcode <code>0x60</code> through <code>0x7F</code> inclusive. These
+opcodes are followed by literal bytes that will be pushed to the EVM
+stack at runtime and so are NOT opcodes themselves. Even though each byte
+of the data following a <code>PUSH*</code> is assigned program counter, it DOES NOT
+run as an opcode. Therefore, the scanner MUST ignore all push data,
+otherwise it will report false positives from stack data being treated as
+opcodes. The relative index of each <code>PUSH</code> opcode signifies how many
+bytes to skip, e.g. <code>0x60</code> skips 1 byte, <code>0x61</code> skips 2 bytes, etc.</p>
+<pre><code class="language-solidity">function scanEVMOpcodesPresentInAccount(address account) external view returns (uint256 scan);
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../../src/interface/deprecated/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../../../../src/interface/IExtrospectBytecodeV2.sol/interface.IExtrospectBytecodeV2.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../../src/interface/deprecated/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../../../../src/interface/IExtrospectBytecodeV2.sol/interface.IExtrospectBytecodeV2.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../../../elasticlunr.min.js"></script>
+        <script src="../../../../mark.min.js"></script>
+        <script src="../../../../searcher.js"></script>
+
+        <script src="../../../../clipboard.min.js"></script>
+        <script src="../../../../highlight.js"></script>
+        <script src="../../../../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../../../solidity.min.js"></script>
+
+
+    </div>
+    </body>
+</html>
