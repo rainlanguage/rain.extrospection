@@ -2,8 +2,8 @@
 pragma solidity =0.8.18;
 
 import "forge-std/Test.sol";
-import "sol.lib.memory/LibPointer.sol";
-import "sol.lib.memory/LibBytes.sol";
+import "rain.solmem/lib/LibPointer.sol";
+import "rain.solmem/lib/LibBytes.sol";
 import "src/lib/LibExtrospectBytecode.sol";
 import "test/lib/LibExtrospectBytecode.testConstants.sol";
 import "test/lib/LibExtrospectionSlow.sol";
