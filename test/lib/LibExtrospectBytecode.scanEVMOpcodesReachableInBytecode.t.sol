@@ -18,7 +18,7 @@ import {
     EVM_OP_EXP,
     EVM_OP_SIGNEXTEND,
     EVM_OP_LOG2
-} from "src/lib/EVMOpCodes.sol";
+} from "src/lib/EVMOpcodes.sol";
 import {
     REPORTED_FALSE_POSITIVE,
     REPORTED_FALSE_POSITIVE_BYTECODE,
