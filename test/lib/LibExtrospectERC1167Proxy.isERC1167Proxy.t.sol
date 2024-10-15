@@ -2,9 +2,14 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity =0.8.25;
 
-import "forge-std/Test.sol";
-import "src/lib/LibExtrospectERC1167Proxy.sol";
-import "test/lib/LibExtrospectionSlow.sol";
+import {Test} from "forge-std/Test.sol";
+import {
+    LibExtrospectERC1167Proxy,
+    ERC1167_SUFFIX,
+    ERC1167_PREFIX,
+    ERC1167_PROXY_LENGTH
+} from "src/lib/LibExtrospectERC1167Proxy.sol";
+import {LibExtrospectionSlow} from "test/lib/LibExtrospectionSlow.sol";
 
 /// @title LibExtrospectERC1167ProxyTest
 /// @notice Tests the LibExtrospectERC1167Proxy library.

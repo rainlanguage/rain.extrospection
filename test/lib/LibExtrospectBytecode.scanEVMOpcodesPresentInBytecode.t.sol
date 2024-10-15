@@ -2,12 +2,10 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity =0.8.25;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import "rain.solmem/lib/LibBytes.sol";
-
-import "src/lib/LibExtrospectBytecode.sol";
-import "test/lib/LibExtrospectionSlow.sol";
+import {LibBytes, LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
+import {LibExtrospectionSlow} from "test/lib/LibExtrospectionSlow.sol";
 
 contract LibExtrospectScanEVMOpcodesPresentInBytecodeTest is Test {
     using LibBytes for bytes;
