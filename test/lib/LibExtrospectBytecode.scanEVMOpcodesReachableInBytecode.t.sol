@@ -1,12 +1,30 @@
-// SPDX-License-Identifier: CAL
-pragma solidity =0.8.18;
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
+pragma solidity =0.8.25;
 
-import "forge-std/Test.sol";
-import "rain.solmem/lib/LibPointer.sol";
-import "rain.solmem/lib/LibBytes.sol";
-import "src/lib/LibExtrospectBytecode.sol";
-import "test/lib/LibExtrospectBytecode.testConstants.sol";
-import "test/lib/LibExtrospectionSlow.sol";
+import {Test} from "forge-std/Test.sol";
+import {LibPointer} from "rain.solmem/lib/LibPointer.sol";
+import {LibBytes} from "rain.solmem/lib/LibBytes.sol";
+import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
+import {
+    EVM_OP_STOP,
+    EVM_OP_RETURN,
+    EVM_OP_REVERT,
+    EVM_OP_INVALID,
+    EVM_OP_SELFDESTRUCT,
+    EVM_OP_EQ,
+    EVM_OP_JUMPDEST,
+    EVM_OP_MULMOD,
+    EVM_OP_EXP,
+    EVM_OP_SIGNEXTEND,
+    EVM_OP_LOG2
+} from "src/lib/EVMOpcodes.sol";
+import {
+    REPORTED_FALSE_POSITIVE,
+    REPORTED_FALSE_POSITIVE_BYTECODE,
+    METAMORPHIC_METADATA
+} from "test/lib/LibExtrospectBytecode.testConstants.sol";
+import {LibExtrospectionSlow} from "test/lib/LibExtrospectionSlow.sol";
 
 contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
     using LibBytes for bytes;

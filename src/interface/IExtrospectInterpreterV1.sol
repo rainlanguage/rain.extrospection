@@ -1,7 +1,22 @@
-// SPDX-License-Identifier: CAL
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity ^0.8.18;
 
-import "../lib/EVMOpcodes.sol";
+import {
+    EVM_OP_CREATE,
+    EVM_OP_CREATE2,
+    EVM_OP_LOG0,
+    EVM_OP_LOG1,
+    EVM_OP_LOG2,
+    EVM_OP_LOG3,
+    EVM_OP_LOG4,
+    EVM_OP_SSTORE,
+    EVM_OP_SELFDESTRUCT,
+    EVM_OP_CALL,
+    EVM_OP_SLOAD,
+    EVM_OP_DELEGATECALL,
+    EVM_OP_CALLCODE
+} from "../lib/EVMOpcodes.sol";
 
 /// @dev https://eips.ethereum.org/EIPS/eip-214#specification
 uint256 constant NON_STATIC_OPS = (1 << uint256(EVM_OP_CREATE)) | (1 << uint256(EVM_OP_CREATE2))

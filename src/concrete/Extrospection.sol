@@ -1,15 +1,13 @@
-// SPDX-License-Identifier: CAL
-pragma solidity =0.8.18;
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
+pragma solidity =0.8.25;
 
-import "rain.solmem/lib/LibPointer.sol";
-import "rain.solmem/lib/LibBytes.sol";
+import {IExtrospectBytecodeV2} from "../interface/IExtrospectBytecodeV2.sol";
+import {IExtrospectInterpreterV1, INTERPRETER_DISALLOWED_OPS} from "../interface/IExtrospectInterpreterV1.sol";
+import {IExtrospectERC1167ProxyV1} from "../interface/IExtrospectERC1167ProxyV1.sol";
 
-import "../interface/IExtrospectBytecodeV2.sol";
-import "../interface/IExtrospectInterpreterV1.sol";
-import "../interface/IExtrospectERC1167ProxyV1.sol";
-
-import "../lib/LibExtrospectBytecode.sol";
-import "../lib/LibExtrospectERC1167Proxy.sol";
+import {LibBytes, LibExtrospectBytecode} from "../lib/LibExtrospectBytecode.sol";
+import {LibExtrospectERC1167Proxy} from "../lib/LibExtrospectERC1167Proxy.sol";
 
 /// @title Extrospection
 /// @notice Implements all extrospection interfaces.

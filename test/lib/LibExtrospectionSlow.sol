@@ -1,8 +1,9 @@
-// SPDX-License-Identifier: CAL
-pragma solidity =0.8.18;
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
+pragma solidity =0.8.25;
 
-import "src/lib/EVMOpcodes.sol";
-import "src/lib/LibExtrospectERC1167Proxy.sol";
+import {HALTING_BITMAP, EVM_OP_JUMPDEST} from "src/lib/EVMOpcodes.sol";
+import {ERC1167_PREFIX_HASH, ERC1167_SUFFIX_HASH} from "src/lib/LibExtrospectERC1167Proxy.sol";
 
 library LibExtrospectionSlow {
     /// KISS implementation of a presence scan.

@@ -1,11 +1,12 @@
-// SPDX-License-Identifier: CAL
-pragma solidity =0.8.18;
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
+pragma solidity =0.8.25;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import "src/lib/LibExtrospectERC1167Proxy.sol";
+import {LibExtrospectERC1167Proxy, ERC1167_PREFIX, ERC1167_SUFFIX} from "src/lib/LibExtrospectERC1167Proxy.sol";
 
-import "src/concrete/Extrospection.sol";
+import {Extrospection} from "src/concrete/Extrospection.sol";
 
 /// @title ExtrospectionERC1167ProxyTest
 /// @notice Tests the Extrospection contract implementation of

@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: CAL
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity ^0.8.18;
 
-import "rain.solmem/lib/LibPointer.sol";
-import "rain.solmem/lib/LibBytes.sol";
-import "./EVMOpcodes.sol";
+import {LibBytes, Pointer} from "rain.solmem/lib/LibBytes.sol";
+import {EVM_OP_JUMPDEST, HALTING_BITMAP} from "./EVMOpcodes.sol";
 
 /// @title LibExtrospectBytecode
 /// @notice Internal algorithms for extrospecting bytecode. Notably the EVM
