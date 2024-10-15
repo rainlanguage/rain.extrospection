@@ -1,7 +1,8 @@
-// SPDX-License-Identifier: CAL
-pragma solidity =0.8.18;
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
+pragma solidity =0.8.25;
 
-import "rain.solmem/lib/LibPointer.sol";
+import {LibPointer} from "rain.solmem/lib/LibPointer.sol";
 import "rain.solmem/lib/LibBytes.sol";
 
 import "../interface/IExtrospectBytecodeV2.sol";
