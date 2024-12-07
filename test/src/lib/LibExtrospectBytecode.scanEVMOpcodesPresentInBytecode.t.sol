@@ -10,16 +10,16 @@ import {LibExtrospectionSlow} from "test/lib/LibExtrospectionSlow.sol";
 contract LibExtrospectScanEVMOpcodesPresentInBytecodeTest is Test {
     using LibBytes for bytes;
 
-    function testScanEVMOpcodesPresentSimple() public {
+    function testScanEVMOpcodesPresentSimple() public pure {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"04050607"), 0xF0);
     }
 
-    function testScanEVMOpcodesPresentPush1() public {
+    function testScanEVMOpcodesPresentPush1() public pure {
         // PUSH1 01
         assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"60016002"), 2 ** 0x60);
     }
 
-    function testScanEVMOpcodesPresentReference(bytes memory data) public {
+    function testScanEVMOpcodesPresentReference(bytes memory data) public pure {
         assertEq(
             LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(data),
             LibExtrospectionSlow.scanEVMOpcodesPresentInBytecodeSlow(data)
