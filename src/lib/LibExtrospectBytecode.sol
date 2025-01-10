@@ -40,7 +40,9 @@ library LibExtrospectBytecode {
     function trimSolidityCBORMetadata(bytes memory bytecode) internal pure returns (bool didTrim) {
         uint256 length = bytecode.length;
         if (length >= 53) {
-            uint256 maskA = 0x0000000000000000000000FFFFFFFFFFFFFFFF00000000000000000000000000;
+            //slither-disable-next-line too-many-digits
+            uint256 maskA = 0xFFFFFFFFFFFFFFFF00000000000000000000000000;
+            //slither-disable-next-line too-many-digits
             uint256 maskB = 0x000000000000000000000000000000000000000000FFFFFFFFFFFF000000FFFF;
             bytes32 expectedHash = bytes32(uint256(0xe55864b80a56accebaca64500e23598f6acfb743a5475323f0b7f2d0d268c62));
             bytes32 relevantHash;
