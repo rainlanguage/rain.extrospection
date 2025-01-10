@@ -12,6 +12,52 @@ import {EVM_OP_JUMPDEST, HALTING_BITMAP} from "./EVMOpcodes.sol";
 library LibExtrospectBytecode {
     using LibBytes for bytes;
 
+    /// https://docs.soliditylang.org/en/latest/metadata.html#encoding-of-the-metadata-hash-in-the-bytecode
+    ///
+    /// The encoding is not super complex, but requires having a CBOR decoder to
+    /// do anything properly at all. At the time of writing, the existing CBOR
+    /// decoding options in Solidity are 3+ years old and not maintained, nor is
+    /// it clear what quality or maturity they have.
+    ///
+    /// MOST OF THE TIME, the metadata is either not present or will follow the
+    /// default structure. This is:
+    /// - First 2 bytes of the 51 bytes are `0xa264` as cbor structure
+    /// - Next 4 bytes `0x69706673` as `ipfs` ascii/utf8
+    /// - Next 2 bytes `0x5822` as cbor structure
+    /// - Next 34 bytes are the IPFS hash (yes 34, not 32)
+    /// - Next 1 bytes `0x64` as cbor structure
+    /// - Next 4 byte `0x736f6c63` as `solc` ascii/utf8
+    /// - Next 1 byte `0x43` as cbor structure
+    /// - Next 3 bytes as solc version (e.g. `0x000804`)
+    /// - Final 2 bytes specify length of metadata which is always 51 bytes
+    ///
+    /// For the sake of trimming metadata in an 80/20 way we check that all the
+    /// static parts are present and correct, and ignore the parts that change.
+    /// The length of the metadata must always be 51+2 bytes, as the dynamic
+    /// parts still have constant length.
+    ///
+    /// NOTE bytecode is mutated in place.
+    function trimSolidityCBORMetadata(bytes memory bytecode) internal pure returns (bool didTrim) {
+        uint256 length = bytecode.length;
+        if (length >= 53) {
+            //slither-disable-next-line too-many-digits
+            uint256 maskA = 0xFFFFFFFFFFFFFFFF00000000000000000000000000;
+            //slither-disable-next-line too-many-digits
+            uint256 maskB = 0x000000000000000000000000000000000000000000FFFFFFFFFFFF000000FFFF;
+            bytes32 expectedHash = bytes32(uint256(0xe55864b80a56accebaca64500e23598f6acfb743a5475323f0b7f2d0d268c62));
+            bytes32 relevantHash;
+            assembly ("memory-safe") {
+                // Point 0x20 bytes before the end of the bytecode.
+                let end := add(bytecode, length)
+                mstore(0, and(maskA, mload(sub(end, 0x20))))
+                mstore(0x20, and(maskB, mload(end)))
+                relevantHash := keccak256(0, 0x40)
+                didTrim := eq(relevantHash, expectedHash)
+                if didTrim { mstore(bytecode, sub(length, 53)) }
+            }
+        }
+    }
+
     /// Scans for opcodes that are reachable during execution of a contract.
     /// Adapted from https://github.com/MrLuit/selfdestruct-detect/blob/master/src/index.ts
     /// @param bytecode The bytecode to scan.
