@@ -37,6 +37,7 @@ library LibExtrospectBytecode {
     /// parts still have constant length.
     ///
     /// NOTE bytecode is mutated in place.
+    //forge-lint: disable-next-line(mixed-case-function)
     function trimSolidityCBORMetadata(bytes memory bytecode) internal pure returns (bool didTrim) {
         uint256 length = bytecode.length;
         if (length >= 53) {
@@ -63,6 +64,7 @@ library LibExtrospectBytecode {
     /// @param bytecode The bytecode to scan.
     /// @return bytesReachable A `uint256` where each bit represents the presence
     /// of a reachable opcode in the source bytecode.
+    //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesReachableInBytecode(bytes memory bytecode) internal pure returns (uint256 bytesReachable) {
         Pointer cursor = bytecode.dataPointer();
         uint256 length = bytecode.length;
@@ -115,6 +117,7 @@ library LibExtrospectBytecode {
     /// @param bytecode The bytecode to scan.
     /// @return bytesPresent A `uint256` where each bit represents the presence
     /// of an opcode in the source bytecode.
+    //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesPresentInBytecode(bytes memory bytecode) internal pure returns (uint256 bytesPresent) {
         Pointer cursor = bytecode.dataPointer();
         uint256 length = bytecode.length;

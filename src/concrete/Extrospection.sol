@@ -25,16 +25,19 @@ contract Extrospection is IExtrospectBytecodeV2, IExtrospectInterpreterV1, IExtr
     }
 
     /// @inheritdoc IExtrospectBytecodeV2
+    //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesPresentInAccount(address account) public view returns (uint256) {
         return LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(account.code);
     }
 
     /// @inheritdoc IExtrospectBytecodeV2
+    //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesReachableInAccount(address account) public view returns (uint256) {
         return LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(account.code);
     }
 
     /// @inheritdoc IExtrospectInterpreterV1
+    //forge-lint: disable-next-line(mixed-case-function)
     function scanOnlyAllowedInterpreterEVMOpcodes(address interpreter) external view returns (bool) {
         return scanEVMOpcodesReachableInAccount(interpreter) & INTERPRETER_DISALLOWED_OPS == 0;
     }

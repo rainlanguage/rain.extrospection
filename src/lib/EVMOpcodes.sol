@@ -169,5 +169,7 @@ uint8 constant EVM_OP_REVERT = 0xFD;
 uint8 constant EVM_OP_INVALID = 0xFE;
 uint8 constant EVM_OP_SELFDESTRUCT = 0xFF;
 
+//forge-lint: disable-next-line(incorrect-shift)
 uint256 constant HALTING_BITMAP = (1 << EVM_OP_STOP) | (1 << EVM_OP_RETURN) | (1 << EVM_OP_REVERT)
-    | (1 << EVM_OP_INVALID) | (1 << EVM_OP_SELFDESTRUCT);
+//forge-lint: disable-next-line(incorrect-shift)
+| (1 << EVM_OP_INVALID) | (1 << EVM_OP_SELFDESTRUCT);

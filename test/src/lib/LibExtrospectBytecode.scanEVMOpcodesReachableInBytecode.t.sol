@@ -3,7 +3,6 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std/Test.sol";
-import {LibPointer} from "rain.solmem/lib/LibPointer.sol";
 import {LibBytes} from "rain.solmem/lib/LibBytes.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {
@@ -36,26 +35,31 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
 
     // Test that stop opcode halts scanning.
     function testScanEVMOpcodesReachableStop() public pure {
+        //forge-lint: disable-next-line(incorrect-shift)
         assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"00010203"), 1 << EVM_OP_STOP);
     }
 
     // Test that return opcode halts scanning.
     function testScanEVMOpcodesReachableReturn() public pure {
+        //forge-lint: disable-next-line(incorrect-shift)
         assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"f300010203"), 1 << EVM_OP_RETURN);
     }
 
     // Test that revert opcode halts scanning.
     function testScanEVMOpcodesReachableRevert() public pure {
+        //forge-lint: disable-next-line(incorrect-shift)
         assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"fd00010203"), 1 << EVM_OP_REVERT);
     }
 
     // Test that invalid opcode halts scanning.
     function testScanEVMOpcodesReachableInvalid() public pure {
+        //forge-lint: disable-next-line(incorrect-shift)
         assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"fe00010203"), 1 << EVM_OP_INVALID);
     }
 
     // Test that selfdestruct opcode halts scanning.
     function testScanEVMOpcodesReachableSelfdestruct() public pure {
+        //forge-lint: disable-next-line(incorrect-shift)
         assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"ff00010203"), 1 << EVM_OP_SELFDESTRUCT);
     }
 
@@ -65,16 +69,22 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         assertEq(
             LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"14fdff0102035b090a0b"),
             // 0x14
+            //forge-lint: disable-next-line(incorrect-shift)
             (1 << EVM_OP_EQ)
             // 0xfd
+            //forge-lint: disable-next-line(incorrect-shift)
             | (1 << EVM_OP_REVERT)
             // 0x5b
+            //forge-lint: disable-next-line(incorrect-shift)
             | (1 << EVM_OP_JUMPDEST)
             // 0x09
+            //forge-lint: disable-next-line(incorrect-shift)
             | (1 << EVM_OP_MULMOD)
             // 0x0a
+            //forge-lint: disable-next-line(incorrect-shift)
             | (1 << EVM_OP_EXP)
             // 0x0b
+            //forge-lint: disable-next-line(incorrect-shift)
             | (1 << EVM_OP_SIGNEXTEND)
         );
     }
@@ -107,6 +117,7 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
     function testScanEVMOpcodesReachableReportedFalsePositive() public pure {
         uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(REPORTED_FALSE_POSITIVE);
         assertEq(scan, 0x240a0000000000000000001a01ff0fff801d6dff0cff00846afc00011eff005f);
+        //forge-lint: disable-next-line(incorrect-shift)
         assertEq(scan & (1 << EVM_OP_SELFDESTRUCT), 0);
     }
 
@@ -116,6 +127,7 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
     function testScanEVMOpcodesReachableReportedFalsePositiveBytecode() public pure {
         uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(REPORTED_FALSE_POSITIVE_BYTECODE);
         assertEq(scan, 0x240a0000000000000000001a01ff0fff801d6dff0cff008468fc00011eff005f);
+        //forge-lint: disable-next-line(incorrect-shift)
         assertEq(scan & (1 << EVM_OP_SELFDESTRUCT), 0);
     }
 
@@ -128,10 +140,12 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         // There IS a selfdestruct in this bytecode, it is hidden in the metadata.
         // It IS reachable, but would be near invisible on etherscan.io or a
         // naive scan that ignores metadata.
+        //forge-lint: disable-next-line(incorrect-shift)
         assertEq(scan & (1 << EVM_OP_SELFDESTRUCT), (1 << EVM_OP_SELFDESTRUCT));
         // log2 is a common false positive in a naive scan. It is the first byte
         // of the cbor encoded metadata. As the start of metadata is not
         // reachable and there are no logs in the bytecode, it is not reachable.
+        //forge-lint: disable-next-line(incorrect-shift)
         assertEq(scan & (1 << EVM_OP_LOG2), 0);
     }
 }
