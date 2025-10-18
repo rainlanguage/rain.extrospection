@@ -54,6 +54,7 @@ interface IExtrospectBytecodeV2 {
     /// @param account The account to scan for opcodes.
     /// @return scan A single `uint256` where each bit represents the presence of
     /// an opcode in the source bytecode.
+    //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesPresentInAccount(address account) external view returns (uint256 scan);
 
     /// Identical to `scanEVMOpcodesPresentInAccount` except that it skips the
@@ -67,5 +68,6 @@ interface IExtrospectBytecodeV2 {
     /// @param account The account to scan for opcodes.
     /// @return scan A single `uint256` where each bit represents the presence of
     /// a reachable opcode in the source bytecode.
+    //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesReachableInAccount(address account) external view returns (uint256 scan);
 }

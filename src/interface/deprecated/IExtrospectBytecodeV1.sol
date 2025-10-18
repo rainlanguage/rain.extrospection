@@ -51,5 +51,6 @@ interface IExtrospectBytecodeV1 {
     /// otherwise it will report false positives from stack data being treated as
     /// opcodes. The relative index of each `PUSH` opcode signifies how many
     /// bytes to skip, e.g. `0x60` skips 1 byte, `0x61` skips 2 bytes, etc.
+    //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesPresentInAccount(address account) external view returns (uint256 scan);
 }

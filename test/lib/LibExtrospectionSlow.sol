@@ -7,6 +7,7 @@ import {ERC1167_PREFIX_HASH, ERC1167_SUFFIX_HASH} from "src/lib/LibExtrospectERC
 
 library LibExtrospectionSlow {
     /// KISS implementation of a presence scan.
+    //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesPresentInBytecodeSlow(bytes memory data) internal pure returns (uint256) {
         uint256 scan = 0;
         for (uint256 i = 0; i < data.length; i++) {
@@ -21,6 +22,7 @@ library LibExtrospectionSlow {
     }
 
     /// KISS implementation of a reachability scan.
+    //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesReachableInBytecodeSlow(bytes memory data) internal pure returns (uint256) {
         uint256 scan = 0;
         bool halted = false;
