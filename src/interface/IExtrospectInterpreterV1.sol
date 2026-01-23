@@ -21,29 +21,30 @@ import {
 /// @dev https://eips.ethereum.org/EIPS/eip-214#specification
 //forge-lint: disable-next-line(incorrect-shift)
 uint256 constant NON_STATIC_OPS = (1 << uint256(EVM_OP_CREATE)) | (1 << uint256(EVM_OP_CREATE2))
-//forge-lint: disable-next-line(incorrect-shift)
-| (1 << uint256(EVM_OP_LOG0)) | (1 << uint256(EVM_OP_LOG1)) | (1 << uint256(EVM_OP_LOG2)) | (1 << uint256(EVM_OP_LOG3))
-//forge-lint: disable-next-line(incorrect-shift)
-| (1 << uint256(EVM_OP_LOG4)) | (1 << uint256(EVM_OP_SSTORE)) | (1 << uint256(EVM_OP_SELFDESTRUCT))
-//forge-lint: disable-next-line(incorrect-shift)
-| (1 << uint256(EVM_OP_CALL));
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (1 << uint256(EVM_OP_LOG0)) | (1 << uint256(EVM_OP_LOG1)) | (1 << uint256(EVM_OP_LOG2))
+    | (1 << uint256(EVM_OP_LOG3))
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (1 << uint256(EVM_OP_LOG4)) | (1 << uint256(EVM_OP_SSTORE)) | (1 << uint256(EVM_OP_SELFDESTRUCT))
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (1 << uint256(EVM_OP_CALL));
 
 /// @dev The interpreter ops allowlist is stricter than the static ops list.
 uint256 constant INTERPRETER_DISALLOWED_OPS = NON_STATIC_OPS
-// Interpreter cannot store so it has no reason to load from storage.
-//forge-lint: disable-next-line(incorrect-shift)
-| (1 << uint256(EVM_OP_SLOAD))
-// Interpreter MUST NOT delegate call as we have no idea what could run and
-// it could easily mutate the interpreter if allowed.
-//forge-lint: disable-next-line(incorrect-shift)
-| (1 << uint256(EVM_OP_DELEGATECALL))
-// Interpreter MUST use static call only.
-//forge-lint: disable-next-line(incorrect-shift)
-| (1 << uint256(EVM_OP_CALLCODE))
-// Interpreter MUST use static call only.
-// Redundant with static list for clarity as static list allows 0 value calls.
-//forge-lint: disable-next-line(incorrect-shift)
-| (1 << uint256(EVM_OP_CALL));
+    // Interpreter cannot store so it has no reason to load from storage.
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (1 << uint256(EVM_OP_SLOAD))
+    // Interpreter MUST NOT delegate call as we have no idea what could run and
+    // it could easily mutate the interpreter if allowed.
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (1 << uint256(EVM_OP_DELEGATECALL))
+    // Interpreter MUST use static call only.
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (1 << uint256(EVM_OP_CALLCODE))
+    // Interpreter MUST use static call only.
+    // Redundant with static list for clarity as static list allows 0 value calls.
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (1 << uint256(EVM_OP_CALL));
 
 /// @title IExtrospectInterpreterV1
 /// @notice External functions for offchain processing to determine if an
