@@ -12,6 +12,14 @@ import {EVM_OP_JUMPDEST, HALTING_BITMAP} from "./EVMOpcodes.sol";
 library LibExtrospectBytecode {
     using LibBytes for bytes;
 
+    /// Thrown when bytecode metadata is not trimmed as expected.
+    error MetadataNotTrimmed();
+
+    /// Thrown when the bytecode hash does not match the expected value.
+    /// @param expected The expected bytecode hash.
+    /// @param actual The actual bytecode hash.
+    error BytecodeHashMismatch(bytes32 expected, bytes32 actual);
+
     /// https://docs.soliditylang.org/en/latest/metadata.html#encoding-of-the-metadata-hash-in-the-bytecode
     ///
     /// The encoding is not super complex, but requires having a CBOR decoder to
@@ -56,6 +64,23 @@ library LibExtrospectBytecode {
                 didTrim := eq(relevantHash, expectedHash)
                 if didTrim { mstore(bytecode, sub(length, 53)) }
             }
+        }
+    }
+
+    /// Checks that the bytecode of an account, after trimming Solidity CBOR
+    /// metadata, matches an expected hash. Reverts if the metadata was not
+    /// trimmed or if the hash does not match after trimming.
+    /// @param account The account whose bytecode to check.
+    /// @param expected The expected hash of the trimmed bytecode.
+    function checkCBORTrimmedBytecodeHash(address account, bytes32 expected) internal view {
+        bytes memory bytecode = account.code;
+        bool didTrim = LibExtrospectBytecode.trimSolidityCBORMetadata(bytecode);
+        if (!didTrim) {
+            revert MetadataNotTrimmed();
+        }
+        bytes32 actual = keccak256(bytecode);
+        if (expected != actual) {
+            revert BytecodeHashMismatch(expected, actual);
         }
     }
 
