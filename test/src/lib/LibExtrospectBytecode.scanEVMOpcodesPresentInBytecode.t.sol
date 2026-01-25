@@ -7,7 +7,7 @@ import {Test} from "forge-std/Test.sol";
 import {LibBytes, LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {LibExtrospectionSlow} from "test/lib/LibExtrospectionSlow.sol";
 
-contract LibExtrospectScanEVMOpcodesPresentInBytecodeTest is Test {
+contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
     using LibBytes for bytes;
 
     function testScanEVMOpcodesPresentSimple() public pure {

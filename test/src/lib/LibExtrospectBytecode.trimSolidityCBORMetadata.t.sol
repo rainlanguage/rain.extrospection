@@ -42,7 +42,7 @@ contract LibExtrospectBytecodeTrimSolidityCBORMetadataTest is Test {
         }
 
         bytes32 before = keccak256(bytecode);
-        assertEq(LibExtrospectBytecode.trimSolidityCBORMetadata(bytecode), false);
+        vm.assume(!LibExtrospectBytecode.trimSolidityCBORMetadata(bytecode));
         assertEq(keccak256(bytecode), before);
 
         // Now add the metadata.

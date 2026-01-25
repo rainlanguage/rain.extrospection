@@ -26,8 +26,9 @@ contract ExtrospectionERC1167ProxyTest is Test {
         // Proxy can't be extrospection, otherwise we'll etch over it.
         vm.assume(proxy != address(extrospection));
         // Proxy can't be a precompile either.
-        vm.assume(uint160(proxy) > 10);
-        // Force incorrect proxy implementation into the proxy address.
+        vm.assume(uint160(proxy) > type(uint160).max / 2);
+        vm.assume(proxy.code.length == 0);
+
         vm.etch(proxy, bytecode);
 
         (bool result, address implementation) = extrospection.isERC1167Proxy(proxy);

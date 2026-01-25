@@ -81,8 +81,10 @@ library LibExtrospectERC1167Proxy {
                     uint256 implementationAddressOffset = ERC1167_IMPLEMENTATION_ADDRESS_OFFSET;
                     uint256 implementationAddressMask = type(uint160).max;
                     assembly ("memory-safe") {
-                        implementationAddress :=
-                            and(mload(add(bytecode, implementationAddressOffset)), implementationAddressMask)
+                        implementationAddress := and(
+                            mload(add(bytecode, implementationAddressOffset)),
+                            implementationAddressMask
+                        )
                     }
                 }
             }

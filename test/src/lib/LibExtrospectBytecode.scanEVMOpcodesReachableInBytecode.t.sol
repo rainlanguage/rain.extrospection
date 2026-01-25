@@ -71,21 +71,21 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
             // 0x14
             //forge-lint: disable-next-line(incorrect-shift)
             (1 << EVM_OP_EQ)
-            // 0xfd
-            //forge-lint: disable-next-line(incorrect-shift)
-            | (1 << EVM_OP_REVERT)
-            // 0x5b
-            //forge-lint: disable-next-line(incorrect-shift)
-            | (1 << EVM_OP_JUMPDEST)
-            // 0x09
-            //forge-lint: disable-next-line(incorrect-shift)
-            | (1 << EVM_OP_MULMOD)
-            // 0x0a
-            //forge-lint: disable-next-line(incorrect-shift)
-            | (1 << EVM_OP_EXP)
-            // 0x0b
-            //forge-lint: disable-next-line(incorrect-shift)
-            | (1 << EVM_OP_SIGNEXTEND)
+                // 0xfd
+                //forge-lint: disable-next-line(incorrect-shift)
+                | (1 << EVM_OP_REVERT)
+                // 0x5b
+                //forge-lint: disable-next-line(incorrect-shift)
+                | (1 << EVM_OP_JUMPDEST)
+                // 0x09
+                //forge-lint: disable-next-line(incorrect-shift)
+                | (1 << EVM_OP_MULMOD)
+                // 0x0a
+                //forge-lint: disable-next-line(incorrect-shift)
+                | (1 << EVM_OP_EXP)
+                // 0x0b
+                //forge-lint: disable-next-line(incorrect-shift)
+                | (1 << EVM_OP_SIGNEXTEND)
         );
     }
 
