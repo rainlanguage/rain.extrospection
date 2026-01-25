@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, console2} from "forge-std/Test.sol";
 
 import {LibExtrospectERC1167Proxy, ERC1167_PREFIX, ERC1167_SUFFIX} from "src/lib/LibExtrospectERC1167Proxy.sol";
 
@@ -27,7 +27,13 @@ contract ExtrospectionERC1167ProxyTest is Test {
         vm.assume(proxy != address(extrospection));
         // Proxy can't be a precompile either.
         vm.assume(uint160(proxy) > type(uint160).max / 2);
+        vm.assume(proxy.code.length == 0);
         // Force incorrect proxy implementation into the proxy address.
+        assembly ("memory-safe") {
+            mstore(bytecode, 23)
+        }
+
+        console2.logBytes(bytecode);
         vm.etch(proxy, bytecode);
 
         (bool result, address implementation) = extrospection.isERC1167Proxy(proxy);

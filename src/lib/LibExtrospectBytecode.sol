@@ -45,6 +45,8 @@ library LibExtrospectBytecode {
     /// parts still have constant length.
     ///
     /// NOTE bytecode is mutated in place.
+    /// @param bytecode The bytecode to trim metadata from.
+    /// @return didTrim Whether metadata was detected and trimmed.
     //forge-lint: disable-next-line(mixed-case-function)
     function trimSolidityCBORMetadata(bytes memory bytecode) internal pure returns (bool didTrim) {
         uint256 length = bytecode.length;
