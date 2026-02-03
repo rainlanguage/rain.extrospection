@@ -68,6 +68,8 @@ uint8 constant EVM_OP_CHAINID = 0x46;
 uint8 constant EVM_OP_SELFBALANCE = 0x47;
 
 uint8 constant EVM_OP_BASEFEE = 0x48;
+uint8 constant EVM_OP_BLOBHASH = 0x49;
+uint8 constant EVM_OP_BLOBBASEFEE = 0x4A;
 
 uint8 constant EVM_OP_POP = 0x50;
 uint8 constant EVM_OP_MLOAD = 0x51;
@@ -83,6 +85,9 @@ uint8 constant EVM_OP_PC = 0x58;
 uint8 constant EVM_OP_MSIZE = 0x59;
 uint8 constant EVM_OP_GAS = 0x5A;
 uint8 constant EVM_OP_JUMPDEST = 0x5B;
+uint8 constant EVM_OP_TLOAD = 0x5C;
+uint8 constant EVM_OP_TSTORE = 0x5D;
+uint8 constant EVM_OP_MCOPY = 0x5E;
 
 uint8 constant EVM_OP_PUSH0 = 0x5F;
 uint8 constant EVM_OP_PUSH1 = 0x60;
