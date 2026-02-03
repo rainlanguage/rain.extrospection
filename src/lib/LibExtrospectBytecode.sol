@@ -55,7 +55,7 @@ library LibExtrospectBytecode {
             uint256 maskA = 0xFFFFFFFFFFFFFFFF00000000000000000000000000;
             //slither-disable-next-line too-many-digits
             uint256 maskB = 0x000000000000000000000000000000000000000000FFFFFFFFFFFF000000FFFF;
-            bytes32 expectedHash = bytes32(uint256(0xe55864b80a56accebaca64500e23598f6acfb743a5475323f0b7f2d0d268c62));
+            bytes32 expectedHash = bytes32(uint256(0x0e55864b80a56accebaca64500e23598f6acfb743a5475323f0b7f2d0d268c62));
             bytes32 relevantHash;
             assembly ("memory-safe") {
                 // Point 0x20 bytes before the end of the bytecode.
