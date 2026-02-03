@@ -23,6 +23,7 @@ import {
 uint256 constant NON_STATIC_OPS = (1 << uint256(EVM_OP_CREATE)) | (1 << uint256(EVM_OP_CREATE2))
     //forge-lint: disable-next-line(incorrect-shift)
     | (1 << uint256(EVM_OP_LOG0)) | (1 << uint256(EVM_OP_LOG1)) | (1 << uint256(EVM_OP_LOG2))
+    //forge-lint: disable-next-line(incorrect-shift)
     | (1 << uint256(EVM_OP_LOG3))
     //forge-lint: disable-next-line(incorrect-shift)
     | (1 << uint256(EVM_OP_LOG4)) | (1 << uint256(EVM_OP_SSTORE)) | (1 << uint256(EVM_OP_SELFDESTRUCT))
