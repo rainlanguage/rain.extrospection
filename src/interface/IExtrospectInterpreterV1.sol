@@ -15,7 +15,8 @@ import {
     EVM_OP_CALL,
     EVM_OP_SLOAD,
     EVM_OP_DELEGATECALL,
-    EVM_OP_CALLCODE
+    EVM_OP_CALLCODE,
+    EVM_OP_TSTORE
 } from "../lib/EVMOpcodes.sol";
 
 /// @dev https://eips.ethereum.org/EIPS/eip-214#specification
@@ -28,7 +29,9 @@ uint256 constant NON_STATIC_OPS = (1 << uint256(EVM_OP_CREATE)) | (1 << uint256(
     //forge-lint: disable-next-line(incorrect-shift)
     | (1 << uint256(EVM_OP_LOG4)) | (1 << uint256(EVM_OP_SSTORE)) | (1 << uint256(EVM_OP_SELFDESTRUCT))
     //forge-lint: disable-next-line(incorrect-shift)
-    | (1 << uint256(EVM_OP_CALL));
+    | (1 << uint256(EVM_OP_CALL))
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (1 << uint256(EVM_OP_TSTORE));
 
 /// @dev The interpreter ops allowlist is stricter than the static ops list.
 uint256 constant INTERPRETER_DISALLOWED_OPS = NON_STATIC_OPS
