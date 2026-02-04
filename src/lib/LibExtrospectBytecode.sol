@@ -69,10 +69,25 @@ library LibExtrospectBytecode {
     /// parts still have constant length.
     ///
     /// NOTE bytecode is mutated in place.
+    ///
+    /// NOTE EOF bytecode is not supported by this function and will cause a
+    /// revert.
+    ///
+    /// NOTE this function makes some large assumptions about the structure of
+    /// the metadata. It probably won't trim metadata inappropriately because it
+    /// is looking for an exact match with the assumed structure, including the
+    /// length and every CBOR byte. However, it may fail to trim metadata that
+    /// doesn't follow the assumed structure, even if it is valid Solidity CBOR
+    /// metadata or some other form of metadata. I.e. false positives are
+    /// unlikely but false negatives are to be expected at least some of the
+    /// time. For this reason, false negatives DO NOT revert or cause any other
+    /// issues, they just cause the function to return `false` and leave the
+    /// bytecode untrimmed.
+    ///
     /// @param bytecode The bytecode to trim metadata from.
     /// @return didTrim Whether metadata was detected and trimmed.
     //forge-lint: disable-next-line(mixed-case-function)
-    function trimSolidityCBORMetadata(bytes memory bytecode) internal pure returns (bool didTrim) {
+    function tryTrimSolidityCBORMetadata(bytes memory bytecode) internal pure returns (bool didTrim) {
         checkNotEOFBytecode(bytecode);
         uint256 length = bytecode.length;
         if (length >= 53) {
@@ -101,7 +116,7 @@ library LibExtrospectBytecode {
     /// @param expected The expected hash of the trimmed bytecode.
     function checkCBORTrimmedBytecodeHash(address account, bytes32 expected) internal view {
         bytes memory bytecode = account.code;
-        bool didTrim = LibExtrospectBytecode.trimSolidityCBORMetadata(bytecode);
+        bool didTrim = LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode);
         if (!didTrim) {
             revert MetadataNotTrimmed();
         }

@@ -5,19 +5,19 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std/Test.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 
-contract LibExtrospectBytecodeTrimSolidityCBORMetadataTest is Test {
-    /// External version of trimSolidityCBORMetadata for testing.
-    function trimSolidityCBORMetadataExternal(bytes memory bytecode) external pure returns (bool) {
-        return LibExtrospectBytecode.trimSolidityCBORMetadata(bytecode);
+contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
+    /// External version of tryTrimSolidityCBORMetadata for testing.
+    function tryTrimSolidityCBORMetadataExternal(bytes memory bytecode) external pure returns (bool) {
+        return LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode);
     }
 
-    function testTrimSolidityCBORMetadataBytecodeShort(bytes memory bytecode) external pure {
+    function testTryTrimSolidityCBORMetadataBytecodeShort(bytes memory bytecode) external pure {
         vm.assume(bytecode.length < 53);
         vm.assume(!LibExtrospectBytecode.isEOFBytecode(bytecode));
-        assertEq(LibExtrospectBytecode.trimSolidityCBORMetadata(bytecode), false);
+        assertEq(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode), false);
     }
 
-    function testTrimSolidityCBORMetdataBytecodeReal() external pure {
+    function testTryTrimSolidityCBORMetdataBytecodeReal() external pure {
         // Blank contract + cbor.
         bytes memory bytecode =
             hex"6080604052600080fdfea26469706673582212200726074213b9ef2f5b41bf0bdd5bbd03a64652de62f1dfcda59625e106c52e8a64736f6c63430008190033";
@@ -25,11 +25,11 @@ contract LibExtrospectBytecodeTrimSolidityCBORMetadataTest is Test {
 
         uint256 length = bytecode.length;
         assertTrue(length >= 53);
-        assertEq(LibExtrospectBytecode.trimSolidityCBORMetadata(bytecode), true);
+        assertEq(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode), true);
         assertEq(bytecode, expected);
     }
 
-    function testTrimSolidityCBORMetadataBytecodeContrived(bytes memory bytecode) external pure {
+    function testTryTrimSolidityCBORMetadataBytecodeContrived(bytes memory bytecode) external pure {
         vm.assume(!LibExtrospectBytecode.isEOFBytecode(bytecode));
         bytes32 a = keccak256(bytecode);
         bytes memory ipfsHash;
@@ -49,7 +49,7 @@ contract LibExtrospectBytecodeTrimSolidityCBORMetadataTest is Test {
         }
 
         bytes32 before = keccak256(bytecode);
-        vm.assume(!LibExtrospectBytecode.trimSolidityCBORMetadata(bytecode));
+        vm.assume(!LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
         assertEq(keccak256(bytecode), before);
 
         // Now add the metadata.
@@ -59,7 +59,7 @@ contract LibExtrospectBytecodeTrimSolidityCBORMetadataTest is Test {
         before = keccak256(withMetadata);
         uint256 beforeLength = withMetadata.length;
         assertNotEq(bytecode, withMetadata);
-        assertEq(LibExtrospectBytecode.trimSolidityCBORMetadata(withMetadata), true);
+        assertEq(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(withMetadata), true);
         assertEq(withMetadata.length, beforeLength - 53);
         assertTrue(keccak256(withMetadata) != before);
 
@@ -67,9 +67,9 @@ contract LibExtrospectBytecodeTrimSolidityCBORMetadataTest is Test {
     }
 
     /// EOF bytecode is not supported.
-    function testTrimSolidityCBORMetadataRevertsOnEOF() external {
+    function testTryTrimSolidityCBORMetadataRevertsOnEOF() external {
         bytes memory eofBytecode = hex"EF00010203";
         vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
-        this.trimSolidityCBORMetadataExternal(eofBytecode);
+        this.tryTrimSolidityCBORMetadataExternal(eofBytecode);
     }
 }
