@@ -95,6 +95,14 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"60016002"), 2 ** 0x60);
     }
 
+    /// Test that push opcodes are skipped while halted.
+    function testScanEVMOpcodesReachablePushWhileHalted() public pure {
+        // hex"00605b6001"
+        // Scanner halts at 00. It sees 60 (PUSH1), skips 5B (data). No JUMPDEST
+        // found. Code remains unreachable.
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"00605b6001"), 1);
+    }
+
     /// Test that push opcode arguments are skipped.
     function testScanEVMOpcodesReachablePush4() public pure {
         // PUSH4 01 02 03 04 PUSH1 01 PUSH1 05
