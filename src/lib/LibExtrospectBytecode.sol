@@ -23,19 +23,24 @@ library LibExtrospectBytecode {
     /// @param actual The actual bytecode hash.
     error BytecodeHashMismatch(bytes32 expected, bytes32 actual);
 
-    /// Checks that the bytecode is not in EOF format. Reverts if it is.
+    /// Returns whether the bytecode is in EOF format.
     /// @param bytecode The bytecode to check.
-    //forge-lint: disable-next-line(mixed-case-function)
-    function checkNotEOFBytecode(bytes memory bytecode) internal pure {
+    /// @return isEOF Whether the bytecode is in EOF format.
+    function isEOFBytecode(bytes memory bytecode) internal pure returns (bool isEOF) {
         if (bytecode.length >= 2) {
-            bool isEOF;
             assembly ("memory-safe") {
                 let firstTwoBytes := and(mload(add(bytecode, 2)), 0xFFFF)
                 isEOF := eq(firstTwoBytes, 0xEF00)
             }
-            if (isEOF) {
-                revert EOFBytecodeNotSupported();
-            }
+        }
+    }
+
+    /// Checks that the bytecode is not in EOF format. Reverts if it is.
+    /// @param bytecode The bytecode to check.
+    //forge-lint: disable-next-line(mixed-case-function)
+    function checkNotEOFBytecode(bytes memory bytecode) internal pure {
+        if (isEOFBytecode(bytecode)) {
+            revert EOFBytecodeNotSupported();
         }
     }
 
@@ -132,7 +137,6 @@ library LibExtrospectBytecode {
                 let push := sub(op, 0x60)
                 if lt(push, 0x20) {
                     cursor := add(cursor, add(push, 1))
-                    continue
                 }
                 switch halted
                 case 0 {

@@ -28,12 +28,13 @@ library LibExtrospectionSlow {
         bool halted = false;
         for (uint256 i = 0; i < data.length; i++) {
             uint8 op = uint8(data[i]);
+            if (0x60 <= op && op < 0x80) {
+                i += op - 0x5f;
+            }
             if (!halted) {
                 scan = scan | (uint256(1) << uint256(op));
                 if ((HALTING_BITMAP & (uint256(1) << uint256(op))) > 0) {
                     halted = true;
-                } else if (0x60 <= op && op < 0x80) {
-                    i += op - 0x5f;
                 }
             } else if (op == EVM_OP_JUMPDEST) {
                 halted = false;

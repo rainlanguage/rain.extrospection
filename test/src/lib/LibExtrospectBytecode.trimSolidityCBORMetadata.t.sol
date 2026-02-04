@@ -8,6 +8,7 @@ import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 contract LibExtrospectBytecodeTrimSolidityCBORMetadataTest is Test {
     function testTrimSolidityCBORMetadataBytecodeShort(bytes memory bytecode) external pure {
         vm.assume(bytecode.length < 53);
+        vm.assume(!LibExtrospectBytecode.isEOFBytecode(bytecode));
         assertEq(LibExtrospectBytecode.trimSolidityCBORMetadata(bytecode), false);
     }
 
