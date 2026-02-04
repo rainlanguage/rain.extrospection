@@ -10,6 +10,11 @@ import {LibExtrospectionSlow} from "test/lib/LibExtrospectionSlow.sol";
 contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
     using LibBytes for bytes;
 
+    /// External version of scanEVMOpcodesPresentInBytecode for testing.
+    function scanEVMOpcodesPresentInBytecodeExternal(bytes memory bytecode) external pure returns (uint256) {
+        return LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(bytecode);
+    }
+
     function testScanEVMOpcodesPresentSimple() public pure {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"04050607"), 0xF0);
     }
@@ -19,10 +24,19 @@ contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"60016002"), 2 ** 0x60);
     }
 
+    /// Check that non-EOF bytecode fuzz matches reference implementation.
     function testScanEVMOpcodesPresentReference(bytes memory data) public pure {
+        vm.assume(!LibExtrospectBytecode.isEOFBytecode(data));
         assertEq(
             LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(data),
             LibExtrospectionSlow.scanEVMOpcodesPresentInBytecodeSlow(data)
         );
+    }
+
+    /// Check that EOF bytecode reverts as not supported.
+    function testScanEVMOpcodesPresentRevertsOnEOF() public {
+        bytes memory eofBytecode = hex"EF00010203";
+        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
+        this.scanEVMOpcodesPresentInBytecodeExternal(eofBytecode);
     }
 }

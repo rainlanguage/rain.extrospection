@@ -15,10 +15,34 @@ library LibExtrospectBytecode {
     /// Thrown when bytecode metadata is not trimmed as expected.
     error MetadataNotTrimmed();
 
+    /// Thrown when processing an EOF formatted bytecode.
+    error EOFBytecodeNotSupported();
+
     /// Thrown when the bytecode hash does not match the expected value.
     /// @param expected The expected bytecode hash.
     /// @param actual The actual bytecode hash.
     error BytecodeHashMismatch(bytes32 expected, bytes32 actual);
+
+    /// Returns whether the bytecode is in EOF format.
+    /// @param bytecode The bytecode to check.
+    /// @return isEOF Whether the bytecode is in EOF format.
+    function isEOFBytecode(bytes memory bytecode) internal pure returns (bool isEOF) {
+        if (bytecode.length >= 2) {
+            assembly ("memory-safe") {
+                let firstTwoBytes := and(mload(add(bytecode, 2)), 0xFFFF)
+                isEOF := eq(firstTwoBytes, 0xEF00)
+            }
+        }
+    }
+
+    /// Checks that the bytecode is not in EOF format. Reverts if it is.
+    /// @param bytecode The bytecode to check.
+    //forge-lint: disable-next-line(mixed-case-function)
+    function checkNotEOFBytecode(bytes memory bytecode) internal pure {
+        if (isEOFBytecode(bytecode)) {
+            revert EOFBytecodeNotSupported();
+        }
+    }
 
     /// https://docs.soliditylang.org/en/latest/metadata.html#encoding-of-the-metadata-hash-in-the-bytecode
     ///
@@ -45,10 +69,26 @@ library LibExtrospectBytecode {
     /// parts still have constant length.
     ///
     /// NOTE bytecode is mutated in place.
+    ///
+    /// NOTE EOF bytecode is not supported by this function and will cause a
+    /// revert.
+    ///
+    /// NOTE this function makes some large assumptions about the structure of
+    /// the metadata. It probably won't trim metadata inappropriately because it
+    /// is looking for an exact match with the assumed structure, including the
+    /// length and every CBOR byte. However, it may fail to trim metadata that
+    /// doesn't follow the assumed structure, even if it is valid Solidity CBOR
+    /// metadata or some other form of metadata. I.e. false positives are
+    /// unlikely but false negatives are to be expected at least some of the
+    /// time. For this reason, false negatives DO NOT revert or cause any other
+    /// issues, they just cause the function to return `false` and leave the
+    /// bytecode untrimmed.
+    ///
     /// @param bytecode The bytecode to trim metadata from.
     /// @return didTrim Whether metadata was detected and trimmed.
     //forge-lint: disable-next-line(mixed-case-function)
-    function trimSolidityCBORMetadata(bytes memory bytecode) internal pure returns (bool didTrim) {
+    function tryTrimSolidityCBORMetadata(bytes memory bytecode) internal pure returns (bool didTrim) {
+        checkNotEOFBytecode(bytecode);
         uint256 length = bytecode.length;
         if (length >= 53) {
             //slither-disable-next-line too-many-digits
@@ -76,7 +116,7 @@ library LibExtrospectBytecode {
     /// @param expected The expected hash of the trimmed bytecode.
     function checkCBORTrimmedBytecodeHash(address account, bytes32 expected) internal view {
         bytes memory bytecode = account.code;
-        bool didTrim = LibExtrospectBytecode.trimSolidityCBORMetadata(bytecode);
+        bool didTrim = LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode);
         if (!didTrim) {
             revert MetadataNotTrimmed();
         }
@@ -93,6 +133,7 @@ library LibExtrospectBytecode {
     /// of a reachable opcode in the source bytecode.
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesReachableInBytecode(bytes memory bytecode) internal pure returns (uint256 bytesReachable) {
+        checkNotEOFBytecode(bytecode);
         Pointer cursor = bytecode.dataPointer();
         uint256 length = bytecode.length;
         Pointer end;
@@ -105,6 +146,13 @@ library LibExtrospectBytecode {
             for {} lt(cursor, end) {} {
                 cursor := add(cursor, 1)
                 let op := and(mload(cursor), 0xFF)
+                // The 32 `PUSH*` opcodes starting at 0x60 indicate that the
+                // following bytes MUST be skipped as they are inline stack
+                // data and NOT opcodes.
+                let push := sub(op, 0x60)
+                if lt(push, 0x20) {
+                    cursor := add(cursor, add(push, 1))
+                }
                 switch halted
                 case 0 {
                     //slither-disable-next-line incorrect-shift
@@ -113,13 +161,7 @@ library LibExtrospectBytecode {
                     //slither-disable-next-line incorrect-shift
                     if and(shl(op, 1), haltingMask) {
                         halted := 1
-                        continue
                     }
-                    // The 32 `PUSH*` opcodes starting at 0x60 indicate that the
-                    // following bytes MUST be skipped as they are inline stack
-                    // data and NOT opcodes.
-                    let push := sub(op, 0x60)
-                    if lt(push, 0x20) { cursor := add(cursor, add(push, 1)) }
                     continue
                 }
                 case 1 {
@@ -146,6 +188,7 @@ library LibExtrospectBytecode {
     /// of an opcode in the source bytecode.
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesPresentInBytecode(bytes memory bytecode) internal pure returns (uint256 bytesPresent) {
+        checkNotEOFBytecode(bytecode);
         Pointer cursor = bytecode.dataPointer();
         uint256 length = bytecode.length;
         assembly ("memory-safe") {
