@@ -6,6 +6,18 @@ import {HALTING_BITMAP, EVM_OP_JUMPDEST} from "src/lib/EVMOpcodes.sol";
 import {ERC1167_PREFIX_HASH, ERC1167_SUFFIX_HASH} from "src/lib/LibExtrospectERC1167Proxy.sol";
 
 library LibExtrospectionSlow {
+    /// KISS implementation of isEOFBytecode.
+    //forge-lint: disable-next-line(mixed-case-function)
+    function isEOFBytecodeSlow(bytes memory bytecode) internal pure returns (bool) {
+        bool isEOF = false;
+        if (bytecode.length >= 2) {
+            bytes1 b0 = bytecode[0];
+            bytes1 b1 = bytecode[1];
+            isEOF = (b0 == 0xEF && b1 == 0x00);
+        }
+        return isEOF;
+    }
+
     /// KISS implementation of a presence scan.
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesPresentInBytecodeSlow(bytes memory data) internal pure returns (uint256) {

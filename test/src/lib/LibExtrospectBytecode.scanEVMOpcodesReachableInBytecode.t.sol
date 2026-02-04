@@ -28,6 +28,11 @@ import {LibExtrospectionSlow} from "test/lib/LibExtrospectionSlow.sol";
 contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
     using LibBytes for bytes;
 
+    /// External version of scanEVMOpcodesReachableInBytecode for testing.
+    function scanEVMOpcodesReachableInBytecodeExternal(bytes memory bytecode) external pure returns (uint256) {
+        return LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(bytecode);
+    }
+
     /// Test that the simple case of a few standard opcodes works.
     function testScanEVMOpcodesReachableSimple() public pure {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"04050607"), 0xF0);
@@ -113,6 +118,7 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
 
     /// Compare the output of the fast and reference implementations.
     function testScanEVMOpcodesReachableReference(bytes memory data) public pure {
+        vm.assume(!LibExtrospectBytecode.isEOFBytecode(data));
         assertEq(
             LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(data),
             LibExtrospectionSlow.scanEVMOpcodesReachableInBytecodeSlow(data)
@@ -155,5 +161,12 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         // reachable and there are no logs in the bytecode, it is not reachable.
         //forge-lint: disable-next-line(incorrect-shift)
         assertEq(scan & (1 << EVM_OP_LOG2), 0);
+    }
+
+    /// EOF bytecode is not supported.
+    function testScanEVMOpcodesReachableRevertsOnEOF() public {
+        bytes memory eofBytecode = hex"EF00010203";
+        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
+        this.scanEVMOpcodesReachableInBytecodeExternal(eofBytecode);
     }
 }
