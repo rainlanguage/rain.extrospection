@@ -16,7 +16,8 @@ import {
     EVM_OP_SLOAD,
     EVM_OP_DELEGATECALL,
     EVM_OP_CALLCODE,
-    EVM_OP_TSTORE
+    EVM_OP_TSTORE,
+    EVM_OP_TLOAD
 } from "../lib/EVMOpcodes.sol";
 
 /// @dev https://eips.ethereum.org/EIPS/eip-214#specification
@@ -38,6 +39,9 @@ uint256 constant INTERPRETER_DISALLOWED_OPS = NON_STATIC_OPS
     // Interpreter cannot store so it has no reason to load from storage.
     //forge-lint: disable-next-line(incorrect-shift)
     | (1 << uint256(EVM_OP_SLOAD))
+    // Interpreter cannot tstore so it has no reason to tload.
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (1 << uint256(EVM_OP_TLOAD))
     // Interpreter MUST NOT delegate call as we have no idea what could run and
     // it could easily mutate the interpreter if allowed.
     //forge-lint: disable-next-line(incorrect-shift)
