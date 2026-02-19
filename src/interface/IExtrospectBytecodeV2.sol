@@ -23,8 +23,9 @@ interface IExtrospectBytecodeV2 {
     /// Equivalent to `account.codehash`.
     ///
     /// @param account The account to get the bytecode hash for.
-    /// @return The hash of the bytecode of `account`. Will be `0` (NOT the hash
-    /// of empty bytes) for non-contract accounts.
+    /// @return The hash of the bytecode of `account`. Per EIP-1052, will be `0`
+    /// for non-existent accounts and `keccak256("")` for existing accounts with
+    /// no code (e.g. funded EOAs).
     function bytecodeHash(address account) external view returns (bytes32);
 
     /// Scan every byte of the bytecode in some account and return an encoded

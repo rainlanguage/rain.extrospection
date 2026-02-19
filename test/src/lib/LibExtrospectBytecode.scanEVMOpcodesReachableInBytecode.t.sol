@@ -33,6 +33,22 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         return LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(bytecode);
     }
 
+    /// Test that empty bytecode returns 0.
+    function testScanEVMOpcodesReachableEmpty() public pure {
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex""), 0);
+    }
+
+    /// Test truncated PUSH1 at end of bytecode (no data byte following).
+    function testScanEVMOpcodesReachableTruncatedPush1() public pure {
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"60"), 1 << 0x60);
+    }
+
+    /// Test truncated PUSH32 at end of bytecode (no data bytes following).
+    function testScanEVMOpcodesReachableTruncatedPush32() public pure {
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"7f"), 1 << 0x7f);
+    }
+
     /// Test that the simple case of a few standard opcodes works.
     function testScanEVMOpcodesReachableSimple() public pure {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"04050607"), 0xF0);

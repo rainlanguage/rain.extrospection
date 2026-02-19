@@ -15,6 +15,38 @@ contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
         return LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(bytecode);
     }
 
+    /// Test that empty bytecode returns 0.
+    function testScanEVMOpcodesPresentEmpty() public pure {
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex""), 0);
+    }
+
+    /// Test single-byte non-PUSH bytecodes.
+    function testScanEVMOpcodesPresentSingleByte() public pure {
+        // STOP
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"00"), 1);
+        // ADD
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"01"), 2);
+    }
+
+    /// Test truncated PUSH1 at end of bytecode (no data byte following).
+    function testScanEVMOpcodesPresentTruncatedPush1() public pure {
+        // PUSH1 with no data: the PUSH1 opcode itself is recorded, cursor
+        // skips past end.
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"60"), 1 << 0x60);
+    }
+
+    /// Test truncated PUSH32 at end of bytecode (no data bytes following).
+    function testScanEVMOpcodesPresentTruncatedPush32() public pure {
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"7f"), 1 << 0x7f);
+    }
+
+    /// Test PUSH32 with only 1 byte of data following (31 bytes short).
+    function testScanEVMOpcodesPresentTruncatedPush32Partial() public pure {
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"7fFF"), 1 << 0x7f);
+    }
+
     function testScanEVMOpcodesPresentSimple() public pure {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"04050607"), 0xF0);
     }
