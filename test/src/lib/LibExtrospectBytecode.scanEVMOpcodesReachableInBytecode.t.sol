@@ -21,7 +21,16 @@ import {
     EVM_OP_DELEGATECALL,
     EVM_OP_CALLCODE,
     EVM_OP_CREATE,
-    EVM_OP_CREATE2
+    EVM_OP_CREATE2,
+    EVM_OP_CALL,
+    EVM_OP_STATICCALL,
+    EVM_OP_LOG1,
+    EVM_OP_TLOAD,
+    EVM_OP_TSTORE,
+    EVM_OP_BALANCE,
+    EVM_OP_SELFBALANCE,
+    EVM_OP_EXTCODESIZE,
+    EVM_OP_EXTCODEHASH
 } from "src/lib/EVMOpcodes.sol";
 import {
     REPORTED_FALSE_POSITIVE,
@@ -35,6 +44,14 @@ import {HasCallcode} from "test/concrete/HasCallcode.sol";
 import {HasCreate} from "test/concrete/HasCreate.sol";
 import {HasCreate2} from "test/concrete/HasCreate2.sol";
 import {CleanContract} from "test/concrete/CleanContract.sol";
+import {HasCall} from "test/concrete/HasCall.sol";
+import {HasStaticcall} from "test/concrete/HasStaticcall.sol";
+import {HasLog} from "test/concrete/HasLog.sol";
+import {HasTstore} from "test/concrete/HasTstore.sol";
+import {HasBalance} from "test/concrete/HasBalance.sol";
+import {HasSelfbalance} from "test/concrete/HasSelfbalance.sol";
+import {HasExtcodesize} from "test/concrete/HasExtcodesize.sol";
+import {HasExtcodehash} from "test/concrete/HasExtcodehash.sol";
 
 contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
     using LibBytes for bytes;
@@ -250,6 +267,72 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         assertEq(scan & (1 << uint256(EVM_OP_CREATE)), 0);
         //forge-lint: disable-next-line(incorrect-shift)
         assertEq(scan & (1 << uint256(EVM_OP_CREATE2)), 0);
+    }
+
+    /// Scan a compiled contract with CALL.
+    function testScanEVMOpcodesReachableCall_Source() public {
+        HasCall c = new HasCall();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_CALL)) != 0);
+    }
+
+    /// Scan a compiled contract with STATICCALL.
+    function testScanEVMOpcodesReachableStaticcall_Source() public {
+        HasStaticcall c = new HasStaticcall();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_STATICCALL)) != 0);
+    }
+
+    /// Scan a compiled contract with LOG (event emission).
+    function testScanEVMOpcodesReachableLog_Source() public {
+        HasLog c = new HasLog();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_LOG1)) != 0);
+    }
+
+    /// Scan a compiled contract with TSTORE/TLOAD.
+    function testScanEVMOpcodesReachableTstore_Source() public {
+        HasTstore c = new HasTstore();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_TSTORE)) != 0);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_TLOAD)) != 0);
+    }
+
+    /// Scan a compiled contract with BALANCE.
+    function testScanEVMOpcodesReachableBalance_Source() public {
+        HasBalance c = new HasBalance();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_BALANCE)) != 0);
+    }
+
+    /// Scan a compiled contract with SELFBALANCE.
+    function testScanEVMOpcodesReachableSelfbalance_Source() public {
+        HasSelfbalance c = new HasSelfbalance();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_SELFBALANCE)) != 0);
+    }
+
+    /// Scan a compiled contract with EXTCODESIZE.
+    function testScanEVMOpcodesReachableExtcodesize_Source() public {
+        HasExtcodesize c = new HasExtcodesize();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_EXTCODESIZE)) != 0);
+    }
+
+    /// Scan a compiled contract with EXTCODEHASH.
+    function testScanEVMOpcodesReachableExtcodehash_Source() public {
+        HasExtcodehash c = new HasExtcodehash();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_EXTCODEHASH)) != 0);
     }
 
     /// EOF bytecode is not supported.
