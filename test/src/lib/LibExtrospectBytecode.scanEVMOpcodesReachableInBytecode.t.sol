@@ -17,7 +17,11 @@ import {
     EVM_OP_MULMOD,
     EVM_OP_EXP,
     EVM_OP_SIGNEXTEND,
-    EVM_OP_LOG2
+    EVM_OP_LOG2,
+    EVM_OP_DELEGATECALL,
+    EVM_OP_CALLCODE,
+    EVM_OP_CREATE,
+    EVM_OP_CREATE2
 } from "src/lib/EVMOpcodes.sol";
 import {
     REPORTED_FALSE_POSITIVE,
@@ -25,6 +29,12 @@ import {
     METAMORPHIC_METADATA
 } from "test/lib/LibExtrospectBytecode.testConstants.sol";
 import {LibExtrospectionSlow} from "test/lib/LibExtrospectionSlow.sol";
+import {HasSelfdestruct} from "test/concrete/HasSelfdestruct.sol";
+import {HasDelegatecall} from "test/concrete/HasDelegatecall.sol";
+import {HasCallcode} from "test/concrete/HasCallcode.sol";
+import {HasCreate} from "test/concrete/HasCreate.sol";
+import {HasCreate2} from "test/concrete/HasCreate2.sol";
+import {CleanContract} from "test/concrete/CleanContract.sol";
 
 contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
     using LibBytes for bytes;
@@ -184,6 +194,62 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         // reachable and there are no logs in the bytecode, it is not reachable.
         //forge-lint: disable-next-line(incorrect-shift)
         assertEq(scan & (1 << EVM_OP_LOG2), 0);
+    }
+
+    /// Scan a compiled contract with SELFDESTRUCT.
+    function testScanEVMOpcodesReachableSelfdestruct_Source() public {
+        HasSelfdestruct c = new HasSelfdestruct();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << EVM_OP_SELFDESTRUCT) != 0);
+    }
+
+    /// Scan a compiled contract with DELEGATECALL.
+    function testScanEVMOpcodesReachableDelegatecall_Source() public {
+        HasDelegatecall c = new HasDelegatecall();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_DELEGATECALL)) != 0);
+    }
+
+    /// Scan a compiled contract with CALLCODE.
+    function testScanEVMOpcodesReachableCallcode_Source() public {
+        HasCallcode c = new HasCallcode();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_CALLCODE)) != 0);
+    }
+
+    /// Scan a compiled contract with CREATE.
+    function testScanEVMOpcodesReachableCreate_Source() public {
+        HasCreate c = new HasCreate();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_CREATE)) != 0);
+    }
+
+    /// Scan a compiled contract with CREATE2.
+    function testScanEVMOpcodesReachableCreate2_Source() public {
+        HasCreate2 c = new HasCreate2();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_CREATE2)) != 0);
+    }
+
+    /// Scan a compiled clean contract — no metamorphic opcodes reachable.
+    function testScanEVMOpcodesReachableClean_Source() public {
+        CleanContract c = new CleanContract();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(scan & (1 << EVM_OP_SELFDESTRUCT), 0);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(scan & (1 << uint256(EVM_OP_DELEGATECALL)), 0);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(scan & (1 << uint256(EVM_OP_CALLCODE)), 0);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(scan & (1 << uint256(EVM_OP_CREATE)), 0);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(scan & (1 << uint256(EVM_OP_CREATE2)), 0);
     }
 
     /// EOF bytecode is not supported.

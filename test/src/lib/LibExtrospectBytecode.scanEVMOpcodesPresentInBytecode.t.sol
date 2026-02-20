@@ -5,7 +5,20 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std/Test.sol";
 
 import {LibBytes, LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
+import {
+    EVM_OP_SELFDESTRUCT,
+    EVM_OP_DELEGATECALL,
+    EVM_OP_CALLCODE,
+    EVM_OP_CREATE,
+    EVM_OP_CREATE2
+} from "src/lib/EVMOpcodes.sol";
 import {LibExtrospectionSlow} from "test/lib/LibExtrospectionSlow.sol";
+import {HasSelfdestruct} from "test/concrete/HasSelfdestruct.sol";
+import {HasDelegatecall} from "test/concrete/HasDelegatecall.sol";
+import {HasCallcode} from "test/concrete/HasCallcode.sol";
+import {HasCreate} from "test/concrete/HasCreate.sol";
+import {HasCreate2} from "test/concrete/HasCreate2.sol";
+import {CleanContract} from "test/concrete/CleanContract.sol";
 
 contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
     using LibBytes for bytes;
@@ -63,6 +76,62 @@ contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
             LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(data),
             LibExtrospectionSlow.scanEVMOpcodesPresentInBytecodeSlow(data)
         );
+    }
+
+    /// Scan a compiled contract with SELFDESTRUCT.
+    function testScanEVMOpcodesPresentSelfdestruct_Source() public {
+        HasSelfdestruct c = new HasSelfdestruct();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_SELFDESTRUCT)) != 0);
+    }
+
+    /// Scan a compiled contract with DELEGATECALL.
+    function testScanEVMOpcodesPresentDelegatecall_Source() public {
+        HasDelegatecall c = new HasDelegatecall();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_DELEGATECALL)) != 0);
+    }
+
+    /// Scan a compiled contract with CALLCODE.
+    function testScanEVMOpcodesPresentCallcode_Source() public {
+        HasCallcode c = new HasCallcode();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_CALLCODE)) != 0);
+    }
+
+    /// Scan a compiled contract with CREATE.
+    function testScanEVMOpcodesPresentCreate_Source() public {
+        HasCreate c = new HasCreate();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_CREATE)) != 0);
+    }
+
+    /// Scan a compiled contract with CREATE2.
+    function testScanEVMOpcodesPresentCreate2_Source() public {
+        HasCreate2 c = new HasCreate2();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_CREATE2)) != 0);
+    }
+
+    /// Scan a compiled clean contract — no metamorphic opcodes present.
+    function testScanEVMOpcodesPresentClean_Source() public {
+        CleanContract c = new CleanContract();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(address(c).code);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(scan & (1 << uint256(EVM_OP_SELFDESTRUCT)), 0);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(scan & (1 << uint256(EVM_OP_DELEGATECALL)), 0);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(scan & (1 << uint256(EVM_OP_CALLCODE)), 0);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(scan & (1 << uint256(EVM_OP_CREATE)), 0);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(scan & (1 << uint256(EVM_OP_CREATE2)), 0);
     }
 
     /// Check that EOF bytecode reverts as not supported.
