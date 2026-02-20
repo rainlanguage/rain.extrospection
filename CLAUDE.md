@@ -50,7 +50,7 @@ nix develop -c forge test --match-test testFoo
 
 ## Conventions
 
-- Solidity `^0.8.25` for non-concrete files (interfaces, libraries), `=0.8.25` for concrete files (tests)
+- Solidity `^0.8.25` for non-concrete files (libraries), `=0.8.25` for concrete files (tests)
 - Assembly blocks marked `memory-safe`
 - Every file starts with SPDX license identifier and copyright header
 - `forge-lint` annotations suppress expected warnings: `incorrect-shift`, `mixed-case-function`, `assembly-usage`

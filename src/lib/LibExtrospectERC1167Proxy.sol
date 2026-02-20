@@ -2,12 +2,17 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-/// @dev ERC1167 proxy is known bytecode that wraps the implementation address.
-/// This is the prefix.
+/// @dev The 10 bytes before the implementation address in an ERC1167 proxy.
 bytes constant ERC1167_PREFIX = hex"363d3d373d3d3d363d73";
-/// @dev ERC1167 proxy is known bytecode that wraps the implementation address.
-/// This is the suffix.
+/// @dev The 15 bytes after the implementation address in an ERC1167 proxy.
 bytes constant ERC1167_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3";
+/// @dev The ERC1167 proxy prefix is a known length.
+uint256 constant ERC1167_PREFIX_LENGTH = 10;
+/// @dev The ERC1167 proxy suffix is a known length.
+uint256 constant ERC1167_SUFFIX_LENGTH = 15;
+/// @dev The length of a proxy contract is constant as the implementation
+/// address is always 20 bytes.
+uint256 constant ERC1167_PROXY_LENGTH = 20 + ERC1167_PREFIX_LENGTH + ERC1167_SUFFIX_LENGTH;
 /// @dev We can more efficiently compare equality of hashes of regions of memory
 /// than the regions themselves.
 /// This is the hash of the ERC1167 proxy prefix.
@@ -22,19 +27,13 @@ uint256 constant ERC1167_PREFIX_START = 0x20;
 /// @dev The bounds of the ERC1167 proxy suffix are constant.
 /// This is the start offset of the ERC1167 proxy suffix.
 uint256 constant ERC1167_SUFFIX_START = 0x20 + ERC1167_PROXY_LENGTH - ERC1167_SUFFIX_LENGTH;
-/// @dev The ERC1167 proxy prefix is a known length.
-uint256 constant ERC1167_PREFIX_LENGTH = 10;
-/// @dev The ERC1167 proxy suffix is a known length.
-uint256 constant ERC1167_SUFFIX_LENGTH = 15;
-/// @dev The length of a proxy contract is constant as the implementation
-/// address is always 20 bytes.
-uint256 constant ERC1167_PROXY_LENGTH = 20 + ERC1167_PREFIX_LENGTH + ERC1167_SUFFIX_LENGTH;
 /// @dev The implementation address read offset is constant.
 uint256 constant ERC1167_IMPLEMENTATION_ADDRESS_OFFSET = ERC1167_PREFIX_LENGTH + 20;
 
 /// @title LibExtrospectERC1167Proxy
 /// @notice Detection of ERC-1167 minimal proxy contracts and extraction of
 /// their implementation address from bytecode.
+/// https://eips.ethereum.org/EIPS/eip-1167
 library LibExtrospectERC1167Proxy {
     /// @notice Checks if the given bytecode is an ERC1167 proxy. If so,
     /// returns the implementation address.

@@ -96,6 +96,53 @@ contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
         assertFalse(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
     }
 
+    /// False negative: bzzr1 (Swarm) metadata is not trimmed.
+    /// This demonstrates the documented false-negative behavior for
+    /// non-standard CBOR metadata structures.
+    function testTryTrimSolidityCBORMetadataFalseNegativeBzzr1() external pure {
+        // Construct bytecode with bzzr1 Swarm metadata (52 bytes, not 53).
+        // a2 = map(2), 65 = text(5), "bzzr1", 5820 = bytes(32), [32-byte hash],
+        // 64 = text(4), "solc", 43 = bytes(3), [version], 0032 = length(50)
+        bytes memory bytecode = bytes.concat(
+            hex"6001600055",
+            hex"a265627a7a72315820",
+            bytes32(0),
+            hex"64736f6c634300081900",
+            hex"32"
+        );
+        assertFalse(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
+    }
+
+    /// False negative: reversed key ordering (solc before ipfs) is not trimmed.
+    function testTryTrimSolidityCBORMetadataFalseNegativeReversedKeys() external pure {
+        // Same 53-byte length but keys in reverse order (solc first, ipfs second).
+        bytes memory bytecode = bytes.concat(
+            hex"6001600055",
+            hex"a264736f6c63430008196469706673582200000000000000000000000000000000000000000000000000000000000000000000",
+            hex"0033"
+        );
+        assertFalse(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
+    }
+
+    /// False negative: single-entry metadata (ipfs only, no solc) is not trimmed.
+    function testTryTrimSolidityCBORMetadataFalseNegativeSingleEntry() external pure {
+        // a1 = map(1), 64 = text(4), "ipfs", 5822 = bytes(34), [34-byte hash],
+        // 002a = length(42)
+        bytes memory bytecode = bytes.concat(
+            hex"6001600055",
+            hex"a16469706673582200000000000000000000000000000000000000000000000000000000000000000000",
+            hex"002a"
+        );
+        assertFalse(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
+    }
+
+    /// Test exactly 52-byte bytecode (off-by-one below the 53-byte minimum).
+    function testTryTrimSolidityCBORMetadataExactly52Bytes() external pure {
+        bytes memory code = new bytes(52);
+        assertFalse(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(code));
+        assertEq(code.length, 52);
+    }
+
     /// EOF bytecode is not supported.
     function testTryTrimSolidityCBORMetadataRevertsOnEOF() external {
         bytes memory eofBytecode = hex"EF00010203";

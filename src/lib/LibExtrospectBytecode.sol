@@ -97,6 +97,11 @@ library LibExtrospectBytecode {
         checkNotEOFBytecode(bytecode);
         uint256 length = bytecode.length;
         if (length >= 53) {
+            // Two overlapping 32-byte reads cover the last 53 bytes of
+            // bytecode (the metadata). The masks zero out the variable parts
+            // (34-byte IPFS hash and 3-byte solc version), preserving only the
+            // fixed CBOR structure bytes: a2 64 "ipfs" 5822 ... 64 "solc" 43
+            // ... 0033. The expected hash is keccak256 of the masked result.
             //slither-disable-next-line too-many-digits
             uint256 maskA = 0xFFFFFFFFFFFFFFFF00000000000000000000000000;
             //slither-disable-next-line too-many-digits
@@ -122,7 +127,7 @@ library LibExtrospectBytecode {
     /// @param expected The expected hash of the trimmed bytecode.
     function checkCBORTrimmedBytecodeHash(address account, bytes32 expected) internal view {
         bytes memory bytecode = account.code;
-        bool didTrim = LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode);
+        bool didTrim = tryTrimSolidityCBORMetadata(bytecode);
         if (!didTrim) {
             revert MetadataNotTrimmed();
         }
@@ -141,7 +146,7 @@ library LibExtrospectBytecode {
     //forge-lint: disable-next-line(mixed-case-function)
     function checkNoSolidityCBORMetadata(address account) internal view {
         bytes memory bytecode = account.code;
-        bool didTrim = LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode);
+        bool didTrim = tryTrimSolidityCBORMetadata(bytecode);
         if (didTrim) {
             revert UnexpectedMetadata();
         }
@@ -166,12 +171,11 @@ library LibExtrospectBytecode {
         checkNotEOFBytecode(bytecode);
         Pointer cursor = bytecode.dataPointer();
         uint256 length = bytecode.length;
-        Pointer end;
         uint256 opJumpDest = EVM_OP_JUMPDEST;
         uint256 haltingMask = HALTING_BITMAP;
         assembly ("memory-safe") {
             cursor := sub(cursor, 0x20)
-            end := add(cursor, length)
+            let end := add(cursor, length)
             let halted := 0
             for {} lt(cursor, end) {} {
                 cursor := add(cursor, 1)

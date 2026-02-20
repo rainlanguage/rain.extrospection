@@ -203,43 +203,44 @@ uint256 constant HALTING_BITMAP = (1 << EVM_OP_STOP) | (1 << EVM_OP_RETURN) | (1
 /// - CREATE: can deploy child contracts
 /// - CREATE2: can deploy children at deterministic (reusable) addresses
 //forge-lint: disable-next-line(incorrect-shift)
-uint256 constant METAMORPHIC_OPS = (1 << uint256(EVM_OP_SELFDESTRUCT)) | (1 << uint256(EVM_OP_DELEGATECALL))
+uint256 constant METAMORPHIC_OPS = (1 << EVM_OP_SELFDESTRUCT) | (1 << EVM_OP_DELEGATECALL)
     //forge-lint: disable-next-line(incorrect-shift)
-    | (1 << uint256(EVM_OP_CALLCODE)) | (1 << uint256(EVM_OP_CREATE))
+    | (1 << EVM_OP_CALLCODE) | (1 << EVM_OP_CREATE)
     //forge-lint: disable-next-line(incorrect-shift)
-    | (1 << uint256(EVM_OP_CREATE2));
+    | (1 << EVM_OP_CREATE2);
 
-/// @dev Bitmap of opcodes disallowed in a static context per EIP-214. Includes
-/// TSTORE per EIP-1153 (Cancun). CALL is included unconditionally (EIP-214
-/// only disallows CALL with non-zero value, but the bitmap cannot express
-/// value-conditional semantics).
+/// @dev Bitmap of opcodes disallowed in a static context per EIP-214. Members:
+/// CREATE, CREATE2, LOG0, LOG1, LOG2, LOG3, LOG4, SSTORE, SELFDESTRUCT,
+/// CALL, TSTORE. CALL is included unconditionally (EIP-214 only disallows
+/// CALL with non-zero value, but the bitmap cannot express value-conditional
+/// semantics). TSTORE added per EIP-1153 (Cancun).
 /// https://eips.ethereum.org/EIPS/eip-214#specification
 //forge-lint: disable-next-line(incorrect-shift)
-uint256 constant NON_STATIC_OPS = (1 << uint256(EVM_OP_CREATE)) | (1 << uint256(EVM_OP_CREATE2))
+uint256 constant NON_STATIC_OPS = (1 << EVM_OP_CREATE) | (1 << EVM_OP_CREATE2)
     //forge-lint: disable-next-line(incorrect-shift)
-    | (1 << uint256(EVM_OP_LOG0)) | (1 << uint256(EVM_OP_LOG1)) | (1 << uint256(EVM_OP_LOG2))
+    | (1 << EVM_OP_LOG0) | (1 << EVM_OP_LOG1) | (1 << EVM_OP_LOG2)
     //forge-lint: disable-next-line(incorrect-shift)
-    | (1 << uint256(EVM_OP_LOG3))
+    | (1 << EVM_OP_LOG3)
     //forge-lint: disable-next-line(incorrect-shift)
-    | (1 << uint256(EVM_OP_LOG4)) | (1 << uint256(EVM_OP_SSTORE)) | (1 << uint256(EVM_OP_SELFDESTRUCT))
+    | (1 << EVM_OP_LOG4) | (1 << EVM_OP_SSTORE) | (1 << EVM_OP_SELFDESTRUCT)
     //forge-lint: disable-next-line(incorrect-shift)
-    | (1 << uint256(EVM_OP_CALL))
+    | (1 << EVM_OP_CALL)
     //forge-lint: disable-next-line(incorrect-shift)
-    | (1 << uint256(EVM_OP_TSTORE));
+    | (1 << EVM_OP_TSTORE);
 
 /// @dev Interpreter disallowed ops bitmap. Stricter than `NON_STATIC_OPS`,
 /// adding SLOAD, TLOAD, DELEGATECALL, and CALLCODE.
 uint256 constant INTERPRETER_DISALLOWED_OPS = NON_STATIC_OPS
     // Interpreter cannot store so it has no reason to load from storage.
     //forge-lint: disable-next-line(incorrect-shift)
-    | (1 << uint256(EVM_OP_SLOAD))
+    | (1 << EVM_OP_SLOAD)
     // Interpreter cannot tstore so it has no reason to tload.
     //forge-lint: disable-next-line(incorrect-shift)
-    | (1 << uint256(EVM_OP_TLOAD))
+    | (1 << EVM_OP_TLOAD)
     // Interpreter MUST NOT delegate call as we have no idea what could run and
     // it could easily mutate the interpreter if allowed.
     //forge-lint: disable-next-line(incorrect-shift)
-    | (1 << uint256(EVM_OP_DELEGATECALL))
+    | (1 << EVM_OP_DELEGATECALL)
     // Interpreter MUST use static call only.
     //forge-lint: disable-next-line(incorrect-shift)
-    | (1 << uint256(EVM_OP_CALLCODE));
+    | (1 << EVM_OP_CALLCODE);

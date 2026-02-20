@@ -33,6 +33,11 @@ contract LibExtrospectBytecodeIsEOFBytecodeTest is Test {
         assertTrue(LibExtrospectBytecode.isEOFBytecode(hex"EF00010203"));
     }
 
+    /// Test minimum valid EOF detection: exactly 2 bytes 0xEF00.
+    function testIsEOFBytecodeExactTwoBytes() external pure {
+        assertTrue(LibExtrospectBytecode.isEOFBytecode(hex"EF00"));
+    }
+
     /// Test that checkNotEOFBytecode reverts on EOF bytecode.
     function testCheckNotEOFBytecodeRevertsOnEOF() external {
         vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
@@ -47,5 +52,11 @@ contract LibExtrospectBytecodeIsEOFBytecodeTest is Test {
     /// Fuzz test isEOFBytecode against reference implementation.
     function testIsEOFBytecodeFuzz(bytes memory bytecode) external pure {
         vm.assertEq(LibExtrospectBytecode.isEOFBytecode(bytecode), LibExtrospectionSlow.isEOFBytecodeSlow(bytecode));
+    }
+
+    /// Fuzz test checkNotEOFBytecode does not revert on non-EOF bytecode.
+    function testCheckNotEOFBytecodeDoesNotRevertFuzz(bytes memory bytecode) external view {
+        vm.assume(!LibExtrospectBytecode.isEOFBytecode(bytecode));
+        this.checkNotEOFBytecodeExternal(bytecode);
     }
 }

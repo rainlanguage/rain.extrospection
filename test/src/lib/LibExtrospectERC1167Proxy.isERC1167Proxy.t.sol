@@ -24,6 +24,25 @@ contract LibExtrospectERC1167ProxyTest is Test {
         assertEq(implementation, address(0));
     }
 
+    /// Valid proxy with last byte truncated (44 bytes) is not detected.
+    function testIsERC1167ProxyLength44(address implementation) external pure {
+        bytes memory bytecode = abi.encodePacked(ERC1167_PREFIX, implementation, ERC1167_SUFFIX);
+        assembly ("memory-safe") {
+            mstore(bytecode, 44)
+        }
+        (bool result, address impl) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        assertFalse(result);
+        assertEq(impl, address(0));
+    }
+
+    /// Valid proxy with one extra byte appended (46 bytes) is not detected.
+    function testIsERC1167ProxyLength46(address implementation, bytes1 extra) external pure {
+        bytes memory extended = abi.encodePacked(ERC1167_PREFIX, implementation, ERC1167_SUFFIX, extra);
+        (bool result, address impl) = LibExtrospectERC1167Proxy.isERC1167Proxy(extended);
+        assertFalse(result);
+        assertEq(impl, address(0));
+    }
+
     /// ERC1167 has known prefix so any other prefix is not a proxy.
     /// Does NOT constrain length -- tests the length-check early return.
     function testIsERC1167ProxyPrefixFail(bytes memory badPrefix, address implementation) external pure {

@@ -36,4 +36,48 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
         vm.expectRevert(LibExtrospectBytecode.UnexpectedMetadata.selector);
         this.checkNoSolidityCBORMetadataExternal(deployed);
     }
+
+    /// EOF bytecode etched onto an account reverts with EOFBytecodeNotSupported.
+    function testCheckNoMetadataEOF() external {
+        address target = address(0xBEEF);
+        vm.etch(target, hex"EF00010203");
+        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
+        this.checkNoSolidityCBORMetadataExternal(target);
+    }
+
+    /// Fuzz: bytecode without valid metadata passes.
+    function testCheckNoMetadataPassesFuzz(bytes memory code) external {
+        vm.assume(code.length > 0);
+        vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
+        vm.assume(!LibExtrospectBytecode.tryTrimSolidityCBORMetadata(code));
+
+        address target = address(0xBEEF);
+        vm.etch(target, code);
+        LibExtrospectBytecode.checkNoSolidityCBORMetadata(target);
+    }
+
+    /// Fuzz: bytecode with valid CBOR metadata appended reverts.
+    function testCheckNoMetadataRevertsFuzz(bytes memory code) external {
+        vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
+
+        // Build synthetic IPFS hash and solc version from fuzz input.
+        bytes32 seed = keccak256(code);
+        bytes memory ipfsHash = new bytes(34);
+        assembly ("memory-safe") {
+            mstore(add(ipfsHash, 0x20), seed)
+            mstore(add(ipfsHash, 0x40), keccak256(0, 0x20))
+        }
+        bytes memory solcVersion = new bytes(3);
+        assembly ("memory-safe") {
+            mstore(add(solcVersion, 0x20), seed)
+        }
+
+        bytes memory withMetadata =
+            bytes.concat(code, hex"a264697066735822", ipfsHash, hex"64736f6c6343", solcVersion, hex"0033");
+
+        address target = address(0xBEEF);
+        vm.etch(target, withMetadata);
+        vm.expectRevert(LibExtrospectBytecode.UnexpectedMetadata.selector);
+        this.checkNoSolidityCBORMetadataExternal(target);
+    }
 }

@@ -14,7 +14,8 @@ library LibExtrospectMetamorphic {
     /// @param riskyOpcodes Bitmap of reachable metamorphic opcodes.
     error Metamorphic(uint256 riskyOpcodes);
 
-    /// Scans bytecode for reachable metamorphic risk opcodes.
+    /// Scans bytecode for reachable metamorphic risk opcodes. Reverts with
+    /// `EOFBytecodeNotSupported` if the bytecode is EOF.
     /// @param bytecode The bytecode to scan.
     /// @return riskyOpcodes Bitmap of reachable metamorphic opcodes. Zero if
     /// no metamorphic risk opcodes are reachable.
@@ -23,6 +24,7 @@ library LibExtrospectMetamorphic {
     }
 
     /// Reverts if any metamorphic risk opcodes are reachable in bytecode.
+    /// Also reverts with `EOFBytecodeNotSupported` if the bytecode is EOF.
     /// @param bytecode The bytecode to check.
     function checkNotMetamorphic(bytes memory bytecode) internal pure {
         uint256 riskyOpcodes = scanMetamorphicRisk(bytecode);
