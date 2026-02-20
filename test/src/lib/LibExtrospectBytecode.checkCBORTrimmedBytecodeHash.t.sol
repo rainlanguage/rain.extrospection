@@ -37,6 +37,13 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
         this.externalCheckCBORTrimmedBytecodeHash(PROD_ARBITRUM_CLONE_FACTORY_ADDRESS_V1, expectedCodeHash);
     }
 
+    /// Test that an empty account (no deployed code) reverts with
+    /// MetadataNotTrimmed since there is no metadata to trim.
+    function testCheckCBORTrimmedBytecodeHashEmptyAccount() external {
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.MetadataNotTrimmed.selector));
+        this.externalCheckCBORTrimmedBytecodeHash(address(0xdead), bytes32(0));
+    }
+
     function testCheckCBORTrimmedBytecodeHashMetadataNotTrimmed() external {
         bytes32 expectedCodeHash = bytes32(0xDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF);
         LibExtrospectTestProd.createSelectForkArbitrum(vm);

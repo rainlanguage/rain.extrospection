@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-DCL-1.0
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.25;
 
 import {
     EVM_OP_CREATE,
@@ -67,6 +67,10 @@ interface IExtrospectInterpreterV1 {
     /// scope of the scan. The implementation is free to be more or less strict
     /// in how it determines which bytes to include in the scan, e.g. whether to
     /// consider reachable opcodes only or all opcodes.
+    /// @param interpreter The interpreter contract address to scan.
+    /// @return `true` if only allowed opcodes were found (no disallowed opcodes
+    /// detected), `false` if any disallowed opcode was detected. A `true`
+    /// return does NOT guarantee the contract is safe to use as an interpreter.
     //forge-lint: disable-next-line(mixed-case-function)
     function scanOnlyAllowedInterpreterEVMOpcodes(address interpreter) external view returns (bool);
 }

@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: LicenseRef-DCL-1.0
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.25;
+
+/// @dev EVM opcode constants current through Cancun. Each constant is the
+/// canonical opcode byte value. The `HALTING_BITMAP` encodes opcodes that
+/// terminate the current execution path, used by the reachability scanner in
+/// `LibExtrospectBytecode`. Additional opcode bitmaps (`NON_STATIC_OPS`,
+/// `INTERPRETER_DISALLOWED_OPS`) are defined in `IExtrospectInterpreterV1.sol`.
 
 uint8 constant EVM_OP_STOP = 0x00;
 
@@ -174,6 +180,10 @@ uint8 constant EVM_OP_REVERT = 0xFD;
 uint8 constant EVM_OP_INVALID = 0xFE;
 uint8 constant EVM_OP_SELFDESTRUCT = 0xFF;
 
+/// @dev Bitmap of opcodes that terminate the current execution path. Used by
+/// `LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode` to pause scanning
+/// until the next JUMPDEST. Includes STOP, RETURN, REVERT, INVALID,
+/// SELFDESTRUCT, and unconditional JUMP (which cannot fall through).
 //forge-lint: disable-next-line(incorrect-shift)
 uint256 constant HALTING_BITMAP = (1 << EVM_OP_STOP) | (1 << EVM_OP_RETURN) | (1 << EVM_OP_REVERT)
     //forge-lint: disable-next-line(incorrect-shift)

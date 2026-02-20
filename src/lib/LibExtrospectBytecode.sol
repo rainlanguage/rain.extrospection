@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-DCL-1.0
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.25;
 
 import {LibBytes, Pointer} from "rain.solmem/lib/LibBytes.sol";
 import {EVM_OP_JUMPDEST, HALTING_BITMAP} from "./EVMOpcodes.sol";
@@ -53,13 +53,14 @@ library LibExtrospectBytecode {
     ///
     /// MOST OF THE TIME, the metadata is either not present or will follow the
     /// default structure. This is:
-    /// - First 2 bytes of the 51 bytes are `0xa264` as cbor structure
+    /// - First byte `0xa2` is cbor map header (map with 2 entries)
+    /// - Next byte `0x64` is cbor text string prefix (4-byte string follows)
     /// - Next 4 bytes `0x69706673` as `ipfs` ascii/utf8
-    /// - Next 2 bytes `0x5822` as cbor structure
+    /// - Next 2 bytes `0x5822` as cbor byte string prefix (34-byte hash follows)
     /// - Next 34 bytes are the IPFS hash (yes 34, not 32)
-    /// - Next 1 bytes `0x64` as cbor structure
-    /// - Next 4 byte `0x736f6c63` as `solc` ascii/utf8
-    /// - Next 1 byte `0x43` as cbor structure
+    /// - Next byte `0x64` is cbor text string prefix (4-byte string follows)
+    /// - Next 4 bytes `0x736f6c63` as `solc` ascii/utf8
+    /// - Next byte `0x43` is cbor byte string prefix (3-byte version follows)
     /// - Next 3 bytes as solc version (e.g. `0x000804`)
     /// - Final 2 bytes specify length of metadata which is always 51 bytes
     ///
@@ -178,10 +179,8 @@ library LibExtrospectBytecode {
         }
     }
 
-    /// Scans opcodes present in a region of memory, as per
-    /// `IExtrospectBytecodeV1.scanEVMOpcodesPresentInAccount`. The start cursor
-    /// MUST point to the first byte of a region of memory that contract code has
-    /// already been copied to, e.g. with `extcodecopy`.
+    /// Scans all opcodes present in bytecode, respecting PUSH* inline data.
+    /// Adapted from
     /// https://github.com/a16z/metamorphic-contract-detector/blob/main/metamorphic_detect/opcodes.py#L52
     /// @param bytecode The bytecode to scan.
     /// @return bytesPresent A `uint256` where each bit represents the presence

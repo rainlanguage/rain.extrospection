@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-DCL-1.0
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.25;
 
 /// @title IExtrospectBytecodeV2
 /// @notice External functions for offchain processing to conveniently access the
@@ -41,7 +41,7 @@ interface IExtrospectBytecodeV2 {
     /// to check for the presence of a list of (un)desired opcodes in a single
     /// logical operation. This allows for fewer branching operations (expensive)
     /// per byte, but precludes the ability to break the loop early upon
-    /// discovering the prescence of a specific opcode.
+    /// discovering the presence of a specific opcode.
     ///
     /// The scan MUST respect the inline skip behaviour of the `PUSH*` family of
     /// evm opcodes, starting from opcode `0x60` through `0x7F` inclusive. These

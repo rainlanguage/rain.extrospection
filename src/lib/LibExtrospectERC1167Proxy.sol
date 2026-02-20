@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-DCL-1.0
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.25;
 
 /// @dev ERC1167 proxy is known bytecode that wraps the implementation address.
 /// This is the prefix.
@@ -33,6 +33,8 @@ uint256 constant ERC1167_PROXY_LENGTH = 20 + ERC1167_PREFIX_LENGTH + ERC1167_SUF
 uint256 constant ERC1167_IMPLEMENTATION_ADDRESS_OFFSET = ERC1167_PREFIX_LENGTH + 20;
 
 /// @title LibExtrospectERC1167Proxy
+/// @notice Detection of ERC-1167 minimal proxy contracts and extraction of
+/// their implementation address from bytecode.
 library LibExtrospectERC1167Proxy {
     /// @notice Checks if the given bytecode is an ERC1167 proxy. If so,
     /// returns the implementation address.

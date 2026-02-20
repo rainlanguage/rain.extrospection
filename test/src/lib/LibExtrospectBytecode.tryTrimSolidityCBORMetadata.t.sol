@@ -66,6 +66,36 @@ contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
         assertEq(bytecode, withMetadata);
     }
 
+    /// Test exactly 53-byte bytecode that IS valid CBOR metadata (no code
+    /// prefix). The entire bytecode is the metadata.
+    function testTryTrimSolidityCBORMetadataExactly53BytesValid() external pure {
+        // Construct a valid 53-byte CBOR metadata from the real test above.
+        bytes memory metadata =
+            hex"a26469706673582212200726074213b9ef2f5b41bf0bdd5bbd03a64652de62f1dfcda59625e106c52e8a64736f6c63430008190033";
+        assertEq(metadata.length, 53);
+        assertTrue(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(metadata));
+        assertEq(metadata.length, 0);
+    }
+
+    /// Test exactly 53-byte bytecode that is NOT valid CBOR metadata.
+    function testTryTrimSolidityCBORMetadataExactly53BytesInvalid() external pure {
+        bytes memory notMetadata =
+            hex"0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        assertEq(notMetadata.length, 53);
+        assertFalse(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(notMetadata));
+        assertEq(notMetadata.length, 53);
+    }
+
+    /// Test that calling tryTrimSolidityCBORMetadata twice on already-trimmed
+    /// bytecode returns false on the second call.
+    function testTryTrimSolidityCBORMetadataIdempotency() external pure {
+        bytes memory bytecode =
+            hex"6080604052600080fdfea26469706673582212200726074213b9ef2f5b41bf0bdd5bbd03a64652de62f1dfcda59625e106c52e8a64736f6c63430008190033";
+        assertTrue(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
+        // Second call should return false — metadata already trimmed.
+        assertFalse(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
+    }
+
     /// EOF bytecode is not supported.
     function testTryTrimSolidityCBORMetadataRevertsOnEOF() external {
         bytes memory eofBytecode = hex"EF00010203";

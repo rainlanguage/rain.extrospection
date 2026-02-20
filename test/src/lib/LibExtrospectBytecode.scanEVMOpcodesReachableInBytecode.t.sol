@@ -11,6 +11,7 @@ import {
     EVM_OP_REVERT,
     EVM_OP_INVALID,
     EVM_OP_SELFDESTRUCT,
+    EVM_OP_JUMP,
     EVM_OP_EQ,
     EVM_OP_JUMPDEST,
     EVM_OP_MULMOD,
@@ -82,6 +83,12 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
     function testScanEVMOpcodesReachableSelfdestruct() public pure {
         //forge-lint: disable-next-line(incorrect-shift)
         assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"ff00010203"), 1 << EVM_OP_SELFDESTRUCT);
+    }
+
+    // Test that unconditional jump halts scanning (cannot fall through).
+    function testScanEVMOpcodesReachableJump() public pure {
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"5600010203"), 1 << EVM_OP_JUMP);
     }
 
     // Test that jumpdest opcode resumes scanning.
