@@ -240,6 +240,14 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         );
     }
 
+    /// PUSH0 (0x5F) is NOT a PUSH with data — it pushes zero with no inline
+    /// bytes. The next byte is a separate opcode, not skip data.
+    function testScanEVMOpcodesReachablePush0Boundary() public pure {
+        // PUSH0 followed by ADD (0x01). Both should be recorded.
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"5F01"), (1 << 0x5F) | (1 << 0x01));
+    }
+
     /// Test that push opcode arguments are skipped.
     function testScanEVMOpcodesReachablePush1() public pure {
         // PUSH1 01

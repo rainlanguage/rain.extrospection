@@ -36,12 +36,13 @@ nix develop -c forge test --match-test testFoo
 
 ## Architecture
 
-**Source layout:** `src/interface/` for external-facing interfaces, `src/lib/` for internal library implementations. No concrete deployed contracts — only interfaces and libraries.
+**Source layout:** `src/lib/` for library implementations. No concrete deployed contracts — libraries only.
 
 **Core libraries:**
 - `LibExtrospectBytecode` — Opcode scanning (present scan: linear pass respecting PUSH\* inline data; reachable scan: halt-aware with JUMPDEST tracking), CBOR metadata trimming, EOF detection
 - `LibExtrospectERC1167Proxy` — ERC1167 minimal proxy detection and implementation address extraction
-- `EVMOpcodes` — Constants for all 256 EVM opcodes and derived bitmaps (e.g. `HALTING_BITMAP`)
+- `LibExtrospectMetamorphic` — Metamorphic risk detection (scans for reachable SELFDESTRUCT, DELEGATECALL, CALLCODE, CREATE, CREATE2)
+- `EVMOpcodes` — Constants for all 256 EVM opcodes and derived bitmaps (e.g. `HALTING_BITMAP`, `METAMORPHIC_OPS`)
 
 **Key pattern:** Opcodes are encoded as a single `uint256` bitmap where bit N represents opcode 0xN. Bitwise AND against reference bitmaps checks for (un)desired opcodes in one operation.
 
@@ -49,9 +50,7 @@ nix develop -c forge test --match-test testFoo
 
 ## Conventions
 
-- Solidity `^0.8.18` for interfaces, compiled with `=0.8.25`
-- Interfaces versioned with suffix: `IExtrospectBytecodeV2`, `IExtrospectERC1167ProxyV1`
-- Deprecated interfaces go in `src/interface/deprecated/`
+- Solidity `^0.8.25` for non-concrete files (interfaces, libraries), `=0.8.25` for concrete files (tests)
 - Assembly blocks marked `memory-safe`
 - Every file starts with SPDX license identifier and copyright header
 - `forge-lint` annotations suppress expected warnings: `incorrect-shift`, `mixed-case-function`, `assembly-usage`
@@ -62,4 +61,5 @@ nix develop -c forge test --match-test testFoo
 
 Git submodules in `lib/`:
 - `rain.solmem` — Memory utilities (`LibBytes`, `Pointer`)
+- `rain.math.binary` — Binary math utilities
 - `forge-std` — Foundry test framework

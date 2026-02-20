@@ -186,6 +186,14 @@ contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"04050607"), 0xF0);
     }
 
+    /// PUSH0 (0x5F) is NOT a PUSH with data — it pushes zero with no inline
+    /// bytes. The next byte is a separate opcode, not skip data.
+    function testScanEVMOpcodesPresentPush0Boundary() public pure {
+        // PUSH0 followed by ADD (0x01). Both should be recorded.
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"5F01"), (1 << 0x5F) | (1 << 0x01));
+    }
+
     function testScanEVMOpcodesPresentPush1() public pure {
         // PUSH1 01
         assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"60016002"), 2 ** 0x60);

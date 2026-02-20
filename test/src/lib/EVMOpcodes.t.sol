@@ -375,4 +375,29 @@ contract EVMOpcodesTest is Test {
         //forge-lint: disable-next-line(incorrect-shift)
         assertTrue(HALTING_BITMAP & (1 << 0x56) != 0, "JUMP");
     }
+
+    /// Validate that non-halting opcodes are absent from HALTING_BITMAP.
+    function testHaltingBitmapExclusions() external pure {
+        // JUMPI is conditional — it does NOT unconditionally halt.
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(HALTING_BITMAP & (1 << 0x57), 0, "JUMPI should not halt");
+        // JUMPDEST is a label, not a halting opcode.
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(HALTING_BITMAP & (1 << 0x5B), 0, "JUMPDEST should not halt");
+        // Common non-halting opcodes.
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(HALTING_BITMAP & (1 << 0x01), 0, "ADD should not halt");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(HALTING_BITMAP & (1 << 0x51), 0, "MLOAD should not halt");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(HALTING_BITMAP & (1 << 0x52), 0, "MSTORE should not halt");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(HALTING_BITMAP & (1 << 0x60), 0, "PUSH1 should not halt");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(HALTING_BITMAP & (1 << 0xF1), 0, "CALL should not halt");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(HALTING_BITMAP & (1 << 0xFA), 0, "STATICCALL should not halt");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(HALTING_BITMAP & (1 << 0xF4), 0, "DELEGATECALL should not halt");
+    }
 }

@@ -42,14 +42,34 @@ contract IExtrospectMetamorphicV1Test is Test {
         assertTrue(METAMORPHIC_OPS & (1 << uint256(EVM_OP_CREATE2)) != 0);
     }
 
-    /// Opcodes NOT in the metamorphic set.
+    /// Opcodes NOT in the metamorphic set — check all nearby 0xF* opcodes
+    /// and a selection of common opcodes from other ranges.
     function testMetamorphicOpsExclusions() external pure {
-        // STATICCALL (0xFA), CALL (0xF1), RETURN (0xF3) should NOT be set.
+        // All 0xF* range opcodes that are NOT metamorphic risk.
         //forge-lint: disable-next-line(incorrect-shift)
-        assertEq(METAMORPHIC_OPS & (1 << 0xFA), 0);
+        assertEq(METAMORPHIC_OPS & (1 << 0xF1), 0, "CALL");
         //forge-lint: disable-next-line(incorrect-shift)
-        assertEq(METAMORPHIC_OPS & (1 << 0xF1), 0);
+        assertEq(METAMORPHIC_OPS & (1 << 0xF3), 0, "RETURN");
         //forge-lint: disable-next-line(incorrect-shift)
-        assertEq(METAMORPHIC_OPS & (1 << 0xF3), 0);
+        assertEq(METAMORPHIC_OPS & (1 << 0xFA), 0, "STATICCALL");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(METAMORPHIC_OPS & (1 << 0xFD), 0, "REVERT");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(METAMORPHIC_OPS & (1 << 0xFE), 0, "INVALID");
+        // Common opcodes from other ranges.
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(METAMORPHIC_OPS & (1 << 0x00), 0, "STOP");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(METAMORPHIC_OPS & (1 << 0x01), 0, "ADD");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(METAMORPHIC_OPS & (1 << 0x54), 0, "SLOAD");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(METAMORPHIC_OPS & (1 << 0x55), 0, "SSTORE");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(METAMORPHIC_OPS & (1 << 0x56), 0, "JUMP");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(METAMORPHIC_OPS & (1 << 0x5B), 0, "JUMPDEST");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(METAMORPHIC_OPS & (1 << 0xA0), 0, "LOG0");
     }
 }

@@ -148,7 +148,16 @@ library LibExtrospectBytecode {
     }
 
     /// Scans for opcodes that are reachable during execution of a contract.
+    /// Uses a linear over-approximation: scans sequentially, skipping PUSH*
+    /// inline data. When a halting opcode is encountered (STOP, RETURN, REVERT,
+    /// INVALID, SELFDESTRUCT, or unconditional JUMP per `HALTING_BITMAP`),
+    /// scanning pauses. Scanning resumes at the next JUMPDEST. Opcodes between
+    /// a halt and the next JUMPDEST are treated as unreachable and excluded.
+    /// This is an over-approximation because not all JUMPDESTs are actually
+    /// reachable at runtime.
     /// Adapted from https://github.com/MrLuit/selfdestruct-detect/blob/master/src/index.ts
+    /// NOTE: Reverts with `EOFBytecodeNotSupported` if the bytecode is EOF
+    /// (EIP-7692).
     /// @param bytecode The bytecode to scan.
     /// @return bytesReachable A `uint256` where each bit represents the presence
     /// of a reachable opcode in the source bytecode.

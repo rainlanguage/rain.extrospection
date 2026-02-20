@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std/Test.sol";
 import {LibCtPop} from "rain.math.binary/lib/LibCtPop.sol";
 
-import {NON_STATIC_OPS, INTERPRETER_DISALLOWED_OPS} from "src/interface/IExtrospectInterpreterV1.sol";
+import {NON_STATIC_OPS, INTERPRETER_DISALLOWED_OPS} from "src/lib/EVMOpcodes.sol";
 
 /// @title IExtrospectInterpreterV1Test
 /// @notice Tests that the security-critical bitmap constants NON_STATIC_OPS and
@@ -131,6 +131,8 @@ contract IExtrospectInterpreterV1Test is Test {
         //forge-lint: disable-next-line(incorrect-shift)
         assertEq(NON_STATIC_OPS & (1 << 0x5C), 0, "TLOAD should not be in NON_STATIC_OPS");
         //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(NON_STATIC_OPS & (1 << 0xF2), 0, "CALLCODE should not be in NON_STATIC_OPS");
+        //forge-lint: disable-next-line(incorrect-shift)
         assertEq(NON_STATIC_OPS & (1 << 0xF4), 0, "DELEGATECALL should not be in NON_STATIC_OPS");
         //forge-lint: disable-next-line(incorrect-shift)
         assertEq(NON_STATIC_OPS & (1 << 0xFA), 0, "STATICCALL should not be flagged");
@@ -142,6 +144,62 @@ contract IExtrospectInterpreterV1Test is Test {
     /// CREATE, CREATE2, LOG0-4, SSTORE, SELFDESTRUCT, CALL, TSTORE = 11.
     function testNonStaticOpsPopcount() external pure {
         assertEq(NON_STATIC_OPS.ctpop(), 11);
+    }
+
+    /// Test that each individual opcode in INTERPRETER_DISALLOWED_OPS is set.
+    function testInterpreterDisallowedOpsIndividualBits() external pure {
+        // All NON_STATIC_OPS bits.
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0xF0) != 0, "CREATE");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0xF5) != 0, "CREATE2");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0xA0) != 0, "LOG0");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0xA1) != 0, "LOG1");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0xA2) != 0, "LOG2");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0xA3) != 0, "LOG3");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0xA4) != 0, "LOG4");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0x55) != 0, "SSTORE");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0xFF) != 0, "SELFDESTRUCT");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0xF1) != 0, "CALL");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0x5D) != 0, "TSTORE");
+        // Additional interpreter restrictions.
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0x54) != 0, "SLOAD");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0x5C) != 0, "TLOAD");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0xF4) != 0, "DELEGATECALL");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(INTERPRETER_DISALLOWED_OPS & (1 << 0xF2) != 0, "CALLCODE");
+    }
+
+    /// Test that opcodes NOT in INTERPRETER_DISALLOWED_OPS are absent.
+    function testInterpreterDisallowedOpsExclusions() external pure {
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(INTERPRETER_DISALLOWED_OPS & (1 << 0x00), 0, "STOP should not be flagged");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(INTERPRETER_DISALLOWED_OPS & (1 << 0x01), 0, "ADD should not be flagged");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(INTERPRETER_DISALLOWED_OPS & (1 << 0xFA), 0, "STATICCALL should not be flagged");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(INTERPRETER_DISALLOWED_OPS & (1 << 0xF3), 0, "RETURN should not be flagged");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(INTERPRETER_DISALLOWED_OPS & (1 << 0xFD), 0, "REVERT should not be flagged");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(INTERPRETER_DISALLOWED_OPS & (1 << 0x5B), 0, "JUMPDEST should not be flagged");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(INTERPRETER_DISALLOWED_OPS & (1 << 0x51), 0, "MLOAD should not be flagged");
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(INTERPRETER_DISALLOWED_OPS & (1 << 0x52), 0, "MSTORE should not be flagged");
     }
 
     /// Test the exact popcount of INTERPRETER_DISALLOWED_OPS.
