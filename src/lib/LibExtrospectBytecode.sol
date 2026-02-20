@@ -23,6 +23,11 @@ library LibExtrospectBytecode {
     /// @param actual The actual bytecode hash.
     error BytecodeHashMismatch(bytes32 expected, bytes32 actual);
 
+    /// Thrown when CBOR metadata is unexpectedly present in bytecode.
+    /// The common defense against the metamorphic metadata attack is to
+    /// compile without CBOR metadata entirely.
+    error UnexpectedMetadata();
+
     /// Returns whether the bytecode is in EOF format.
     /// @param bytecode The bytecode to check.
     /// @return isEOF Whether the bytecode is in EOF format.
@@ -124,6 +129,21 @@ library LibExtrospectBytecode {
         bytes32 actual = keccak256(bytecode);
         if (expected != actual) {
             revert BytecodeHashMismatch(expected, actual);
+        }
+    }
+
+    /// Checks that no standard Solidity CBOR metadata is present in the
+    /// bytecode of an account. Reverts if metadata is detected. This is the
+    /// inverse of `checkCBORTrimmedBytecodeHash` — use this when bytecode
+    /// should have been compiled without metadata (e.g. `cbor_metadata = false`
+    /// in foundry.toml) as a defense against the metamorphic metadata attack.
+    /// @param account The account whose bytecode to check.
+    //forge-lint: disable-next-line(mixed-case-function)
+    function checkNoSolidityCBORMetadata(address account) internal view {
+        bytes memory bytecode = account.code;
+        bool didTrim = LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode);
+        if (didTrim) {
+            revert UnexpectedMetadata();
         }
     }
 

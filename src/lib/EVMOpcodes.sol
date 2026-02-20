@@ -3,10 +3,11 @@
 pragma solidity ^0.8.25;
 
 /// @dev EVM opcode constants current through Cancun. Each constant is the
-/// canonical opcode byte value. The `HALTING_BITMAP` encodes opcodes that
-/// terminate the current execution path, used by the reachability scanner in
-/// `LibExtrospectBytecode`. Additional opcode bitmaps (`NON_STATIC_OPS`,
-/// `INTERPRETER_DISALLOWED_OPS`) are defined in `IExtrospectInterpreterV1.sol`.
+/// canonical opcode byte value. Derived bitmaps: `HALTING_BITMAP` encodes
+/// opcodes that terminate the current execution path; `METAMORPHIC_OPS`
+/// encodes opcodes that indicate metamorphic risk. Additional opcode bitmaps
+/// (`NON_STATIC_OPS`, `INTERPRETER_DISALLOWED_OPS`) are defined in
+/// `IExtrospectInterpreterV1.sol`.
 
 uint8 constant EVM_OP_STOP = 0x00;
 
@@ -191,3 +192,19 @@ uint256 constant HALTING_BITMAP = (1 << EVM_OP_STOP) | (1 << EVM_OP_RETURN) | (1
     // unconditional jump always halts current flow as it cannot fall through
     //forge-lint: disable-next-line(incorrect-shift)
     | (1 << EVM_OP_JUMP);
+
+/// @dev Bitmap of opcodes that indicate metamorphic risk. A contract with any
+/// of these opcodes reachable could potentially be destroyed and redeployed
+/// with different code at the same address.
+/// - SELFDESTRUCT: direct contract destruction
+/// - DELEGATECALL: can execute arbitrary code (including SELFDESTRUCT) in the
+///   contract's own context
+/// - CALLCODE: deprecated equivalent of DELEGATECALL
+/// - CREATE: can deploy child contracts
+/// - CREATE2: can deploy children at deterministic (reusable) addresses
+//forge-lint: disable-next-line(incorrect-shift)
+uint256 constant METAMORPHIC_OPS = (1 << uint256(EVM_OP_SELFDESTRUCT)) | (1 << uint256(EVM_OP_DELEGATECALL))
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (1 << uint256(EVM_OP_CALLCODE)) | (1 << uint256(EVM_OP_CREATE))
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (1 << uint256(EVM_OP_CREATE2));

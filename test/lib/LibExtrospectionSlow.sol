@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {HALTING_BITMAP, EVM_OP_JUMPDEST} from "src/lib/EVMOpcodes.sol";
+import {HALTING_BITMAP, METAMORPHIC_OPS, EVM_OP_JUMPDEST} from "src/lib/EVMOpcodes.sol";
 import {ERC1167_PREFIX_HASH, ERC1167_SUFFIX_HASH} from "src/lib/LibExtrospectERC1167Proxy.sol";
 
 library LibExtrospectionSlow {
@@ -54,6 +54,11 @@ library LibExtrospectionSlow {
             }
         }
         return scan;
+    }
+
+    /// KISS implementation of metamorphic risk scan.
+    function scanMetamorphicRiskSlow(bytes memory data) internal pure returns (uint256) {
+        return scanEVMOpcodesReachableInBytecodeSlow(data) & METAMORPHIC_OPS;
     }
 
     /// KISS implementation of ERC1167 proxy detection.
