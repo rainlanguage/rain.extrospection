@@ -19,7 +19,7 @@ import {HasDelegatecall} from "test/concrete/HasDelegatecall.sol";
 import {HasCallcode} from "test/concrete/HasCallcode.sol";
 import {HasCreate} from "test/concrete/HasCreate.sol";
 import {HasCreate2} from "test/concrete/HasCreate2.sol";
-import {CleanContract} from "test/concrete/CleanContract.sol";
+import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 
 contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
     /// External wrapper for EOF revert test.
@@ -34,7 +34,7 @@ contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
 
     /// Clean contract with no metamorphic ops returns 0.
     function testScanMetamorphicRiskClean() external {
-        CleanContract clean = new CleanContract();
+        NonMetamorphic clean = new NonMetamorphic();
         assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(address(clean).code), 0);
     }
 

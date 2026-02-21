@@ -87,7 +87,7 @@ import {HasDelegatecall} from "test/concrete/HasDelegatecall.sol";
 import {HasCallcode} from "test/concrete/HasCallcode.sol";
 import {HasCreate} from "test/concrete/HasCreate.sol";
 import {HasCreate2} from "test/concrete/HasCreate2.sol";
-import {CleanContract} from "test/concrete/CleanContract.sol";
+import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 import {HasCall} from "test/concrete/HasCall.sol";
 import {HasStaticcall} from "test/concrete/HasStaticcall.sol";
 import {HasLog} from "test/concrete/HasLog.sol";
@@ -359,7 +359,7 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
 
     /// Scan a compiled clean contract — no metamorphic opcodes reachable.
     function testScanEVMOpcodesReachableClean_Source() public {
-        CleanContract c = new CleanContract();
+        NonMetamorphic c = new NonMetamorphic();
         uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code);
         //forge-lint: disable-next-line(incorrect-shift)
         assertEq(scan & (1 << EVM_OP_SELFDESTRUCT), 0);

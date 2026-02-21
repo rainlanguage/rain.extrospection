@@ -80,7 +80,7 @@ import {HasDelegatecall} from "test/concrete/HasDelegatecall.sol";
 import {HasCallcode} from "test/concrete/HasCallcode.sol";
 import {HasCreate} from "test/concrete/HasCreate.sol";
 import {HasCreate2} from "test/concrete/HasCreate2.sol";
-import {CleanContract} from "test/concrete/CleanContract.sol";
+import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 import {HasCall} from "test/concrete/HasCall.sol";
 import {HasStaticcall} from "test/concrete/HasStaticcall.sol";
 import {HasLog} from "test/concrete/HasLog.sol";
@@ -250,7 +250,7 @@ contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
 
     /// Scan a compiled clean contract — no metamorphic opcodes present.
     function testScanEVMOpcodesPresentClean_Source() public {
-        CleanContract c = new CleanContract();
+        NonMetamorphic c = new NonMetamorphic();
         uint256 scan = LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(address(c).code);
         //forge-lint: disable-next-line(incorrect-shift)
         assertEq(scan & (1 << uint256(EVM_OP_SELFDESTRUCT)), 0);
@@ -749,7 +749,7 @@ contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
     /// Scan a compiled contract with RETURN.
     function testScanEVMOpcodesPresentReturn_Source() public {
         // Every compiled contract uses RETURN, so we can use any contract.
-        CleanContract c = new CleanContract();
+        NonMetamorphic c = new NonMetamorphic();
         uint256 scan = LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(address(c).code);
         //forge-lint: disable-next-line(incorrect-shift)
         assertTrue(scan & (1 << uint256(EVM_OP_RETURN)) != 0);

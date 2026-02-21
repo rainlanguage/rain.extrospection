@@ -11,7 +11,7 @@ import {HasDelegatecall} from "test/concrete/HasDelegatecall.sol";
 import {HasCreate2} from "test/concrete/HasCreate2.sol";
 import {HasCallcode} from "test/concrete/HasCallcode.sol";
 import {HasCreate} from "test/concrete/HasCreate.sol";
-import {CleanContract} from "test/concrete/CleanContract.sol";
+import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 
 contract LibExtrospectMetamorphicCheckNotMetamorphicTest is Test {
     /// External wrapper for revert tests.
@@ -21,7 +21,7 @@ contract LibExtrospectMetamorphicCheckNotMetamorphicTest is Test {
 
     /// Clean contract passes.
     function testCheckNotMetamorphicClean() external {
-        CleanContract clean = new CleanContract();
+        NonMetamorphic clean = new NonMetamorphic();
         LibExtrospectMetamorphic.checkNotMetamorphic(address(clean).code);
     }
 

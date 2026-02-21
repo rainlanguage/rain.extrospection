@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std/Test.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
-import {CleanContract} from "test/concrete/CleanContract.sol";
+import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 
 contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
     /// External wrapper for revert tests.
@@ -20,8 +20,8 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
 
     /// Contract compiled without metadata passes. This project compiles with
     /// cbor_metadata = false so all contracts deployed in tests lack metadata.
-    function testCheckNoMetadataCleanContract() external {
-        CleanContract clean = new CleanContract();
+    function testCheckNoMetadataNonMetamorphic() external {
+        NonMetamorphic clean = new NonMetamorphic();
         LibExtrospectBytecode.checkNoSolidityCBORMetadata(address(clean));
     }
 
