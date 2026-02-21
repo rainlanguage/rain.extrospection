@@ -5,6 +5,8 @@ pragma solidity =0.8.25;
 /// @dev Contract that uses the SUB opcode.
 contract HasSub {
     function sub(uint256 a, uint256 b) external pure returns (uint256) {
-        unchecked { return a - b; }
+        unchecked {
+            return a - b;
+        }
     }
 }

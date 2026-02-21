@@ -103,13 +103,8 @@ contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
         // Construct bytecode with bzzr1 Swarm metadata (52 bytes, not 53).
         // a2 = map(2), 65 = text(5), "bzzr1", 5820 = bytes(32), [32-byte hash],
         // 64 = text(4), "solc", 43 = bytes(3), [version], 0032 = length(50)
-        bytes memory bytecode = bytes.concat(
-            hex"6001600055",
-            hex"a265627a7a72315820",
-            bytes32(0),
-            hex"64736f6c634300081900",
-            hex"32"
-        );
+        bytes memory bytecode =
+            bytes.concat(hex"6001600055", hex"a265627a7a72315820", bytes32(0), hex"64736f6c634300081900", hex"32");
         assertFalse(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
     }
 

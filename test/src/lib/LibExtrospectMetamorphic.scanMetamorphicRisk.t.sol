@@ -88,10 +88,7 @@ contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
     /// Fuzz test against slow reference.
     function testScanMetamorphicRiskReference(bytes memory data) external pure {
         vm.assume(!LibExtrospectBytecode.isEOFBytecode(data));
-        assertEq(
-            LibExtrospectMetamorphic.scanMetamorphicRisk(data),
-            LibExtrospectionSlow.scanMetamorphicRiskSlow(data)
-        );
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(data), LibExtrospectionSlow.scanMetamorphicRiskSlow(data));
     }
 
     /// EOF bytecode reverts.

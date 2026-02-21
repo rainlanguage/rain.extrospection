@@ -5,6 +5,8 @@ pragma solidity =0.8.25;
 /// @dev Contract that uses the EXP opcode.
 contract HasExp {
     function exp(uint256 a, uint256 b) external pure returns (uint256) {
-        unchecked { return a ** b; }
+        unchecked {
+            return a ** b;
+        }
     }
 }
