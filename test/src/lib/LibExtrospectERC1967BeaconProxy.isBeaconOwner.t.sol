@@ -35,14 +35,10 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(notOwnable), expected));
     }
 
-    /// Pins the `ok && ...` short-circuit at its boundary value:
-    /// `expected = address(0)` matches the zero address that
-    /// `_tryGetAddress` returns alongside `ok=false`. Without the
-    /// `ok &&` guard, the predicate would still compute
-    /// `address(0) == expected` after a failed call and return true,
-    /// falsely accepting any non-ownable as a beacon owned by
-    /// `address(0)`. The non-fuzz form catches that specifically;
-    /// fuzz expecteds hit `address(0)` with probability 1/2^160.
+    /// Non-fuzz pin at `expected = address(0)`: that value matches
+    /// the zero address `_tryGetAddress` returns alongside `ok=false`,
+    /// catching any code path that would compare `own == expected`
+    /// without first checking `ok`.
     function testReturnsFalseOnNonOwnableWithZeroAddress() external {
         EmptyContract notOwnable = new EmptyContract();
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(notOwnable), address(0)));
@@ -68,8 +64,7 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
 
     /// `address(type(uint160).max)` is the largest valid 160-bit
     /// address — the strict upper-bits check (`raw > type(uint160).max`)
-    /// must accept it, not reject it. Pins the boundary against a
-    /// `>` → `>=` mutation that would falsely reject.
+    /// must accept it, not reject it.
     function testMatchesAtMaxAddressBoundary() external {
         address maxAddr = address(type(uint160).max);
         MockBeacon beacon = new MockBeacon(address(this), maxAddr);

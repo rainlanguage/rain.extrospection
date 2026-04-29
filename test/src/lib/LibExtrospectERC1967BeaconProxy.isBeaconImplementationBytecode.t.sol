@@ -53,14 +53,10 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(notABeacon), expected));
     }
 
-    /// Pins the `ok && ...` short-circuit at its boundary value:
-    /// `expected = keccak256("")` is exactly `keccak256(address(0).code)`.
-    /// Without the `ok &&` guard, the predicate would still compute
-    /// `keccak256(address(0).code) == expected` after a failed call and
-    /// return true, falsely accepting any non-beacon as a beacon
-    /// pointing at empty code. The non-fuzz form catches that
-    /// specifically; fuzz expecteds hit `keccak256("")` with
-    /// probability 1/2^256.
+    /// Non-fuzz pin at `expected = keccak256("")`: that value is also
+    /// `keccak256(address(0).code)`, the value the predicate would
+    /// compare against if it ever fell through to hashing
+    /// `address(0).code` after a failed call.
     function testReturnsFalseOnNonBeaconWithEmptyHash() external {
         EmptyContract notABeacon = new EmptyContract();
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(notABeacon), keccak256("")));
@@ -84,23 +80,31 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), expected));
     }
 
+    /// `staticcall` to a no-code target (e.g. `address(0)`) returns
+    /// success with empty returndata — distinct from a contract that
+    /// reverts (success=false). Pins the length=0 path through the
+    /// length check.
+    function testReturnsFalseOnNoCodeTarget() external {
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(0), keccak256("")));
+    }
+
     /// `address(type(uint160).max)` is the largest valid 160-bit
     /// address — the strict upper-bits check (`raw > type(uint160).max`)
-    /// must accept it, not reject it. Pins the boundary against a
-    /// `>` → `>=` mutation that would falsely reject.
+    /// must accept it, not reject it.
     function testMatchesAtMaxAddressBoundary() external {
         address maxAddr = address(type(uint160).max);
         MockBeacon beacon = new MockBeacon(maxAddr, address(this));
-        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256(maxAddr.code)));
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256(maxAddr.code))
+        );
     }
 
     /// A beacon whose `implementation()` returns more than 32 bytes
     /// must also fail the predicate, even if the first 32 bytes
-    /// happen to decode as a valid address. The expected hash here is
-    /// `keccak256("")`, which is what the first 32 bytes of an empty
-    /// `string memory` (the offset, `0x20`) would resolve to under a
-    /// length-stripped impl — pinning the length check separately
-    /// from the dirty-bits check.
+    /// happen to decode as a valid address. Expected is `keccak256("")`
+    /// — the value `keccak256(address(0x20).code)` resolves to (since
+    /// `0x20` has no code), where `0x20` is the offset word at the
+    /// start of an empty `string memory` encoding.
     function testReturnsFalseOnWrongLengthReturn() external {
         WrongLengthBeacon beacon = new WrongLengthBeacon();
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
