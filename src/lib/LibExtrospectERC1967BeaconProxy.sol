@@ -61,17 +61,6 @@ library LibExtrospectERC1967BeaconProxy {
         return ok && keccak256(impl.code) == expectedRuntimeHash;
     }
 
-    /// @notice Verify that the runtime bytecode at `target` matches
-    /// `expectedRuntimeHash`. Available standalone for any runtime
-    /// bytecode comparison the caller knows the expected hash for.
-    /// @param target The contract address whose runtime to hash.
-    /// @param expectedRuntimeHash The expected `keccak256` of the
-    /// runtime bytecode.
-    /// @return True if the hashes match.
-    function isRuntimeBytecode(address target, bytes32 expectedRuntimeHash) internal view returns (bool) {
-        return keccak256(target.code) == expectedRuntimeHash;
-    }
-
     /// @notice Verify that `beacon`'s current owner equals
     /// `expectedOwner`. A target that doesn't expose `owner()` (or
     /// whose call reverts) is not a valid beacon and trivially fails
