@@ -2,6 +2,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
+import {IBeacon} from "../interface/IBeacon.sol";
+import {IOwnable} from "../interface/IOwnable.sol";
+
 /// @dev EIP-1967 implementation storage slot, derived in-source from the
 /// spec formula. Evaluated at compile time, zero runtime cost.
 bytes32 constant ERC1967_IMPLEMENTATION_SLOT = bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1);
@@ -14,77 +17,78 @@ bytes32 constant ERC1967_ADMIN_SLOT = bytes32(uint256(keccak256("eip1967.proxy.a
 /// formula.
 bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.beacon")) - 1);
 
-/// @dev `keccak256` of the runtime bytecode of Solady's minimal ERC-1967
-/// beacon proxy. Sourced from `solady/src/utils/LibClone.sol` —
-/// `ERC1967_BEACON_PROXY_CODE_HASH`. The proxy's runtime is fixed (the
-/// beacon address lives in the proxy's `ERC1967_BEACON_SLOT`, not in
-/// bytecode), so every Solady-deployed minimal beacon proxy has the same
-/// runtime hash regardless of which beacon it points at. Cannot be
-/// derived in-source without pasting Solady's 82-byte runtime as a
-/// literal here; the value is verified against a fresh Solady deployment
-/// in the matching test file via `keccak256(address.code)`.
-bytes32 constant SOLADY_ERC1967_BEACON_PROXY_RUNTIME_HASH =
-    0x14044459af17bc4f0f5aa2f658cb692add77d1302c29fe2aebab005eea9d1162;
-
-/// @dev `keccak256` of the runtime bytecode of Solady's ERC1967I beacon
-/// proxy variant (with the `calldatasize() == 1` short-circuit that
-/// returns `implementation()` directly). Sourced from
-/// `solady/src/utils/LibClone.sol` — `ERC1967I_BEACON_PROXY_CODE_HASH`.
-/// Same caveat as the minimal variant on derivation.
-bytes32 constant SOLADY_ERC1967I_BEACON_PROXY_RUNTIME_HASH =
-    0xf8c46d2793d5aa984eb827aeaba4b63aedcab80119212fce827309788735519a;
-
 /// @title LibExtrospectERC1967BeaconProxy
-/// @notice Bytecode-level detection of ERC-1967 beacon proxies, plus the
-/// canonical EIP-1967 storage slot constants for callers that need to
-/// read proxy slot state directly.
+/// @notice Introspection helpers for ERC-1967 beacon proxies and the
+/// beacons they point at.
 ///
-/// Unlike ERC-1167 minimal proxies, an ERC-1967 beacon proxy's beacon
-/// address is held in storage, not in bytecode. Two practical
-/// consequences:
+/// What's possible from a runtime contract context (no cheat codes):
 ///
-/// 1. The runtime bytecode is fixed for any given beacon-proxy
-///    implementation (Solady's minimal, Solady's ERC1967I variant, OZ's
-///    `BeaconProxy`, etc.) — a single hash uniquely identifies "this is
-///    a Solady minimal beacon proxy" regardless of which beacon it
-///    points at.
-/// 2. The beacon address itself cannot be extracted from bytecode. To
-///    read it you need either storage access to the proxy
-///    (`SLOAD(ERC1967_BEACON_SLOT)`, only available from delegatecall
-///    context or via an off-chain `eth_getStorageAt` / Foundry's
-///    `vm.load`) or a proxy that exposes a non-standard public getter.
+/// - Read a beacon's implementation via `IBeacon.implementation()` —
+///   well-defined interface, callable from anywhere.
+/// - Read a beacon's owner via `Ownable.owner()` — de-facto convention
+///   for beacons that inherit OZ `Ownable` or equivalent.
+/// - Hash a contract's runtime bytecode via `keccak256(addr.code)` to
+///   compare against an expected template.
 ///
-/// This library covers what's possible from bytecode alone — detection
-/// of known beacon-proxy templates — and exports the slot constants so
-/// any caller that has slot-reading access elsewhere can use a single
-/// canonical source for the slot addresses.
+/// What's NOT possible from a runtime contract context:
+///
+/// - Reading a proxy's beacon storage slot directly. ERC-1967 specifies
+///   the slot but not a getter — proxies route everything through
+///   `delegatecall`, with no public function exposing the slot. To read
+///   it you need either Foundry's `vm.load` (tests), an off-chain
+///   `eth_getStorageAt`, or `sload` from a delegatecall context running
+///   as the proxy.
+///
+/// The slot constants are exported so callers that have storage access
+/// elsewhere use a single canonical source for the slot addresses.
 library LibExtrospectERC1967BeaconProxy {
-    /// @notice Checks if `bytecode` is the runtime bytecode of Solady's
-    /// minimal ERC-1967 beacon proxy.
-    /// @param bytecode The runtime bytecode to check (e.g. obtained via
-    /// `address.code` or `extcodecopy`).
-    /// @return True if the bytecode hash matches Solady's minimal beacon
-    /// proxy template.
-    function isSoladyERC1967BeaconProxy(bytes memory bytecode) internal pure returns (bool) {
-        return keccak256(bytecode) == SOLADY_ERC1967_BEACON_PROXY_RUNTIME_HASH;
+    /// @notice Read the current implementation address of `beacon` via
+    /// `IBeacon.implementation()`. Reverts if `beacon` does not expose
+    /// the standard interface.
+    /// @param beacon The beacon address to query.
+    /// @return The implementation address the beacon currently points at.
+    function implementationOf(address beacon) internal view returns (address) {
+        return IBeacon(beacon).implementation();
     }
 
-    /// @notice Checks if `bytecode` is the runtime bytecode of Solady's
-    /// ERC1967I beacon proxy variant.
-    /// @param bytecode The runtime bytecode to check.
-    /// @return True if the bytecode hash matches Solady's ERC1967I beacon
-    /// proxy template.
-    function isSoladyERC1967IBeaconProxy(bytes memory bytecode) internal pure returns (bool) {
-        return keccak256(bytecode) == SOLADY_ERC1967I_BEACON_PROXY_RUNTIME_HASH;
+    /// @notice Read the owner of `beacon` via `Ownable.owner()`. Reverts
+    /// if `beacon` does not expose the standard interface.
+    /// @param beacon The beacon address to query.
+    /// @return The current owner of the beacon.
+    function ownerOf(address beacon) internal view returns (address) {
+        return IOwnable(beacon).owner();
     }
 
-    /// @notice Checks if `bytecode` is any of the known Solady ERC-1967
-    /// beacon proxy templates.
-    /// @param bytecode The runtime bytecode to check.
-    /// @return True if the bytecode hash matches either the minimal or
-    /// the ERC1967I beacon proxy template.
-    function isAnySoladyERC1967BeaconProxy(bytes memory bytecode) internal pure returns (bool) {
-        bytes32 h = keccak256(bytecode);
-        return h == SOLADY_ERC1967_BEACON_PROXY_RUNTIME_HASH || h == SOLADY_ERC1967I_BEACON_PROXY_RUNTIME_HASH;
+    /// @notice Verify that a beacon's current implementation has runtime
+    /// bytecode matching `expectedRuntimeHash`. Useful for asserting a
+    /// known-good implementation is behind the beacon without trusting
+    /// any storage-side state.
+    /// @param beacon The beacon address to query.
+    /// @param expectedRuntimeHash The expected `keccak256` of the
+    /// implementation's runtime bytecode.
+    /// @return True if the beacon's current implementation has matching
+    /// runtime bytecode.
+    function isBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash) internal view returns (bool) {
+        return keccak256(IBeacon(beacon).implementation().code) == expectedRuntimeHash;
+    }
+
+    /// @notice Verify that the runtime bytecode at `target` matches
+    /// `expectedRuntimeHash`. Standalone helper for any runtime
+    /// bytecode comparison the caller knows the expected hash for.
+    /// @param target The contract address whose runtime to hash.
+    /// @param expectedRuntimeHash The expected `keccak256` of the
+    /// runtime bytecode.
+    /// @return True if the hashes match.
+    function isRuntimeBytecode(address target, bytes32 expectedRuntimeHash) internal view returns (bool) {
+        return keccak256(target.code) == expectedRuntimeHash;
+    }
+
+    /// @notice Verify that `beacon`'s current owner equals
+    /// `expectedOwner`.
+    /// @param beacon The beacon address to query.
+    /// @param expectedOwner The owner address the beacon should report.
+    /// @return True if the ownership matches.
+    function isBeaconOwner(address beacon, address expectedOwner) internal view returns (bool) {
+        return IOwnable(beacon).owner() == expectedOwner;
     }
 }
