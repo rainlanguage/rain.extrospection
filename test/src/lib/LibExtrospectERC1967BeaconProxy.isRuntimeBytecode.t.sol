@@ -33,4 +33,13 @@ contract LibExtrospectERC1967BeaconProxyIsRuntimeBytecodeTest is Test {
         assertTrue(LibExtrospectERC1967BeaconProxy.isRuntimeBytecode(address(0), emptyHash));
         assertFalse(LibExtrospectERC1967BeaconProxy.isRuntimeBytecode(address(0), wrongHash));
     }
+
+    /// `bytes32(0)` is never a valid `keccak256` output for any input
+    /// (including the empty string). Comparing against it always
+    /// returns false, both for code-present and no-code targets.
+    function testZeroHashAlwaysReturnsFalse() external {
+        EmptyContract target = new EmptyContract();
+        assertFalse(LibExtrospectERC1967BeaconProxy.isRuntimeBytecode(address(target), bytes32(0)));
+        assertFalse(LibExtrospectERC1967BeaconProxy.isRuntimeBytecode(address(0), bytes32(0)));
+    }
 }

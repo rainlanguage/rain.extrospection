@@ -6,6 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {LibExtrospectERC1967BeaconProxy} from "src/lib/LibExtrospectERC1967BeaconProxy.sol";
 import {MockBeacon} from "test/concrete/MockBeacon.sol";
 import {EmptyContract} from "test/concrete/EmptyContract.sol";
+import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
 
 /// @title LibExtrospectERC1967BeaconProxyOwnerOfTest
 /// @notice Tests `LibExtrospectERC1967BeaconProxy.ownerOf`.
@@ -21,5 +22,26 @@ contract LibExtrospectERC1967BeaconProxyOwnerOfTest is Test {
         EmptyContract notOwnable = new EmptyContract();
         vm.expectRevert();
         LibExtrospectERC1967BeaconProxy.ownerOf(address(notOwnable));
+    }
+
+    /// Documents what happens on a no-code address. Same shape as the
+    /// `implementationOf` zero-address test — pin whichever behaviour
+    /// Solidity gives us so a future toolchain change surfaces.
+    function testZeroAddressBehaviour() external {
+        try this.callOwnerOf(address(0)) returns (address result) {
+            assertEq(result, address(0), "no-code target must decode to zero, not arbitrary memory");
+        } catch {}
+    }
+
+    /// External wrapper so the test can `try`/`catch` the helper.
+    function callOwnerOf(address target) external view returns (address) {
+        return LibExtrospectERC1967BeaconProxy.ownerOf(target);
+    }
+
+    /// Reverts when the beacon's `owner()` itself reverts.
+    function testPropagatesBeaconRevert() external {
+        RevertingBeacon beacon = new RevertingBeacon();
+        vm.expectRevert();
+        LibExtrospectERC1967BeaconProxy.ownerOf(address(beacon));
     }
 }
