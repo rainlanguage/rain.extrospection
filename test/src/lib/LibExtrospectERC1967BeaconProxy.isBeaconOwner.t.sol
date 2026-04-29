@@ -8,6 +8,7 @@ import {MockBeacon} from "test/concrete/MockBeacon.sol";
 import {EmptyContract} from "test/concrete/EmptyContract.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
 import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
+import {WrongLengthBeacon} from "test/concrete/WrongLengthBeacon.sol";
 
 /// @title LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest
 /// @notice Tests `LibExtrospectERC1967BeaconProxy.isBeaconOwner`.
@@ -48,5 +49,17 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
     function testReturnsFalseOnInvalidReturnEncoding(address expected) external {
         BogusBeacon beacon = new BogusBeacon();
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), expected));
+    }
+
+    /// A beacon whose `owner()` returns more than 32 bytes must also
+    /// fail the predicate, even if the first 32 bytes happen to
+    /// decode as a valid address. The expected owner here is
+    /// `address(0x20)`, which is what the first 32 bytes of an empty
+    /// `string memory` (the offset, `0x20`) would resolve to under a
+    /// length-stripped impl — pinning the length check separately
+    /// from the dirty-bits check.
+    function testReturnsFalseOnWrongLengthReturn() external {
+        WrongLengthBeacon beacon = new WrongLengthBeacon();
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), address(uint160(0x20))));
     }
 }
