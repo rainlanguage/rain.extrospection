@@ -35,6 +35,19 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(notOwnable), expected));
     }
 
+    /// Pins the `ok && ...` short-circuit at its boundary value:
+    /// `expected = address(0)` matches the zero address that
+    /// `_tryGetAddress` returns alongside `ok=false`. Without the
+    /// `ok &&` guard, the predicate would still compute
+    /// `address(0) == expected` after a failed call and return true,
+    /// falsely accepting any non-ownable as a beacon owned by
+    /// `address(0)`. The non-fuzz form catches that specifically;
+    /// fuzz expecteds hit `address(0)` with probability 1/2^160.
+    function testReturnsFalseOnNonOwnableWithZeroAddress() external {
+        EmptyContract notOwnable = new EmptyContract();
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(notOwnable), address(0)));
+    }
+
     /// A beacon whose `owner()` reverts is also a failure for the
     /// predicate, returning false rather than propagating.
     function testReturnsFalseOnBeaconRevert(address expected) external {

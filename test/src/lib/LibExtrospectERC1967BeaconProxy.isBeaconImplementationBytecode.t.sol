@@ -53,6 +53,19 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(notABeacon), expected));
     }
 
+    /// Pins the `ok && ...` short-circuit at its boundary value:
+    /// `expected = keccak256("")` is exactly `keccak256(address(0).code)`.
+    /// Without the `ok &&` guard, the predicate would still compute
+    /// `keccak256(address(0).code) == expected` after a failed call and
+    /// return true, falsely accepting any non-beacon as a beacon
+    /// pointing at empty code. The non-fuzz form catches that
+    /// specifically; fuzz expecteds hit `keccak256("")` with
+    /// probability 1/2^256.
+    function testReturnsFalseOnNonBeaconWithEmptyHash() external {
+        EmptyContract notABeacon = new EmptyContract();
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(notABeacon), keccak256("")));
+    }
+
     /// A beacon whose `implementation()` reverts is also a failure for
     /// the predicate, returning false rather than propagating.
     function testReturnsFalseOnBeaconRevert(bytes32 expected) external {
