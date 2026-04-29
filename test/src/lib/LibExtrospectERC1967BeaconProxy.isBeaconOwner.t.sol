@@ -1,0 +1,24 @@
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
+pragma solidity =0.8.25;
+
+import {Test} from "forge-std/Test.sol";
+import {LibExtrospectERC1967BeaconProxy} from "src/lib/LibExtrospectERC1967BeaconProxy.sol";
+import {MockBeacon} from "test/concrete/MockBeacon.sol";
+
+/// @title LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest
+/// @notice Tests `LibExtrospectERC1967BeaconProxy.isBeaconOwner`.
+contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
+    /// Returns true when the beacon's reported owner matches.
+    function testMatches(address impl, address own) external {
+        MockBeacon beacon = new MockBeacon(impl, own);
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), own));
+    }
+
+    /// Returns false on a mismatch.
+    function testMismatches(address impl, address own, address wrong) external {
+        vm.assume(wrong != own);
+        MockBeacon beacon = new MockBeacon(impl, own);
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), wrong));
+    }
+}
