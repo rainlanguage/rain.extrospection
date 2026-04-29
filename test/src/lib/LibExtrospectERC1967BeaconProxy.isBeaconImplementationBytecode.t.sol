@@ -30,4 +30,14 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         vm.assume(wrongHash != keccak256(address(impl).code));
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), wrongHash));
     }
+
+    /// A beacon whose `implementation()` returns `address(0)` resolves
+    /// to an empty-code account; its hash is `keccak256("")`.
+    function testImplementationZeroAddressHashesToEmpty(bytes32 wrongHash) external {
+        bytes32 emptyHash = keccak256("");
+        vm.assume(wrongHash != emptyHash);
+        MockBeacon beacon = new MockBeacon(address(0), address(this));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), emptyHash));
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), wrongHash));
+    }
 }
