@@ -8,6 +8,9 @@ pragma solidity =0.8.25;
 /// 64 bytes (offset 0x20 + length 0). Distinguishes the
 /// wrong-return-length branch from the dirty-address-bits branch
 /// covered by `BogusBeacon`.
+///
+/// Cannot `is IBeacon, IOwnable` — return types deliberately differ
+/// from the interfaces. That mismatch is the test condition.
 contract WrongLengthBeacon {
     function implementation() external pure returns (string memory) {
         return "";

@@ -9,6 +9,9 @@ pragma solidity =0.8.25;
 /// from "selector missing" and "selector reverts": the call succeeds
 /// but the return data is structurally invalid for the typed
 /// interface.
+///
+/// Cannot `is IBeacon, IOwnable` — return types deliberately differ
+/// from the interfaces. That mismatch is the test condition.
 contract BogusBeacon {
     function implementation() external pure returns (uint256) {
         return type(uint256).max;

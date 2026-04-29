@@ -2,10 +2,13 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-/// @dev Minimal beacon test fixture. Exposes both `implementation()`
-/// and `owner()` so the lib's interface-based helpers have something
-/// concrete to call.
-contract MockBeacon {
+import {IBeacon} from "src/interface/IBeacon.sol";
+import {IOwnable} from "src/interface/IOwnable.sol";
+
+/// @dev Minimal beacon test fixture implementing both `IBeacon` and
+/// `IOwnable` so selector and return-type match the lib's expectations
+/// at compile time.
+contract MockBeacon is IBeacon, IOwnable {
     address public immutable implementation;
     address public immutable owner;
 
