@@ -74,11 +74,8 @@ library LibExtrospectERC1967BeaconProxy {
     /// runtime bytecode. False if the call to `implementation()` fails
     /// for any reason.
     function isBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash) internal view returns (bool) {
-        try IBeacon(beacon).implementation() returns (address impl) {
-            return keccak256(impl.code) == expectedRuntimeHash;
-        } catch {
-            return false;
-        }
+        (bool ok, address impl) = _tryGetAddress(beacon, IBeacon.implementation.selector);
+        return ok && keccak256(impl.code) == expectedRuntimeHash;
     }
 
     /// @notice Verify that the runtime bytecode at `target` matches
@@ -102,10 +99,27 @@ library LibExtrospectERC1967BeaconProxy {
     /// @return True if the ownership matches. False if the call to
     /// `owner()` fails for any reason.
     function isBeaconOwner(address beacon, address expectedOwner) internal view returns (bool) {
-        try IOwnable(beacon).owner() returns (address own) {
-            return own == expectedOwner;
-        } catch {
-            return false;
+        (bool ok, address own) = _tryGetAddress(beacon, IOwnable.owner.selector);
+        return ok && own == expectedOwner;
+    }
+
+    /// @dev Static-call `selector` on `target` and decode the return as
+    /// `address`. Returns `(false, _)` on any failure mode: low-level
+    /// call revert, missing selector, fallback returning the wrong
+    /// length, or 32-byte return data whose upper 12 bytes are
+    /// non-zero (which `abi.decode(_, (address))` would reject as a
+    /// dirty address). High-level `try IBeacon(...).implementation()`
+    /// catches the first three but lets the dirty-address Panic
+    /// escape, so we go through the low-level call to fold all four
+    /// into a single boolean.
+    function _tryGetAddress(address target, bytes4 selector) private view returns (bool, address) {
+        (bool success, bytes memory returnData) = target.staticcall(abi.encodeWithSelector(selector));
+        if (!success || returnData.length != 32) return (false, address(0));
+        uint256 raw;
+        assembly ("memory-safe") {
+            raw := mload(add(returnData, 0x20))
         }
+        if (raw > type(uint160).max) return (false, address(0));
+        return (true, address(uint160(raw)));
     }
 }

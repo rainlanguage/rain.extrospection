@@ -7,6 +7,7 @@ import {LibExtrospectERC1967BeaconProxy} from "src/lib/LibExtrospectERC1967Beaco
 import {MockBeacon} from "test/concrete/MockBeacon.sol";
 import {EmptyContract} from "test/concrete/EmptyContract.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
+import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
 
 /// @title LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest
 /// @notice Tests `LibExtrospectERC1967BeaconProxy.isBeaconOwner`.
@@ -37,6 +38,15 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
     /// predicate, returning false rather than propagating.
     function testReturnsFalseOnBeaconRevert(address expected) external {
         RevertingBeacon beacon = new RevertingBeacon();
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), expected));
+    }
+
+    /// A beacon whose `owner()` returns bytes that don't decode as an
+    /// `address` is also a failure for the predicate. The high-level
+    /// try/catch around a typed return value catches the decode error,
+    /// and the wrapper folds it into false rather than propagating.
+    function testReturnsFalseOnInvalidReturnEncoding(address expected) external {
+        BogusBeacon beacon = new BogusBeacon();
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), expected));
     }
 }

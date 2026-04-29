@@ -7,6 +7,7 @@ import {LibExtrospectERC1967BeaconProxy} from "src/lib/LibExtrospectERC1967Beaco
 import {MockBeacon} from "test/concrete/MockBeacon.sol";
 import {EmptyContract} from "test/concrete/EmptyContract.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
+import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
 
 /// @title LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest
 /// @notice Tests `LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode`.
@@ -55,6 +56,16 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
     /// the predicate, returning false rather than propagating.
     function testReturnsFalseOnBeaconRevert(bytes32 expected) external {
         RevertingBeacon beacon = new RevertingBeacon();
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), expected));
+    }
+
+    /// A beacon whose `implementation()` returns bytes that don't
+    /// decode as an `address` is also a failure for the predicate.
+    /// The high-level try/catch around a typed return value catches
+    /// the decode error, and the wrapper folds it into false rather
+    /// than propagating.
+    function testReturnsFalseOnInvalidReturnEncoding(bytes32 expected) external {
+        BogusBeacon beacon = new BogusBeacon();
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), expected));
     }
 }
