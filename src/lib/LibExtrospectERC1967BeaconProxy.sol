@@ -62,14 +62,23 @@ library LibExtrospectERC1967BeaconProxy {
     /// @notice Verify that a beacon's current implementation has runtime
     /// bytecode matching `expectedRuntimeHash`. Useful for asserting a
     /// known-good implementation is behind the beacon without trusting
-    /// any storage-side state.
+    /// any storage-side state. A target that doesn't expose
+    /// `implementation()` (or whose call reverts) is not a valid beacon
+    /// and trivially fails the check — returns false rather than
+    /// reverting, so integrators can collapse the predicate into a
+    /// single boolean assertion.
     /// @param beacon The beacon address to query.
     /// @param expectedRuntimeHash The expected `keccak256` of the
     /// implementation's runtime bytecode.
     /// @return True if the beacon's current implementation has matching
-    /// runtime bytecode.
+    /// runtime bytecode. False if the call to `implementation()` fails
+    /// for any reason.
     function isBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash) internal view returns (bool) {
-        return keccak256(IBeacon(beacon).implementation().code) == expectedRuntimeHash;
+        try IBeacon(beacon).implementation() returns (address impl) {
+            return keccak256(impl.code) == expectedRuntimeHash;
+        } catch {
+            return false;
+        }
     }
 
     /// @notice Verify that the runtime bytecode at `target` matches
@@ -84,11 +93,19 @@ library LibExtrospectERC1967BeaconProxy {
     }
 
     /// @notice Verify that `beacon`'s current owner equals
-    /// `expectedOwner`.
+    /// `expectedOwner`. A target that doesn't expose `owner()` (or
+    /// whose call reverts) is not a valid beacon and trivially fails
+    /// the check — returns false rather than reverting, so integrators
+    /// can collapse the predicate into a single boolean assertion.
     /// @param beacon The beacon address to query.
     /// @param expectedOwner The owner address the beacon should report.
-    /// @return True if the ownership matches.
+    /// @return True if the ownership matches. False if the call to
+    /// `owner()` fails for any reason.
     function isBeaconOwner(address beacon, address expectedOwner) internal view returns (bool) {
-        return IOwnable(beacon).owner() == expectedOwner;
+        try IOwnable(beacon).owner() returns (address own) {
+            return own == expectedOwner;
+        } catch {
+            return false;
+        }
     }
 }
