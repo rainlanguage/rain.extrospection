@@ -43,9 +43,11 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
     }
 
     /// A beacon whose `owner()` returns bytes that don't decode as an
-    /// `address` is also a failure for the predicate. The high-level
-    /// try/catch around a typed return value catches the decode error,
-    /// and the wrapper folds it into false rather than propagating.
+    /// `address` is also a failure for the predicate. High-level
+    /// `try IOwnable(...).owner() returns (address)` lets the
+    /// dirty-address Panic escape past `catch`, so the wrapper goes
+    /// through a low-level staticcall and rejects 32-byte returndata
+    /// whose upper 12 bytes are non-zero.
     function testReturnsFalseOnInvalidReturnEncoding(address expected) external {
         BogusBeacon beacon = new BogusBeacon();
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), expected));
