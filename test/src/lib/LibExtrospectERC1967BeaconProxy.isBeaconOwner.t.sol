@@ -53,6 +53,16 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), expected));
     }
 
+    /// `address(type(uint160).max)` is the largest valid 160-bit
+    /// address — the strict upper-bits check (`raw > type(uint160).max`)
+    /// must accept it, not reject it. Pins the boundary against a
+    /// `>` → `>=` mutation that would falsely reject.
+    function testMatchesAtMaxAddressBoundary() external {
+        address maxAddr = address(type(uint160).max);
+        MockBeacon beacon = new MockBeacon(address(this), maxAddr);
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), maxAddr));
+    }
+
     /// A beacon whose `owner()` returns more than 32 bytes must also
     /// fail the predicate, even if the first 32 bytes happen to
     /// decode as a valid address. The expected owner here is

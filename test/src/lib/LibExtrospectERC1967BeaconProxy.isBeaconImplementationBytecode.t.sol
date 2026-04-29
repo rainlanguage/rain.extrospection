@@ -71,6 +71,16 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), expected));
     }
 
+    /// `address(type(uint160).max)` is the largest valid 160-bit
+    /// address — the strict upper-bits check (`raw > type(uint160).max`)
+    /// must accept it, not reject it. Pins the boundary against a
+    /// `>` → `>=` mutation that would falsely reject.
+    function testMatchesAtMaxAddressBoundary() external {
+        address maxAddr = address(type(uint160).max);
+        MockBeacon beacon = new MockBeacon(maxAddr, address(this));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256(maxAddr.code)));
+    }
+
     /// A beacon whose `implementation()` returns more than 32 bytes
     /// must also fail the predicate, even if the first 32 bytes
     /// happen to decode as a valid address. The expected hash here is
