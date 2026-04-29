@@ -18,8 +18,8 @@ bytes32 constant ERC1967_ADMIN_SLOT = bytes32(uint256(keccak256("eip1967.proxy.a
 bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.beacon")) - 1);
 
 /// @title LibExtrospectERC1967BeaconProxy
-/// @notice Introspection helpers for ERC-1967 beacon proxies and the
-/// beacons they point at.
+/// @notice Extrospection of ERC-1967 beacon proxies and the beacons
+/// they point at.
 ///
 /// What's possible from a runtime contract context (no cheat codes):
 ///
@@ -42,23 +42,6 @@ bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.
 /// The slot constants are exported so callers that have storage access
 /// elsewhere use a single canonical source for the slot addresses.
 library LibExtrospectERC1967BeaconProxy {
-    /// @notice Read the current implementation address of `beacon` via
-    /// `IBeacon.implementation()`. Reverts if `beacon` does not expose
-    /// the standard interface.
-    /// @param beacon The beacon address to query.
-    /// @return The implementation address the beacon currently points at.
-    function implementationOf(address beacon) internal view returns (address) {
-        return IBeacon(beacon).implementation();
-    }
-
-    /// @notice Read the owner of `beacon` via `Ownable.owner()`. Reverts
-    /// if `beacon` does not expose the standard interface.
-    /// @param beacon The beacon address to query.
-    /// @return The current owner of the beacon.
-    function ownerOf(address beacon) internal view returns (address) {
-        return IOwnable(beacon).owner();
-    }
-
     /// @notice Verify that a beacon's current implementation has runtime
     /// bytecode matching `expectedRuntimeHash`. Useful for asserting a
     /// known-good implementation is behind the beacon without trusting
@@ -79,7 +62,7 @@ library LibExtrospectERC1967BeaconProxy {
     }
 
     /// @notice Verify that the runtime bytecode at `target` matches
-    /// `expectedRuntimeHash`. Standalone helper for any runtime
+    /// `expectedRuntimeHash`. Available standalone for any runtime
     /// bytecode comparison the caller knows the expected hash for.
     /// @param target The contract address whose runtime to hash.
     /// @param expectedRuntimeHash The expected `keccak256` of the
@@ -113,6 +96,11 @@ library LibExtrospectERC1967BeaconProxy {
     /// escape, so we go through the low-level call to fold all four
     /// into a single boolean.
     function _tryGetAddress(address target, bytes4 selector) private view returns (bool, address) {
+        // Low-level staticcall is required to validate return-data length
+        // and reject dirty address bits ourselves; high-level
+        // `try IBeacon(...).implementation() returns (address)` lets the
+        // dirty-address Panic escape past the catch.
+        //slither-disable-next-line low-level-calls
         (bool success, bytes memory returnData) = target.staticcall(abi.encodeWithSelector(selector));
         if (!success || returnData.length != 32) return (false, address(0));
         uint256 raw;
