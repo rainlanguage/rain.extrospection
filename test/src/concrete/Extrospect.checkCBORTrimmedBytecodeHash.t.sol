@@ -7,6 +7,7 @@ import {SOLIDITY_CBOR_RUNTIME_FIXTURE} from "test/concrete/SolidityCBORFixture.s
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 
 contract ExtrospectCheckCBORTrimmedBytecodeHashTest is ExtrospectEquivalence {
+    //forge-lint: disable-next-line(mixed-case-function)
     function libCheckCBORTrimmedBytecodeHashExternal(address account, bytes32 expected) external view {
         LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(account, expected);
     }
@@ -44,17 +45,13 @@ contract ExtrospectCheckCBORTrimmedBytecodeHashTest is ExtrospectEquivalence {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                LibExtrospectBytecode.BytecodeHashMismatch.selector,
-                wrong,
-                keccak256(_trim(withMeta))
+                LibExtrospectBytecode.BytecodeHashMismatch.selector, wrong, keccak256(_trim(withMeta))
             )
         );
         extrospect.checkCBORTrimmedBytecodeHash(deployed, wrong);
         vm.expectRevert(
             abi.encodeWithSelector(
-                LibExtrospectBytecode.BytecodeHashMismatch.selector,
-                wrong,
-                keccak256(_trim(withMeta))
+                LibExtrospectBytecode.BytecodeHashMismatch.selector, wrong, keccak256(_trim(withMeta))
             )
         );
         this.libCheckCBORTrimmedBytecodeHashExternal(deployed, wrong);

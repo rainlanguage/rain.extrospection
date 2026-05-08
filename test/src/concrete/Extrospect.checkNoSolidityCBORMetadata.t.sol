@@ -7,6 +7,7 @@ import {SOLIDITY_CBOR_RUNTIME_FIXTURE} from "test/concrete/SolidityCBORFixture.s
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 
 contract ExtrospectCheckNoSolidityCBORMetadataTest is ExtrospectEquivalence {
+    //forge-lint: disable-next-line(mixed-case-function)
     function libCheckNoSolidityCBORMetadataExternal(address account) external view {
         LibExtrospectBytecode.checkNoSolidityCBORMetadata(account);
     }
