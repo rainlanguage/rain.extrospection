@@ -2,15 +2,17 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
+import {IExtrospectV1} from "../interface/IExtrospectV1.sol";
 import {LibExtrospectBytecode} from "../lib/LibExtrospectBytecode.sol";
 import {LibExtrospectMetamorphic} from "../lib/LibExtrospectMetamorphic.sol";
 import {LibExtrospectERC1167Proxy} from "../lib/LibExtrospectERC1167Proxy.sol";
 import {LibExtrospectERC1967BeaconProxy} from "../lib/LibExtrospectERC1967BeaconProxy.sol";
 
 /// @title Extrospect
-/// @notice Concrete contract exposing the public surface of every
-/// extrospection library as `external` methods. Parameterless constructor
-/// for deterministic Zoltu deployment across EVM networks.
+/// @notice Concrete implementation of `IExtrospectV1`. Parameterless
+/// constructor for deterministic Zoltu deployment across EVM networks.
+/// Consumers should depend on `IExtrospectV1` rather than importing this
+/// contract directly.
 ///
 /// All library functions in this repo are `internal`, which means Solidity
 /// inlines them into the calling frame. That's the right choice for
@@ -22,64 +24,68 @@ import {LibExtrospectERC1967BeaconProxy} from "../lib/LibExtrospectERC1967Beacon
 ///   below the cheatcode call; an inlined library call shares the test
 ///   contract's frame, so the cheatcode never sees a frame deeper than
 ///   itself. An external hop fixes this.
-contract Extrospect {
-    /// @notice See `LibExtrospectBytecode.isEOFBytecode`.
+contract Extrospect is IExtrospectV1 {
+    /// @inheritdoc IExtrospectV1
     function isEOFBytecode(bytes memory bytecode) external pure returns (bool) {
         return LibExtrospectBytecode.isEOFBytecode(bytecode);
     }
 
-    /// @notice See `LibExtrospectBytecode.checkNotEOFBytecode`.
+    /// @inheritdoc IExtrospectV1
     function checkNotEOFBytecode(bytes memory bytecode) external pure {
         LibExtrospectBytecode.checkNotEOFBytecode(bytecode);
     }
 
-    /// @notice See `LibExtrospectBytecode.tryTrimSolidityCBORMetadata`.
-    function tryTrimSolidityCBORMetadata(bytes memory bytecode) external pure returns (bool didTrim, bytes memory) {
+    /// @inheritdoc IExtrospectV1
+    function tryTrimSolidityCBORMetadata(bytes memory bytecode)
+        external
+        pure
+        returns (bool didTrim, bytes memory trimmedBytecode)
+    {
         didTrim = LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode);
         return (didTrim, bytecode);
     }
 
-    /// @notice See `LibExtrospectBytecode.checkCBORTrimmedBytecodeHash`.
+    /// @inheritdoc IExtrospectV1
     function checkCBORTrimmedBytecodeHash(address account, bytes32 expected) external view {
         LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(account, expected);
     }
 
-    /// @notice See `LibExtrospectBytecode.checkNoSolidityCBORMetadata`.
+    /// @inheritdoc IExtrospectV1
     function checkNoSolidityCBORMetadata(address account) external view {
         LibExtrospectBytecode.checkNoSolidityCBORMetadata(account);
     }
 
-    /// @notice See `LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode`.
+    /// @inheritdoc IExtrospectV1
     function scanEVMOpcodesReachableInBytecode(bytes memory bytecode) external pure returns (uint256) {
         return LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(bytecode);
     }
 
-    /// @notice See `LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode`.
+    /// @inheritdoc IExtrospectV1
     function scanEVMOpcodesPresentInBytecode(bytes memory bytecode) external pure returns (uint256) {
         return LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(bytecode);
     }
 
-    /// @notice See `LibExtrospectMetamorphic.scanMetamorphicRisk`.
+    /// @inheritdoc IExtrospectV1
     function scanMetamorphicRisk(bytes memory bytecode) external pure returns (uint256) {
         return LibExtrospectMetamorphic.scanMetamorphicRisk(bytecode);
     }
 
-    /// @notice See `LibExtrospectMetamorphic.checkNotMetamorphic`.
+    /// @inheritdoc IExtrospectV1
     function checkNotMetamorphic(bytes memory bytecode) external pure {
         LibExtrospectMetamorphic.checkNotMetamorphic(bytecode);
     }
 
-    /// @notice See `LibExtrospectERC1167Proxy.isERC1167Proxy`.
+    /// @inheritdoc IExtrospectV1
     function isERC1167Proxy(bytes memory bytecode) external pure returns (bool, address) {
         return LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
     }
 
-    /// @notice See `LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode`.
+    /// @inheritdoc IExtrospectV1
     function isBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash) external view returns (bool) {
         return LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(beacon, expectedRuntimeHash);
     }
 
-    /// @notice See `LibExtrospectERC1967BeaconProxy.isBeaconOwner`.
+    /// @inheritdoc IExtrospectV1
     function isBeaconOwner(address beacon, address expectedOwner) external view returns (bool) {
         return LibExtrospectERC1967BeaconProxy.isBeaconOwner(beacon, expectedOwner);
     }
