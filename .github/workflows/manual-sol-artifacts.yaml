@@ -3,9 +3,6 @@ on:
   workflow_dispatch:
 jobs:
   deploy:
-    # Only main can dispatch a real broadcast — other refs would deploy
-    # non-main code with a real key.
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
