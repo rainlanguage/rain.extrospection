@@ -13,17 +13,6 @@ import {LibExtrospectERC1967BeaconProxy} from "../lib/LibExtrospectERC1967Beacon
 /// constructor for deterministic Zoltu deployment across EVM networks.
 /// Consumers should depend on `IExtrospectV1` rather than importing this
 /// contract directly.
-///
-/// All library functions in this repo are `internal`, which means Solidity
-/// inlines them into the calling frame. That's the right choice for
-/// inter-library composition but it leaves no external entry point for:
-///
-/// - Offchain consumers calling extrospection at a deterministic address.
-/// - Tests in dependent repos that need to assert library-internal reverts
-///   via `vm.expectRevert`. `expectRevert` requires the revert at a depth
-///   below the cheatcode call; an inlined library call shares the test
-///   contract's frame, so the cheatcode never sees a frame deeper than
-///   itself. An external hop fixes this.
 contract Extrospect is IExtrospectV1 {
     /// @inheritdoc IExtrospectV1
     function isEOFBytecode(bytes memory bytecode) external pure returns (bool) {
