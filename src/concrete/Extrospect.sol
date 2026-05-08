@@ -51,6 +51,9 @@ contract Extrospect is IExtrospectV1 {
 
     /// @inheritdoc IExtrospectV1
     function isERC1167Proxy(bytes memory bytecode) external pure returns (bool, address) {
+        // False positive: tuple pass-through — both components re-emitted as this
+        // function's own return, nothing discarded.
+        // slither-disable-next-line unused-return
         return LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
     }
 
