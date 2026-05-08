@@ -4,6 +4,7 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std/Test.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
+import {SOLIDITY_CBOR_RUNTIME_FIXTURE} from "test/concrete/SolidityCBORFixture.sol";
 
 contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
     /// External version of tryTrimSolidityCBORMetadata for testing.
@@ -19,8 +20,7 @@ contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
 
     function testTryTrimSolidityCBORMetdataBytecodeReal() external pure {
         // Blank contract + cbor.
-        bytes memory bytecode =
-            hex"6080604052600080fdfea26469706673582212200726074213b9ef2f5b41bf0bdd5bbd03a64652de62f1dfcda59625e106c52e8a64736f6c63430008190033";
+        bytes memory bytecode = SOLIDITY_CBOR_RUNTIME_FIXTURE;
         bytes memory expected = hex"6080604052600080fdfe";
 
         uint256 length = bytecode.length;
@@ -89,8 +89,7 @@ contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
     /// Test that calling tryTrimSolidityCBORMetadata twice on already-trimmed
     /// bytecode returns false on the second call.
     function testTryTrimSolidityCBORMetadataIdempotency() external pure {
-        bytes memory bytecode =
-            hex"6080604052600080fdfea26469706673582212200726074213b9ef2f5b41bf0bdd5bbd03a64652de62f1dfcda59625e106c52e8a64736f6c63430008190033";
+        bytes memory bytecode = SOLIDITY_CBOR_RUNTIME_FIXTURE;
         assertTrue(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
         // Second call should return false — metadata already trimmed.
         assertFalse(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));

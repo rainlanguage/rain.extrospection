@@ -5,6 +5,7 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std/Test.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
+import {SOLIDITY_CBOR_RUNTIME_FIXTURE} from "test/concrete/SolidityCBORFixture.sol";
 
 contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
     /// External wrapper for revert tests.
@@ -29,8 +30,7 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
     function testCheckNoMetadataRevertsOnMetadata() external {
         // Runtime bytecode with standard Solidity CBOR metadata appended.
         // We use vm.etch since the project itself compiles without metadata.
-        bytes memory runtimeCode =
-            hex"6080604052600080fdfea26469706673582212200726074213b9ef2f5b41bf0bdd5bbd03a64652de62f1dfcda59625e106c52e8a64736f6c63430008190033";
+        bytes memory runtimeCode = SOLIDITY_CBOR_RUNTIME_FIXTURE;
         address deployed = address(0xbeef);
         vm.etch(deployed, runtimeCode);
         vm.expectRevert(LibExtrospectBytecode.UnexpectedMetadata.selector);
