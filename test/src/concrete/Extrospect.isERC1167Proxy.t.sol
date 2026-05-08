@@ -2,17 +2,10 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std/Test.sol";
-import {Extrospect} from "src/concrete/Extrospect.sol";
+import {ExtrospectEquivalence} from "test/concrete/ExtrospectEquivalence.sol";
 import {LibExtrospectERC1167Proxy} from "src/lib/LibExtrospectERC1167Proxy.sol";
 
-contract ExtrospectIsERC1167ProxyTest is Test {
-    Extrospect internal extrospect;
-
-    function setUp() external {
-        extrospect = new Extrospect();
-    }
-
+contract ExtrospectIsERC1167ProxyTest is ExtrospectEquivalence {
     function testIsERC1167ProxyEquivalenceFuzz(bytes memory bytecode) external view {
         (bool extIsProxy, address extImpl) = extrospect.isERC1167Proxy(bytecode);
         (bool libIsProxy, address libImpl) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);

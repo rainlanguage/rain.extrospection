@@ -2,17 +2,10 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std/Test.sol";
-import {Extrospect} from "src/concrete/Extrospect.sol";
+import {ExtrospectEquivalence} from "test/concrete/ExtrospectEquivalence.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 
-contract ExtrospectTryTrimSolidityCBORMetadataTest is Test {
-    Extrospect internal extrospect;
-
-    function setUp() external {
-        extrospect = new Extrospect();
-    }
-
+contract ExtrospectTryTrimSolidityCBORMetadataTest is ExtrospectEquivalence {
     function testTryTrimSolidityCBORMetadataEquivalenceTrim() external view {
         bytes memory raw =
             hex"6080604052600080fdfea26469706673582212200726074213b9ef2f5b41bf0bdd5bbd03a64652de62f1dfcda59625e106c52e8a64736f6c63430008190033";

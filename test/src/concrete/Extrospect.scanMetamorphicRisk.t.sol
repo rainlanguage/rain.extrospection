@@ -2,17 +2,10 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std/Test.sol";
-import {Extrospect} from "src/concrete/Extrospect.sol";
+import {ExtrospectEquivalence} from "test/concrete/ExtrospectEquivalence.sol";
 import {LibExtrospectMetamorphic} from "src/lib/LibExtrospectMetamorphic.sol";
 
-contract ExtrospectScanMetamorphicRiskTest is Test {
-    Extrospect internal extrospect;
-
-    function setUp() external {
-        extrospect = new Extrospect();
-    }
-
+contract ExtrospectScanMetamorphicRiskTest is ExtrospectEquivalence {
     function testScanMetamorphicRiskEquivalenceFuzz(bytes memory bytecode) external {
         try this._extScan(bytecode) returns (uint256 ext) {
             uint256 lib = LibExtrospectMetamorphic.scanMetamorphicRisk(bytecode);

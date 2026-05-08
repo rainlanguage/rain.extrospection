@@ -2,19 +2,12 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std/Test.sol";
-import {Extrospect} from "src/concrete/Extrospect.sol";
+import {ExtrospectEquivalence} from "test/concrete/ExtrospectEquivalence.sol";
 import {LibExtrospectERC1967BeaconProxy} from "src/lib/LibExtrospectERC1967BeaconProxy.sol";
 import {MockBeacon} from "test/concrete/MockBeacon.sol";
 import {EmptyContract} from "test/concrete/EmptyContract.sol";
 
-contract ExtrospectIsBeaconOwnerTest is Test {
-    Extrospect internal extrospect;
-
-    function setUp() external {
-        extrospect = new Extrospect();
-    }
-
+contract ExtrospectIsBeaconOwnerTest is ExtrospectEquivalence {
     function testIsBeaconOwnerEquivalenceMatch(address owner) external {
         EmptyContract impl = new EmptyContract();
         MockBeacon beacon = new MockBeacon(address(impl), owner);

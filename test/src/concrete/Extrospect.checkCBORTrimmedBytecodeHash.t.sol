@@ -2,17 +2,10 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std/Test.sol";
-import {Extrospect} from "src/concrete/Extrospect.sol";
+import {ExtrospectEquivalence} from "test/concrete/ExtrospectEquivalence.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 
-contract ExtrospectCheckCBORTrimmedBytecodeHashTest is Test {
-    Extrospect internal extrospect;
-
-    function setUp() external {
-        extrospect = new Extrospect();
-    }
-
+contract ExtrospectCheckCBORTrimmedBytecodeHashTest is ExtrospectEquivalence {
     function libCheckCBORTrimmedBytecodeHashExternal(address account, bytes32 expected) external view {
         LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(account, expected);
     }
