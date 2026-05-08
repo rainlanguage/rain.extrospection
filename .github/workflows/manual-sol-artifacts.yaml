@@ -20,12 +20,25 @@ jobs:
           primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-
           gc-max-store-size-linux: 1G
+      - name: Require deployment key
+        env:
+          MAIN_KEY: ${{ secrets.PRIVATE_KEY }}
+        run: |
+          if [[ -z "$MAIN_KEY" ]]; then
+            echo "::error::PRIVATE_KEY secret must be set"
+            exit 1
+          fi
       - name: deploy
         run: nix develop -c rainix-sol-artifacts
         env:
           DEPLOY_BROADCAST: '1'
+          # Skip on-chain simulation: the Zoltu factory's bytecode-driven CREATE
+          # path can fail eth_call dry-runs on networks where blockhash or other
+          # block-derived state isn't predictable in simulation, even when the
+          # actual broadcast succeeds. Trade-off: lose the pre-broadcast guard
+          # against straightforward reverts.
           DEPLOY_SKIP_SIMULATION: '1'
-          DEPLOYMENT_KEY: ${{ github.ref == 'refs/heads/main' && secrets.PRIVATE_KEY || secrets.PRIVATE_KEY_DEV }}
+          DEPLOYMENT_KEY: ${{ secrets.PRIVATE_KEY }}
           ETH_RPC_URL: ${{ secrets.CI_DEPLOY_BASE_RPC_URL || vars.CI_DEPLOY_BASE_RPC_URL || '' }}
           CI_DEPLOY_ARBITRUM_RPC_URL: ${{ secrets.CI_DEPLOY_ARBITRUM_RPC_URL || vars.CI_DEPLOY_ARBITRUM_RPC_URL || '' }}
           CI_DEPLOY_BASE_RPC_URL: ${{ secrets.CI_DEPLOY_BASE_RPC_URL || vars.CI_DEPLOY_BASE_RPC_URL || '' }}
