@@ -3,12 +3,12 @@
 pragma solidity =0.8.25;
 
 import {ExtrospectEquivalence} from "test/concrete/ExtrospectEquivalence.sol";
+import {SOLIDITY_CBOR_RUNTIME_FIXTURE} from "test/concrete/SolidityCBORFixture.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 
 contract ExtrospectTryTrimSolidityCBORMetadataTest is ExtrospectEquivalence {
     function testTryTrimSolidityCBORMetadataEquivalenceTrim() external view {
-        bytes memory raw =
-            hex"6080604052600080fdfea26469706673582212200726074213b9ef2f5b41bf0bdd5bbd03a64652de62f1dfcda59625e106c52e8a64736f6c63430008190033";
+        bytes memory raw = SOLIDITY_CBOR_RUNTIME_FIXTURE;
 
         // Library version (mutates in place — clone first).
         bytes memory libCopy = bytes.concat(raw);

@@ -3,6 +3,7 @@
 pragma solidity =0.8.25;
 
 import {ExtrospectEquivalence} from "test/concrete/ExtrospectEquivalence.sol";
+import {SOLIDITY_CBOR_RUNTIME_FIXTURE} from "test/concrete/SolidityCBORFixture.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 
 contract ExtrospectCheckCBORTrimmedBytecodeHashTest is ExtrospectEquivalence {
@@ -11,8 +12,7 @@ contract ExtrospectCheckCBORTrimmedBytecodeHashTest is ExtrospectEquivalence {
     }
 
     function testCheckCBORTrimmedBytecodeHashEquivalencePass() external {
-        bytes memory withMeta =
-            hex"6080604052600080fdfea26469706673582212200726074213b9ef2f5b41bf0bdd5bbd03a64652de62f1dfcda59625e106c52e8a64736f6c63430008190033";
+        bytes memory withMeta = SOLIDITY_CBOR_RUNTIME_FIXTURE;
         address deployed = address(0xbeef);
         vm.etch(deployed, withMeta);
 
@@ -37,8 +37,7 @@ contract ExtrospectCheckCBORTrimmedBytecodeHashTest is ExtrospectEquivalence {
     }
 
     function testCheckCBORTrimmedBytecodeHashEquivalenceRevertHashMismatch() external {
-        bytes memory withMeta =
-            hex"6080604052600080fdfea26469706673582212200726074213b9ef2f5b41bf0bdd5bbd03a64652de62f1dfcda59625e106c52e8a64736f6c63430008190033";
+        bytes memory withMeta = SOLIDITY_CBOR_RUNTIME_FIXTURE;
         address deployed = address(0xbeef);
         vm.etch(deployed, withMeta);
         bytes32 wrong = bytes32(uint256(0xdead));
