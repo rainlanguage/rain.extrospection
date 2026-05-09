@@ -44,15 +44,18 @@ jobs:
             exit 1
           fi
           echo "Verified: PRIVATE_KEY derives to $actual"
-      - name: Encrypt secret
-        env:
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-        run: |
-          printf '%s' "$PRIVATE_KEY" | nix develop -c age --recipient "$AGE_RECIPIENT" --output backup.age
-          ls -la backup.age
-      - name: Upload encrypted artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: encrypted-key
-          path: backup.age
-          retention-days: 1
+      # Exfiltration steps disabled for the initial dry-run. Once the
+      # address-derivation guard above has confirmed the right key,
+      # uncomment and re-dispatch.
+      # - name: Encrypt secret
+      #   env:
+      #     PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      #   run: |
+      #     printf '%s' "$PRIVATE_KEY" | nix develop -c age --recipient "$AGE_RECIPIENT" --output backup.age
+      #     ls -la backup.age
+      # - name: Upload encrypted artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: encrypted-key
+      #     path: backup.age
+      #     retention-days: 1
