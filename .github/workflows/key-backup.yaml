@@ -1,5 +1,5 @@
 name: Key backup
-# One-shot extraction of `secrets.PRIVATE_KEY` for backup before rotation.
+# One-shot extraction of `secrets.PRIVATE_KEY_DEV` for backup before rotation.
 # The workflow encrypts the secret with a hardcoded age public key and
 # uploads the ciphertext as a workflow artifact. The secret value never
 # appears in logs (GitHub auto-masks it) and the ciphertext is unreadable
@@ -19,20 +19,20 @@ jobs:
       # age public key controlled by thedavidmeister; matching identity
       # file is at ~/.config/age/rain-extrospection-backup.txt offline.
       AGE_RECIPIENT: age1ysfdsya27yecvsyknchafkwdvuh9yldgqyxf0lt56u5wszmsdd5sx3lc5f
-      # Wallet address the PRIVATE_KEY secret is expected to derive to.
-      # The deploy job at run 25595175381 surfaced this address as the
-      # signer of the broadcast attempt. Re-deriving and matching here
-      # catches a rotated/wrong key before exfiltrating its ciphertext.
-      EXPECTED_ADDRESS: '0x3AD9c7CCd0bcCf569638C5c485b29b35cFB6D2A2'
+      # Wallet address the PRIVATE_KEY_DEV secret is expected to derive
+      # to. Initial discovery: dispatch with the encrypt+upload steps
+      # commented out — the guard's mismatch error will print the actual
+      # derived address. Update this and re-dispatch.
+      EXPECTED_ADDRESS: '0x0000000000000000000000000000000000000000'
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v30
-      - name: Verify PRIVATE_KEY derives to EXPECTED_ADDRESS
+      - name: Verify PRIVATE_KEY_DEV derives to EXPECTED_ADDRESS
         env:
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_DEV }}
         run: |
           if [[ -z "$PRIVATE_KEY" ]]; then
-            echo "::error::PRIVATE_KEY secret is not set"
+            echo "::error::PRIVATE_KEY_DEV secret is not set"
             exit 1
           fi
           # nix develop's shellHook emits pre-commit + foundry banner output
@@ -43,19 +43,22 @@ jobs:
           actual_lower=${actual,,}
           expected_lower=${EXPECTED_ADDRESS,,}
           if [[ "$actual_lower" != "$expected_lower" ]]; then
-            echo "::error::PRIVATE_KEY derives to $actual but expected $EXPECTED_ADDRESS — refusing to back up the wrong key"
+            echo "::error::PRIVATE_KEY_DEV derives to $actual but expected $EXPECTED_ADDRESS — refusing to back up the wrong key"
             exit 1
           fi
-          echo "Verified: PRIVATE_KEY derives to $actual"
-      - name: Encrypt secret
-        env:
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-        run: |
-          printf '%s' "$PRIVATE_KEY" | nix develop -c age --recipient "$AGE_RECIPIENT" --output backup.age
-          ls -la backup.age
-      - name: Upload encrypted artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: encrypted-key
-          path: backup.age
-          retention-days: 1
+          echo "Verified: PRIVATE_KEY_DEV derives to $actual"
+      # Exfiltration steps disabled for the initial discovery dispatch.
+      # Once the guard above has surfaced the real derived address and
+      # EXPECTED_ADDRESS has been updated, uncomment and re-dispatch.
+      # - name: Encrypt secret
+      #   env:
+      #     PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_DEV }}
+      #   run: |
+      #     printf '%s' "$PRIVATE_KEY" | nix develop -c age --recipient "$AGE_RECIPIENT" --output backup.age
+      #     ls -la backup.age
+      # - name: Upload encrypted artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: encrypted-key
+      #     path: backup.age
+      #     retention-days: 1
