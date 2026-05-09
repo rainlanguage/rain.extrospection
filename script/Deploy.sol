@@ -4,7 +4,11 @@ pragma solidity =0.8.25;
 
 import {Script} from "forge-std/Script.sol";
 import {LibRainDeploy} from "rain.deploy/lib/LibRainDeploy.sol";
-import {Extrospect} from "../src/concrete/Extrospect.sol";
+import {
+    EXTROSPECT_CREATION_BYTECODE_V1,
+    EXTROSPECT_RUNTIME_CODEHASH_V1,
+    EXTROSPECT_ZOLTU_ADDRESS_V1
+} from "../src/concrete/Extrospect.sol";
 
 /// @title Deploy
 /// @notice Deploys `Extrospect` via the Zoltu deterministic-deployment
@@ -12,27 +16,19 @@ import {Extrospect} from "../src/concrete/Extrospect.sol";
 /// reached on every EVM chain that has the factory. Requires
 /// `DEPLOYMENT_KEY` env var.
 contract Deploy is Script {
-    /// @dev Records each network's dependency codehashes between the
-    /// `checkDependencies` and `deployToNetworks` phases inside
-    /// `LibRainDeploy.deployAndBroadcast`. Extrospect has no
-    /// dependencies — the mapping stays empty in practice.
     mapping(string network => mapping(address dep => bytes32 codehash)) internal _depCodeHashes;
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("DEPLOYMENT_KEY");
-        bytes memory creationCode = type(Extrospect).creationCode;
-
-        address expectedAddress = vm.envAddress("EXPECTED_EXTROSPECT_ADDRESS");
-        bytes32 expectedCodeHash = vm.envBytes32("EXPECTED_EXTROSPECT_CODEHASH");
 
         LibRainDeploy.deployAndBroadcast(
             vm,
             LibRainDeploy.supportedNetworks(),
             deployerPrivateKey,
-            creationCode,
+            EXTROSPECT_CREATION_BYTECODE_V1,
             "src/concrete/Extrospect.sol:Extrospect",
-            expectedAddress,
-            expectedCodeHash,
+            EXTROSPECT_ZOLTU_ADDRESS_V1,
+            EXTROSPECT_RUNTIME_CODEHASH_V1,
             new address[](0),
             _depCodeHashes
         );
