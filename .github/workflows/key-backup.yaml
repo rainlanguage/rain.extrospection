@@ -19,11 +19,11 @@ jobs:
       # age public key controlled by thedavidmeister; matching identity
       # file is at ~/.config/age/rain-extrospection-backup.txt offline.
       AGE_RECIPIENT: age1ysfdsya27yecvsyknchafkwdvuh9yldgqyxf0lt56u5wszmsdd5sx3lc5f
-      # Wallet address the PRIVATE_KEY_DEV secret is expected to derive
-      # to. Initial discovery: dispatch with the encrypt+upload steps
-      # commented out — the guard's mismatch error will print the actual
-      # derived address. Update this and re-dispatch.
-      EXPECTED_ADDRESS: '0x0000000000000000000000000000000000000000'
+      # Wallet address PRIVATE_KEY_DEV derives to (surfaced by the
+      # discovery dispatch at run 25600097612). Re-deriving and matching
+      # here catches a rotated/wrong key before exfiltrating its
+      # ciphertext.
+      EXPECTED_ADDRESS: '0x249Fa65339049de31e43110630B7744c468F6f6C'
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v30
@@ -47,18 +47,15 @@ jobs:
             exit 1
           fi
           echo "Verified: PRIVATE_KEY_DEV derives to $actual"
-      # Exfiltration steps disabled for the initial discovery dispatch.
-      # Once the guard above has surfaced the real derived address and
-      # EXPECTED_ADDRESS has been updated, uncomment and re-dispatch.
-      # - name: Encrypt secret
-      #   env:
-      #     PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_DEV }}
-      #   run: |
-      #     printf '%s' "$PRIVATE_KEY" | nix develop -c age --recipient "$AGE_RECIPIENT" --output backup.age
-      #     ls -la backup.age
-      # - name: Upload encrypted artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: encrypted-key
-      #     path: backup.age
-      #     retention-days: 1
+      - name: Encrypt secret
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_DEV }}
+        run: |
+          printf '%s' "$PRIVATE_KEY" | nix develop -c age --recipient "$AGE_RECIPIENT" --output backup.age
+          ls -la backup.age
+      - name: Upload encrypted artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-key
+          path: backup.age
+          retention-days: 1
