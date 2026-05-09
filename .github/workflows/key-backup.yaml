@@ -23,10 +23,7 @@ jobs:
       # The deploy job at run 25595175381 surfaced this address as the
       # signer of the broadcast attempt. Re-deriving and matching here
       # catches a rotated/wrong key before exfiltrating its ciphertext.
-      # MUTATION-TEST: deliberately wrong address so the guard fails. Revert
-      # back to 0x3AD9c7CCd0bcCf569638C5c485b29b35cFB6D2A2 once the dry-run
-      # has demonstrated the guard fires.
-      EXPECTED_ADDRESS: '0x000000000000000000000000000000000000dEaD'
+      EXPECTED_ADDRESS: '0x3AD9c7CCd0bcCf569638C5c485b29b35cFB6D2A2'
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v30
@@ -47,18 +44,15 @@ jobs:
             exit 1
           fi
           echo "Verified: PRIVATE_KEY derives to $actual"
-      # Exfiltration steps disabled for the initial dry-run. Once the
-      # address-derivation guard above has confirmed the right key,
-      # uncomment and re-dispatch.
-      # - name: Encrypt secret
-      #   env:
-      #     PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-      #   run: |
-      #     printf '%s' "$PRIVATE_KEY" | nix develop -c age --recipient "$AGE_RECIPIENT" --output backup.age
-      #     ls -la backup.age
-      # - name: Upload encrypted artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: encrypted-key
-      #     path: backup.age
-      #     retention-days: 1
+      - name: Encrypt secret
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        run: |
+          printf '%s' "$PRIVATE_KEY" | nix develop -c age --recipient "$AGE_RECIPIENT" --output backup.age
+          ls -la backup.age
+      - name: Upload encrypted artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-key
+          path: backup.age
+          retention-days: 1
