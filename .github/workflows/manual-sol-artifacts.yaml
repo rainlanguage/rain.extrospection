@@ -52,3 +52,34 @@ jobs:
           CI_DEPLOY_POLYGON_ETHERSCAN_API_KEY: ${{ secrets.CI_DEPLOY_POLYGON_ETHERSCAN_API_KEY || '' }}
           EXPECTED_EXTROSPECT_ADDRESS: ${{ vars.EXPECTED_EXTROSPECT_ADDRESS || '' }}
           EXPECTED_EXTROSPECT_CODEHASH: ${{ vars.EXPECTED_EXTROSPECT_CODEHASH || '' }}
+      - name: verify on each network
+        # Idempotent: re-runs against the deterministic Zoltu address on every
+        # supported network. Works whether the contract was just deployed in
+        # this dispatch or already existed from a prior one. Per-chain failures
+        # don't abort — verification on a chain where it's already verified
+        # returns "Smart-contract already verified" which forge treats as an
+        # error; treat each chain independently and surface the result.
+        env:
+          CI_DEPLOY_ARBITRUM_ETHERSCAN_API_KEY: ${{ secrets.CI_DEPLOY_ARBITRUM_ETHERSCAN_API_KEY || '' }}
+          CI_DEPLOY_BASE_ETHERSCAN_API_KEY: ${{ secrets.CI_DEPLOY_BASE_ETHERSCAN_API_KEY || '' }}
+          CI_DEPLOY_BASE_SEPOLIA_ETHERSCAN_API_KEY: ${{ secrets.CI_DEPLOY_BASE_SEPOLIA_ETHERSCAN_API_KEY || '' }}
+          CI_DEPLOY_FLARE_ETHERSCAN_API_KEY: ${{ secrets.CI_DEPLOY_FLARE_ETHERSCAN_API_KEY || '' }}
+          CI_DEPLOY_POLYGON_ETHERSCAN_API_KEY: ${{ secrets.CI_DEPLOY_POLYGON_ETHERSCAN_API_KEY || '' }}
+        run: |
+          set +e
+          fail=0
+          for chain in arbitrum base base_sepolia flare polygon; do
+            echo "=== $chain ==="
+            out=$(nix develop -c forge verify-contract \
+              --chain "$chain" \
+              --watch \
+              0x1BE878af679C1a0A6AC15108b0F4398de1f94506 \
+              src/concrete/Extrospect.sol:Extrospect 2>&1)
+            ec=$?
+            echo "$out"
+            if [[ $ec -ne 0 ]] && ! grep -q "already verified" <<<"$out"; then
+              echo "::warning::verification on $chain failed (exit $ec)"
+              fail=1
+            fi
+          done
+          exit $fail
