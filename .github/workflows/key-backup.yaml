@@ -1,0 +1,44 @@
+name: Key backup
+# One-shot extraction of `secrets.PRIVATE_KEY` for backup before rotation.
+# The workflow encrypts the secret with a hardcoded age public key and
+# uploads the ciphertext as a workflow artifact. The secret value never
+# appears in logs (GitHub auto-masks it) and the ciphertext is unreadable
+# without the matching age identity file held offline by the recipient.
+#
+# Usage:
+#   1. Dispatch this workflow.
+#   2. Download the `encrypted-key` artifact.
+#   3. Decrypt: `age --decrypt --identity ~/.config/age/rain-extrospection-backup.txt backup.age`.
+#   4. Delete this workflow file once the backup is verified.
+on:
+  workflow_dispatch:
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      # age public key controlled by thedavidmeister; matching identity
+      # file is at ~/.config/age/rain-extrospection-backup.txt offline.
+      AGE_RECIPIENT: age1ysfdsya27yecvsyknchafkwdvuh9yldgqyxf0lt56u5wszmsdd5sx3lc5f
+    steps:
+      - name: Install age
+        run: |
+          curl -fsSL -o age.tar.gz https://github.com/FiloSottile/age/releases/download/v1.2.0/age-v1.2.0-linux-amd64.tar.gz
+          tar xzf age.tar.gz
+          sudo mv age/age /usr/local/bin/
+          age --version
+      - name: Encrypt secret
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        run: |
+          if [[ -z "$PRIVATE_KEY" ]]; then
+            echo "::error::PRIVATE_KEY secret is not set"
+            exit 1
+          fi
+          printf '%s' "$PRIVATE_KEY" | age --recipient "$AGE_RECIPIENT" --output backup.age
+          ls -la backup.age
+      - name: Upload encrypted artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-key
+          path: backup.age
+          retention-days: 1
