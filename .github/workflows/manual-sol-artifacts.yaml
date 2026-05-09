@@ -79,7 +79,7 @@ jobs:
           echo "Verifying $address on each supported network"
           set +e
           fail=0
-          for chain in arbitrum base base_sepolia flare polygon; do
+          for chain in arbitrum base base-sepolia flare polygon; do
             echo "=== $chain ==="
             out=$(nix develop -c forge verify-contract \
               --chain "$chain" \
