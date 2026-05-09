@@ -23,7 +23,10 @@ jobs:
       # The deploy job at run 25595175381 surfaced this address as the
       # signer of the broadcast attempt. Re-deriving and matching here
       # catches a rotated/wrong key before exfiltrating its ciphertext.
-      EXPECTED_ADDRESS: '0x3AD9c7CCd0bcCf569638C5c485b29b35cFB6D2A2'
+      # MUTATION-TEST: deliberately wrong address so the guard fails. Revert
+      # back to 0x3AD9c7CCd0bcCf569638C5c485b29b35cFB6D2A2 once the dry-run
+      # has demonstrated the guard fires.
+      EXPECTED_ADDRESS: '0x000000000000000000000000000000000000dEaD'
     steps:
       - uses: actions/checkout@v4
       - uses: nixbuild/nix-quick-install-action@v30
