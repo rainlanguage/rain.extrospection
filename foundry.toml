@@ -9,9 +9,19 @@ evm_version = "cancun"
 
 bytecode_hash = "none"
 cbor_metadata = false
+libs = ["dependencies"]
 
 [fuzz]
 runs = 2048
+
+[dependencies]
+forge-std = "1.16.1"
+"rain-solmem" = "0.1.3"
+"rain-math-binary" = "0.1.1"
+"rain-deploy" = "0.1.2"
+
+[soldeer]
+recursive_deps = false
 
 [rpc_endpoints]
 arbitrum = "${CI_DEPLOY_ARBITRUM_RPC_URL}"
