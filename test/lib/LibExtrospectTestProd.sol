@@ -8,6 +8,6 @@ library LibExtrospectTestProd {
     uint256 constant PROD_TEST_BLOCK_NUMBER_ARBITRUM = 424463066;
 
     function createSelectForkArbitrum(Vm vm) internal {
-        vm.createSelectFork(vm.envString("RPC_URL_ARBITRUM_FORK"), PROD_TEST_BLOCK_NUMBER_ARBITRUM);
+        vm.createSelectFork("arbitrum", PROD_TEST_BLOCK_NUMBER_ARBITRUM);
     }
 }

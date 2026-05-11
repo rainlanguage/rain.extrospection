@@ -1,4 +1,5 @@
 out
 cache
-.envdependencies/
+.env
+dependencies
 remappings.txt
