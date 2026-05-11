@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std/Test.sol";
-import {LibBytes} from "rain.solmem/lib/LibBytes.sol";
+import {Test} from "forge-std-1.16.1/src/Test.sol";
+import {LibBytes} from "rain-solmem-0.1.3/src/lib/LibBytes.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {
     EVM_OP_STOP,

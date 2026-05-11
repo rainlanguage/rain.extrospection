@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {LibBytes, Pointer} from "rain.solmem/lib/LibBytes.sol";
+import {LibBytes, Pointer} from "rain-solmem-0.1.3/src/lib/LibBytes.sol";
 import {EVM_OP_JUMPDEST, HALTING_BITMAP} from "./EVMOpcodes.sol";
 
 /// @title LibExtrospectBytecode

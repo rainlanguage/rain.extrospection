@@ -2,12 +2,12 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {Vm} from "forge-std/StdCheats.sol";
+import {Vm} from "forge-std-1.16.1/src/StdCheats.sol";
 
 library LibExtrospectTestProd {
     uint256 constant PROD_TEST_BLOCK_NUMBER_ARBITRUM = 424463066;
 
     function createSelectForkArbitrum(Vm vm) internal {
-        vm.createSelectFork(vm.envString("RPC_URL_ARBITRUM_FORK"), PROD_TEST_BLOCK_NUMBER_ARBITRUM);
+        vm.createSelectFork("arbitrum", PROD_TEST_BLOCK_NUMBER_ARBITRUM);
     }
 }

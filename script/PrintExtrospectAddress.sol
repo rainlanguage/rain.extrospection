@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Script, console2} from "forge-std/Script.sol";
+import {Script, console2} from "forge-std-1.16.1/src/Script.sol";
 import {EXTROSPECT_ZOLTU_ADDRESS_V1} from "../src/concrete/Extrospect.sol";
 
 /// @title PrintExtrospectAddress
