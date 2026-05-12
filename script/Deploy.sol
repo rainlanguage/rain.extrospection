@@ -10,6 +10,9 @@ import {
     EXTROSPECT_ZOLTU_ADDRESS_V1
 } from "../src/concrete/Extrospect.sol";
 
+/// @dev Hash of the "extrospect" deployment suite string.
+bytes32 constant DEPLOYMENT_SUITE_EXTROSPECT = keccak256("extrospect");
+
 /// @title Deploy
 /// @notice Deploys `Extrospect` via the Zoltu deterministic-deployment
 /// factory across every Rain-supported network so the same address is
@@ -21,16 +24,23 @@ contract Deploy is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("DEPLOYMENT_KEY");
 
-        LibRainDeploy.deployAndBroadcast(
-            vm,
-            LibRainDeploy.supportedNetworks(),
-            deployerPrivateKey,
-            EXTROSPECT_CREATION_BYTECODE_V1,
-            "src/concrete/Extrospect.sol:Extrospect",
-            EXTROSPECT_ZOLTU_ADDRESS_V1,
-            EXTROSPECT_RUNTIME_CODEHASH_V1,
-            new address[](0),
-            _depCodeHashes
-        );
+        bytes32 suite = keccak256(bytes(vm.envOr("DEPLOYMENT_SUITE", string("extrospect"))));
+        if (suite == DEPLOYMENT_SUITE_EXTROSPECT) {
+            LibRainDeploy.deployAndBroadcast(
+                vm,
+                LibRainDeploy.supportedNetworks(),
+                deployerPrivateKey,
+                EXTROSPECT_CREATION_BYTECODE_V1,
+                "src/concrete/Extrospect.sol:Extrospect",
+                EXTROSPECT_ZOLTU_ADDRESS_V1,
+                EXTROSPECT_RUNTIME_CODEHASH_V1,
+                new address[](0),
+                _depCodeHashes
+            );
+        } else {
+            revert(
+                "Invalid deployment suite specified. Please set the DEPLOYMENT_SUITE environment variable to 'extrospect'."
+            );
+        }
     }
 }
