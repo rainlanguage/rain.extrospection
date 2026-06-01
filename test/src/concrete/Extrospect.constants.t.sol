@@ -9,7 +9,7 @@ import {
     EXTROSPECT_RUNTIME_CODEHASH_V1,
     EXTROSPECT_CREATION_BYTECODE_V1
 } from "src/concrete/Extrospect.sol";
-import {LibRainDeploy} from "rain-deploy-0.1.2/src/lib/LibRainDeploy.sol";
+import {LibRainDeploy} from "rain-deploy-0.1.3/src/lib/LibRainDeploy.sol";
 
 /// @title ExtrospectConstantsTest
 /// @notice Pin the Extrospect deploy constants — creation bytecode,
