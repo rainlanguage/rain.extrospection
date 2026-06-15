@@ -6,26 +6,32 @@ import {ExtrospectEquivalence} from "test/concrete/ExtrospectEquivalence.sol";
 import {LibExtrospectMetamorphic} from "src/lib/LibExtrospectMetamorphic.sol";
 
 contract ExtrospectScanMetamorphicRiskTest is ExtrospectEquivalence {
-    function testScanMetamorphicRiskEquivalenceFuzz(bytes memory bytecode) external {
-        try this._extScan(bytecode) returns (uint256 ext) {
-            uint256 lib = LibExtrospectMetamorphic.scanMetamorphicRisk(bytecode);
-            assertEq(ext, lib);
-        } catch {
-            vm.expectRevert();
-            this._libScan(bytecode);
-        }
-    }
-
-    function _extScan(bytes memory bytecode) external view returns (uint256) {
-        return extrospect.scanMetamorphicRisk(bytecode);
-    }
-
+    /// External re-exposure of the library function so it can be reached via a
+    /// raw self-call and its returndata captured alongside the concrete's.
     function _libScan(bytes memory bytecode) external pure returns (uint256) {
         return LibExtrospectMetamorphic.scanMetamorphicRisk(bytecode);
     }
 
-    function testScanMetamorphicRiskEquivalenceWithDelegatecall() external view {
-        bytes memory code = hex"60006000600060006000F4";
-        assertEq(extrospect.scanMetamorphicRisk(code), LibExtrospectMetamorphic.scanMetamorphicRisk(code));
+    function assertScanEquivalence(bytes memory bytecode) internal {
+        assertEquivalence(extrospect.scanMetamorphicRisk.selector, this._libScan.selector, abi.encode(bytecode));
+    }
+
+    /// Concrete and library agree byte-for-byte on the success path: both
+    /// return the same encoded metamorphic-risk bitmap, and on the EOF revert
+    /// path both emit the byte-identical `EOFBytecodeNotSupported` payload.
+    function testScanMetamorphicRiskEquivalenceFuzz(bytes memory bytecode) external {
+        assertScanEquivalence(bytecode);
+    }
+
+    /// Concrete and library return the byte-identical metamorphic-risk bitmap
+    /// for bytecode containing a reachable DELEGATECALL.
+    function testScanMetamorphicRiskEquivalenceWithDelegatecall() external {
+        assertScanEquivalence(hex"60006000600060006000F4");
+    }
+
+    /// Concrete and library revert with the byte-identical
+    /// `EOFBytecodeNotSupported` payload for EOF-prefixed bytecode.
+    function testScanMetamorphicRiskEquivalenceEOF() external {
+        assertScanEquivalence(hex"EF0000");
     }
 }

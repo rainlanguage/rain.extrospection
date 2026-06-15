@@ -6,29 +6,34 @@ import {ExtrospectEquivalence} from "test/concrete/ExtrospectEquivalence.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 
 contract ExtrospectScanEVMOpcodesPresentInBytecodeTest is ExtrospectEquivalence {
-    function testScanEVMOpcodesPresentInBytecodeEquivalenceFuzz(bytes memory bytecode) external {
-        try this._extScan(bytecode) returns (uint256 ext) {
-            uint256 lib = LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(bytecode);
-            assertEq(ext, lib);
-        } catch {
-            vm.expectRevert();
-            this._libScan(bytecode);
-        }
-    }
-
-    function _extScan(bytes memory bytecode) external view returns (uint256) {
-        return extrospect.scanEVMOpcodesPresentInBytecode(bytecode);
-    }
-
+    /// External re-exposure of the library function so it can be reached via a
+    /// raw self-call and its returndata captured alongside the concrete's.
     function _libScan(bytes memory bytecode) external pure returns (uint256) {
         return LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(bytecode);
     }
 
-    function testScanEVMOpcodesPresentInBytecodeEquivalenceConcrete() external view {
-        bytes memory code = hex"60016002F3";
-        assertEq(
-            extrospect.scanEVMOpcodesPresentInBytecode(code),
-            LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(code)
+    function assertScanEquivalence(bytes memory bytecode) internal {
+        assertEquivalence(
+            extrospect.scanEVMOpcodesPresentInBytecode.selector, this._libScan.selector, abi.encode(bytecode)
         );
+    }
+
+    /// Concrete and library agree byte-for-byte on the success path: both
+    /// return the same encoded opcode bitmap, and on the EOF revert path both
+    /// emit the byte-identical `EOFBytecodeNotSupported` payload.
+    function testScanEVMOpcodesPresentInBytecodeEquivalenceFuzz(bytes memory bytecode) external {
+        assertScanEquivalence(bytecode);
+    }
+
+    /// Concrete and library return the byte-identical opcode bitmap for a
+    /// concrete success-path input.
+    function testScanEVMOpcodesPresentInBytecodeEquivalenceConcrete() external {
+        assertScanEquivalence(hex"60016002F3");
+    }
+
+    /// Concrete and library revert with the byte-identical
+    /// `EOFBytecodeNotSupported` payload for EOF-prefixed bytecode.
+    function testScanEVMOpcodesPresentInBytecodeEquivalenceEOF() external {
+        assertScanEquivalence(hex"EF0000");
     }
 }

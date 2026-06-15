@@ -6,31 +6,35 @@ import {ExtrospectEquivalence} from "test/concrete/ExtrospectEquivalence.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 
 contract ExtrospectScanEVMOpcodesReachableInBytecodeTest is ExtrospectEquivalence {
-    function testScanEVMOpcodesReachableInBytecodeEquivalenceFuzz(bytes memory bytecode) external {
-        // EOF prefix reverts both sides — skip via try/catch comparison.
-        try this._extScan(bytecode) returns (uint256 ext) {
-            uint256 lib = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(bytecode);
-            assertEq(ext, lib);
-        } catch {
-            // Library should also revert.
-            vm.expectRevert();
-            this._libScan(bytecode);
-        }
-    }
-
-    function _extScan(bytes memory bytecode) external view returns (uint256) {
-        return extrospect.scanEVMOpcodesReachableInBytecode(bytecode);
-    }
-
+    /// External re-exposure of the library function so it can be reached via a
+    /// raw self-call and its returndata captured alongside the concrete's.
     function _libScan(bytes memory bytecode) external pure returns (uint256) {
         return LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(bytecode);
     }
 
-    function testScanEVMOpcodesReachableInBytecodeEquivalenceConcrete() external view {
-        bytes memory code = hex"60016002F3"; // PUSH1 0x01 PUSH1 0x02 RETURN
-        assertEq(
-            extrospect.scanEVMOpcodesReachableInBytecode(code),
-            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(code)
+    function assertScanEquivalence(bytes memory bytecode) internal {
+        assertEquivalence(
+            extrospect.scanEVMOpcodesReachableInBytecode.selector, this._libScan.selector, abi.encode(bytecode)
         );
+    }
+
+    /// Concrete and library agree byte-for-byte on the success path: both
+    /// return the same encoded reachable-opcode bitmap, and on the EOF revert
+    /// path both emit the byte-identical `EOFBytecodeNotSupported` payload.
+    function testScanEVMOpcodesReachableInBytecodeEquivalenceFuzz(bytes memory bytecode) external {
+        assertScanEquivalence(bytecode);
+    }
+
+    /// Concrete and library return the byte-identical reachable-opcode bitmap
+    /// for a concrete success-path input.
+    function testScanEVMOpcodesReachableInBytecodeEquivalenceConcrete() external {
+        // PUSH1 0x01 PUSH1 0x02 RETURN
+        assertScanEquivalence(hex"60016002F3");
+    }
+
+    /// Concrete and library revert with the byte-identical
+    /// `EOFBytecodeNotSupported` payload for EOF-prefixed bytecode.
+    function testScanEVMOpcodesReachableInBytecodeEquivalenceEOF() external {
+        assertScanEquivalence(hex"EF0000");
     }
 }
