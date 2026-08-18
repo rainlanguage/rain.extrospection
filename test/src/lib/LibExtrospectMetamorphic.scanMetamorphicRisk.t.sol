@@ -108,6 +108,12 @@ contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
         assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(address(new ChildLeaf()).code), 0);
     }
 
+    /// SELFDESTRUCT after STOP with no JUMPDEST is present in the bytecode but
+    /// not reachable, so it is not risky.
+    function testScanMetamorphicRiskUnreachableSelfdestruct() external pure {
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(hex"00FF"), 0);
+    }
+
     /// Fuzz test against slow reference.
     function testScanMetamorphicRiskReference(bytes memory data) external pure {
         vm.assume(!LibExtrospectBytecode.isEOFBytecode(data));
