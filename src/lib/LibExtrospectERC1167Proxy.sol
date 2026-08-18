@@ -45,7 +45,7 @@ library LibExtrospectERC1167Proxy {
     /// - ERC1167 vanity proxies, which push the implementation address with
     ///   `PUSH(20 - Z)` and jump to `0x2b - Z` for a total length of `45 - Z`
     ///   when the address has `Z` leading zero bytes;
-    /// - minimal proxies that build their calldata with `PUSH0` instead of
+    /// - minimal proxies that push their zero constants with `PUSH0` instead of
     ///   `RETURNDATASIZE`;
     /// - EIP-7702 delegation designators, which are `0xef0100` followed by the
     ///   20 byte address that the account delegates to.
