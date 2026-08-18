@@ -125,23 +125,15 @@ contract LibExtrospectERC1167ProxyTest is Test {
         assertEq(emptyImplementationResult, implementationResult);
     }
 
-    /// The verdict is a function of the bytecode alone, so the same clone
-    /// bytecode gets the same result whether or not the implementation account
-    /// has code.
-    function testIsERC1167ProxyImplementationCodeIrrelevant() external {
+    /// A clone whose implementation account has no code is detected as a
+    /// proxy, and the codeless address is returned.
+    function testIsERC1167ProxyImplementationWithoutCode() external view {
         address implementation = address(uint160(uint256(keccak256("no code at this address"))));
-        bytes memory bytecode = abi.encodePacked(ERC1167_PREFIX, implementation, ERC1167_SUFFIX);
-
         assertEq(implementation.code.length, 0);
+        bytes memory bytecode = abi.encodePacked(ERC1167_PREFIX, implementation, ERC1167_SUFFIX);
         (bool result, address implementationResult) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
         assertTrue(result);
         assertEq(implementationResult, implementation);
-
-        vm.etch(implementation, hex"00");
-        assertEq(implementation.code.length, 1);
-        (bool resultWithCode, address implementationResultWithCode) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
-        assertEq(resultWithCode, result);
-        assertEq(implementationResultWithCode, implementationResult);
     }
 
     /// Compare the fail case of the slow implementation to the fast.
