@@ -127,7 +127,7 @@ library LibExtrospectBytecode {
     /// does not match after trimming.
     ///
     /// NOTE EOF bytecode is not supported by this function and reverts with
-    /// `EOFBytecodeNotSupported` before either of the above are reached.
+    /// `EOFBytecodeNotSupported` before either of the above is reached.
     ///
     /// @param account The account whose bytecode to check.
     /// @param expected The expected hash of the trimmed bytecode.
