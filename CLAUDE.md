@@ -59,7 +59,9 @@ nix develop -c forge test --match-test testFoo
 
 ## Dependencies
 
-Git submodules in `lib/`:
-- `rain.solmem` — Memory utilities (`LibBytes`, `Pointer`)
-- `rain.math.binary` — Binary math utilities
-- `forge-std` — Foundry test framework
+Soldeer packages, declared in `foundry.toml` `[dependencies]` and pinned in `soldeer.lock`. `forge soldeer install` installs them under `dependencies/` (`libs = ["dependencies"]`), which is gitignored. Imports carry the version in the path, e.g. `rain-solmem-0.1.3/src/lib/LibBytes.sol`.
+
+- `forge-std` 1.16.1 — Foundry test framework
+- `rain-deploy` 0.1.3 — Deployment helpers (`LibRainDeploy`), used by `script/Deploy.sol`
+- `rain-math-binary` 0.1.3 — Binary math utilities (`LibCtPop`)
+- `rain-solmem` 0.1.3 — Memory utilities (`LibBytes`, `Pointer`)

@@ -165,6 +165,21 @@ contract LibExtrospectERC1167ProxyTest is Test {
         assertEq(ERC1167_PROXY_LENGTH, 45);
     }
 
+    /// The implementation address must be masked to exactly 160 bits. The word
+    /// loaded from bytecode also contains the final byte of the ERC1167 prefix
+    /// (0x73, the PUSH20 opcode) immediately above the address, so an unmasked
+    /// or under-masked read leaks it into the returned value.
+    function testIsERC1167ProxyImplementationAddressIsCleanWord(address implementation) external pure {
+        bytes memory bytecode = abi.encodePacked(ERC1167_PREFIX, implementation, ERC1167_SUFFIX);
+        (bool result, address implementationResult) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        assertTrue(result);
+        uint256 raw;
+        assembly ("memory-safe") {
+            raw := implementationResult
+        }
+        assertEq(raw, uint256(uint160(implementation)));
+    }
+
     /// Gas cost of the fast implementation succeeding.
     function testIsERC1167ProxyGasSuccess() external pure {
         (bool result, address implementationResult) = LibExtrospectERC1167Proxy.isERC1167Proxy(
