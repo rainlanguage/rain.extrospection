@@ -33,15 +33,9 @@ nix develop -c forge test
 nix develop -c forge test --match-contract LibExtrospectBytecodeIsEOFBytecodeTest
 nix develop -c forge test --match-test testFoo
 
-# Mutation / coverage campaigns (drops the deploy-constant pins)
+# Mutation / coverage campaigns — see .claude/rules/mutation-profile.md
 nix develop -c bash -c 'FOUNDRY_PROFILE=mutation forge test'
 ```
-
-### The `mutation` profile
-
-`ExtrospectConstantsTest` (`test/src/concrete/Extrospect.constants.t.sol`) pins `type(Extrospect).creationCode` and `type(Extrospect).runtimeCode` against the `EXTROSPECT_*_V1` constants. Those compiler outputs change for any edit to any source file reachable from `Extrospect`, so both pins fail under every source mutation, whether or not the mutated behaviour is observable. Under the default profile a mutation campaign therefore scores every mutant `KILLED` and measures nothing.
-
-`FOUNDRY_PROFILE=mutation` runs the same suite with `no_match_contract = "ExtrospectConstantsTest"`. Every mutation or coverage campaign on this repo runs under it. The default profile keeps the pins, so CI and releases still catch constant drift.
 
 ## Architecture
 
