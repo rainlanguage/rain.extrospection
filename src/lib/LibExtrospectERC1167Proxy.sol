@@ -37,10 +37,15 @@ uint256 constant ERC1167_IMPLEMENTATION_ADDRESS_OFFSET = ERC1167_PREFIX_LENGTH +
 library LibExtrospectERC1167Proxy {
     /// @notice Checks if the given bytecode is an ERC1167 proxy. If so,
     /// returns the implementation address.
+    /// The verdict is a function of the 45 bytes alone. It is the same whether
+    /// or not the implementation account exists or has code.
     /// @param bytecode The bytecode to check.
     /// @return result True if the bytecode is an ERC1167 proxy.
     /// @return implementationAddress The address of the implementation contract.
-    /// This is only valid if `result` is true, else it is zero.
+    /// This is only valid if `result` is true, else it is zero. When `result`
+    /// is true this is whatever address the bytecode encodes, which includes
+    /// `address(0)`, so `result` is the only discriminator between a proxy and
+    /// a non-proxy.
     function isERC1167Proxy(bytes memory bytecode) internal pure returns (bool result, address implementationAddress) {
         unchecked {
             {
