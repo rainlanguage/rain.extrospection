@@ -97,11 +97,13 @@ library LibExtrospectBytecode {
         checkNotEOFBytecode(bytecode);
         uint256 length = bytecode.length;
         if (length >= 53) {
-            // Two overlapping 32-byte reads cover the last 53 bytes of
-            // bytecode (the metadata). The masks zero out the variable parts
-            // (34-byte IPFS hash and 3-byte solc version), preserving only the
-            // fixed CBOR structure bytes: a2 64 "ipfs" 5822 ... 64 "solc" 43
-            // ... 0033. The expected hash is keccak256 of the masked result.
+            // Two adjacent 32-byte reads span the last 53 bytes of bytecode
+            // (the metadata) plus the 11 bytes of memory immediately before
+            // them. The masks zero those 11 bytes and the variable parts of the
+            // metadata (34-byte IPFS hash and 3-byte solc version), preserving
+            // only the fixed CBOR structure bytes: a2 64 "ipfs" 5822 ... 64
+            // "solc" 43 ... 0033. The expected hash is keccak256 of the masked
+            // result.
             //slither-disable-next-line too-many-digits
             uint256 maskA = 0xFFFFFFFFFFFFFFFF00000000000000000000000000;
             //slither-disable-next-line too-many-digits
