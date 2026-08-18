@@ -14,6 +14,12 @@ import {
     REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
 } from "test/concrete/RevertingWithAddressBeacon.sol";
 import {ReturndataBombBeacon, RETURNDATA_BOMB_GAS_BUDGET} from "test/concrete/ReturndataBombBeacon.sol";
+import {ExpensiveBeacon} from "test/concrete/ExpensiveBeacon.sol";
+import {
+    StrictCalldataBeacon,
+    STRICT_CALLDATA_BEACON_IMPLEMENTATION,
+    STRICT_CALLDATA_BEACON_OWNER
+} from "test/concrete/StrictCalldataBeacon.sol";
 
 /// @title LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest
 /// @notice Tests `LibExtrospectERC1967BeaconProxy.isBeaconOwner`.
@@ -100,6 +106,22 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
         assertFalse(
             LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), REVERTING_WITH_ADDRESS_BEACON_PAYLOAD)
         );
+    }
+
+    /// The predicate sends the bare 4 selector bytes with nothing after
+    /// them, so a beacon that rejects any other calldata length still
+    /// resolves.
+    function testMatchesStrictCalldataBeacon() external {
+        StrictCalldataBeacon beacon = new StrictCalldataBeacon();
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), STRICT_CALLDATA_BEACON_OWNER));
+    }
+
+    /// The staticcall forwards all the gas the predicate has, so a
+    /// beacon whose `owner()` costs far more than a minimal getter
+    /// still resolves.
+    function testMatchesExpensiveBeacon() external {
+        ExpensiveBeacon beacon = new ExpensiveBeacon(address(this), address(this));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), address(this)));
     }
 
     /// A hostile beacon returning a blob sized to the caller's own gas

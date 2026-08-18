@@ -14,6 +14,12 @@ import {
     REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
 } from "test/concrete/RevertingWithAddressBeacon.sol";
 import {ReturndataBombBeacon, RETURNDATA_BOMB_GAS_BUDGET} from "test/concrete/ReturndataBombBeacon.sol";
+import {ExpensiveBeacon} from "test/concrete/ExpensiveBeacon.sol";
+import {
+    StrictCalldataBeacon,
+    STRICT_CALLDATA_BEACON_IMPLEMENTATION,
+    STRICT_CALLDATA_BEACON_OWNER
+} from "test/concrete/StrictCalldataBeacon.sol";
 
 /// @title LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest
 /// @notice Tests `LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode`.
@@ -126,6 +132,28 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         RevertingWithAddressBeacon beacon = new RevertingWithAddressBeacon();
         assertEq(keccak256(REVERTING_WITH_ADDRESS_BEACON_PAYLOAD.code), keccak256(""));
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+    }
+
+    /// The predicate sends the bare 4 selector bytes with nothing after
+    /// them, so a beacon that rejects any other calldata length still
+    /// resolves.
+    function testMatchesStrictCalldataBeacon() external {
+        StrictCalldataBeacon beacon = new StrictCalldataBeacon();
+        assertEq(keccak256(STRICT_CALLDATA_BEACON_IMPLEMENTATION.code), keccak256(""));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+    }
+
+    /// The staticcall forwards all the gas the predicate has, so a
+    /// beacon whose `implementation()` costs far more than a minimal
+    /// getter still resolves.
+    function testMatchesExpensiveBeacon() external {
+        EmptyContract impl = new EmptyContract();
+        ExpensiveBeacon beacon = new ExpensiveBeacon(address(impl), address(this));
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(address(impl).code)
+            )
+        );
     }
 
     /// A hostile beacon returning a blob sized to the caller's own gas
