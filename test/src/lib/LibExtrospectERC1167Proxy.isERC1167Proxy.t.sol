@@ -9,7 +9,9 @@ import {
     ERC1167_PREFIX,
     ERC1167_PROXY_LENGTH,
     ERC1167_PREFIX_LENGTH,
-    ERC1167_SUFFIX_LENGTH
+    ERC1167_SUFFIX_LENGTH,
+    ERC1167_PREFIX_HASH,
+    ERC1167_SUFFIX_HASH
 } from "src/lib/LibExtrospectERC1167Proxy.sol";
 import {LibExtrospectionSlow} from "test/lib/LibExtrospectionSlow.sol";
 
@@ -163,6 +165,54 @@ contract LibExtrospectERC1167ProxyTest is Test {
         assertEq(ERC1167_PREFIX_LENGTH, 10);
         assertEq(ERC1167_SUFFIX_LENGTH, 15);
         assertEq(ERC1167_PROXY_LENGTH, 45);
+    }
+
+    /// The hash constants are literals, pinned here against the byte sequences
+    /// they are the hashes of.
+    function testERC1167ConstantHashes() external pure {
+        assertEq(ERC1167_PREFIX_HASH, keccak256(ERC1167_PREFIX));
+        assertEq(ERC1167_SUFFIX_HASH, keccak256(ERC1167_SUFFIX));
+    }
+
+    /// Asserts `isERC1167Proxy` leaves the free memory pointer where it found
+    /// it for `bytecode`.
+    function checkIsERC1167ProxyAllocatesNoMemory(bytes memory bytecode) internal pure {
+        uint256 fmpBefore;
+        uint256 fmpAfter;
+        assembly ("memory-safe") {
+            fmpBefore := mload(0x40)
+        }
+        LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        assembly ("memory-safe") {
+            fmpAfter := mload(0x40)
+        }
+        assertEq(fmpAfter, fmpBefore);
+    }
+
+    /// Bytecode of the wrong length allocates nothing.
+    function testIsERC1167ProxyAllocatesNoMemoryWrongLength() external pure {
+        checkIsERC1167ProxyAllocatesNoMemory(hex"00");
+    }
+
+    /// 45 bytes with a wrong prefix allocates nothing.
+    function testIsERC1167ProxyAllocatesNoMemoryWrongPrefix() external pure {
+        checkIsERC1167ProxyAllocatesNoMemory(
+            abi.encodePacked(bytes10(0), address(0), bytes15(hex"5af43d82803e903d91602b57fd5bf3"))
+        );
+    }
+
+    /// 45 bytes with a wrong suffix allocates nothing.
+    function testIsERC1167ProxyAllocatesNoMemoryWrongSuffix() external pure {
+        checkIsERC1167ProxyAllocatesNoMemory(
+            abi.encodePacked(bytes10(hex"363d3d373d3d3d363d73"), address(0), bytes15(0))
+        );
+    }
+
+    /// A real 45 byte proxy allocates nothing.
+    function testIsERC1167ProxyAllocatesNoMemorySuccess() external pure {
+        checkIsERC1167ProxyAllocatesNoMemory(
+            hex"363d3d373d3d3d363d7300000000000000000000000000000000000000005af43d82803e903d91602b57fd5bf3"
+        );
     }
 
     /// The implementation address must be masked to exactly 160 bits. The word
