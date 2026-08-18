@@ -123,6 +123,13 @@ library LibExtrospectBytecode {
     /// Checks that the bytecode of an account, after trimming Solidity CBOR
     /// metadata, matches an expected hash. Reverts if the metadata was not
     /// trimmed or if the hash does not match after trimming.
+    ///
+    /// An account whose code is exactly the 53 byte metadata trailer and
+    /// nothing else trims to an empty remainder, so `actual` is
+    /// `keccak256("")` for every such account. As the trailer's 34 byte IPFS
+    /// hash and 3 byte solc version are not constrained by the trim, an
+    /// `expected` of `keccak256("")` matches all of them and does not identify
+    /// any one of them.
     /// @param account The account whose bytecode to check.
     /// @param expected The expected hash of the trimmed bytecode.
     function checkCBORTrimmedBytecodeHash(address account, bytes32 expected) internal view {
