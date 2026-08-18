@@ -23,9 +23,8 @@ library LibExtrospectBytecode {
     /// @param actual The actual bytecode hash.
     error BytecodeHashMismatch(bytes32 expected, bytes32 actual);
 
-    /// Thrown when CBOR metadata is unexpectedly present in bytecode.
-    /// The common defense against the metamorphic metadata attack is to
-    /// compile without CBOR metadata entirely.
+    /// Thrown when bytecode ends in the one Solidity CBOR metadata layout that
+    /// `tryTrimSolidityCBORMetadata` matches.
     error UnexpectedMetadata();
 
     /// Returns whether the bytecode is in EOF format.
@@ -137,11 +136,22 @@ library LibExtrospectBytecode {
         }
     }
 
-    /// Checks that no standard Solidity CBOR metadata is present in the
-    /// bytecode of an account. Reverts if metadata is detected. This is the
-    /// inverse of `checkCBORTrimmedBytecodeHash` — use this when bytecode
-    /// should have been compiled without metadata (e.g. `cbor_metadata = false`
-    /// in foundry.toml) as a defense against the metamorphic metadata attack.
+    /// Reverts with `UnexpectedMetadata` when `tryTrimSolidityCBORMetadata`
+    /// matches the bytecode of an account, i.e. when the final 53 bytes are
+    /// exactly the `ipfs` + `solc` layout documented on that function. Reverts
+    /// with `EOFBytecodeNotSupported` when the bytecode is EOF. This fires on
+    /// the same match as `checkCBORTrimmedBytecodeHash`, in the opposite
+    /// direction: that function reverts when the match fails, this one reverts
+    /// when it succeeds.
+    ///
+    /// Every trailer `tryTrimSolidityCBORMetadata` does not match returns
+    /// without reverting, and that includes Solidity CBOR metadata in other
+    /// encodings: the solc-version-only trailer emitted when `bytecode_hash` is
+    /// `none` and `cbor_metadata` is left on, `bzzr1`/Swarm hashes, reordered
+    /// or additional CBOR map keys, and solc versions not encoded as `0x43`
+    /// plus three bytes. Returning without reverting therefore establishes that
+    /// this one layout is absent, not that the account carries no metadata.
+    ///
     /// @param account The account whose bytecode to check.
     //forge-lint: disable-next-line(mixed-case-function)
     function checkNoSolidityCBORMetadata(address account) internal view {

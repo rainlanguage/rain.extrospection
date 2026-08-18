@@ -14,6 +14,17 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
         LibExtrospectBytecode.checkNoSolidityCBORMetadata(account);
     }
 
+    /// Whether `code` opens with the EIP-7702 delegation designator prefix
+    /// `0xEF01`. `vm.etch` rejects such code unless it is exactly 23 bytes
+    /// long, so fuzz inputs carrying this prefix are not etchable.
+    function isEip7702Prefixed(bytes memory code) internal pure returns (bool isPrefixed) {
+        if (code.length >= 2) {
+            assembly ("memory-safe") {
+                isPrefixed := eq(and(mload(add(code, 2)), 0xFFFF), 0xEF01)
+            }
+        }
+    }
+
     /// Account with no code passes (no metadata to detect).
     function testCheckNoMetadataEmptyAccount() external view {
         LibExtrospectBytecode.checkNoSolidityCBORMetadata(address(0xdead));
@@ -50,6 +61,7 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
         vm.assume(code.length > 0);
         vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
         vm.assume(!LibExtrospectBytecode.tryTrimSolidityCBORMetadata(code));
+        vm.assume(!isEip7702Prefixed(code));
 
         address target = address(0xBEEF);
         vm.etch(target, code);
@@ -74,6 +86,7 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
 
         bytes memory withMetadata =
             bytes.concat(code, hex"a264697066735822", ipfsHash, hex"64736f6c6343", solcVersion, hex"0033");
+        vm.assume(!isEip7702Prefixed(withMetadata));
 
         address target = address(0xBEEF);
         vm.etch(target, withMetadata);
