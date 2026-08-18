@@ -9,6 +9,10 @@ import {EmptyContract} from "test/concrete/EmptyContract.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
 import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
 import {WrongLengthBeacon} from "test/concrete/WrongLengthBeacon.sol";
+import {
+    RevertingWithAddressBeacon,
+    REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
+} from "test/concrete/RevertingWithAddressBeacon.sol";
 
 /// @title LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest
 /// @notice Tests `LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode`.
@@ -107,6 +111,19 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
     /// start of an empty `string memory` encoding.
     function testReturnsFalseOnWrongLengthReturn() external {
         WrongLengthBeacon beacon = new WrongLengthBeacon();
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+    }
+
+    /// A beacon whose `implementation()` reverts with exactly 32 bytes
+    /// that decode cleanly as an address must still fail the predicate.
+    /// The revert data is byte-identical to a successful `address`
+    /// return, so only the staticcall's `success` flag separates the
+    /// two: a wrapper that ignored `success` would decode
+    /// `REVERTING_WITH_ADDRESS_BEACON_PAYLOAD`, whose (absent) code
+    /// hashes to `keccak256("")`, and return true here.
+    function testReturnsFalseOnRevertWithAddressSizedData() external {
+        RevertingWithAddressBeacon beacon = new RevertingWithAddressBeacon();
+        assertEq(keccak256(REVERTING_WITH_ADDRESS_BEACON_PAYLOAD.code), keccak256(""));
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
     }
 }
