@@ -6,6 +6,7 @@ import {Test} from "forge-std-1.16.1/src/Test.sol";
 import {LibExtrospectERC1967BeaconProxy} from "src/lib/LibExtrospectERC1967BeaconProxy.sol";
 import {MockBeacon} from "test/concrete/MockBeacon.sol";
 import {EmptyContract} from "test/concrete/EmptyContract.sol";
+import {CallerKeyedBeacon} from "test/concrete/CallerKeyedBeacon.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
 import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
 import {WrongLengthBeacon} from "test/concrete/WrongLengthBeacon.sol";
@@ -99,5 +100,24 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
         assertFalse(
             LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), REVERTING_WITH_ADDRESS_BEACON_PAYLOAD)
         );
+    }
+
+    /// The predicate reports the owner the beacon returns to
+    /// `msg.sender`. A beacon that keys `owner()` off its caller flips
+    /// the predicate for the caller it singles out, with no state
+    /// change between the two calls.
+    function testOwnerIsTheBeaconAnswerToTheCaller() external {
+        address singledOut = address(uint160(0xBEEF));
+        address defaultOwner = address(uint160(0xA11CE));
+        address singledOutOwner = address(uint160(0xBAD));
+        CallerKeyedBeacon beacon = new CallerKeyedBeacon(singledOut, defaultOwner, singledOutOwner);
+
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), defaultOwner));
+
+        vm.prank(singledOut);
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), defaultOwner));
+
+        vm.prank(singledOut);
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), singledOutOwner));
     }
 }

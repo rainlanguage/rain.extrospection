@@ -23,10 +23,13 @@ bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.
 ///
 /// What's possible from a runtime contract context (no cheat codes):
 ///
-/// - Read a beacon's implementation via `IBeacon.implementation()` —
-///   well-defined interface, callable from anywhere.
-/// - Read a beacon's owner via `Ownable.owner()` — de-facto convention
-///   for beacons that inherit OZ `Ownable` or equivalent.
+/// - Read what a beacon answers to `IBeacon.implementation()` —
+///   well-defined interface, callable from anywhere. It is an ordinary
+///   function rather than a storage read, so the answer is the beacon's
+///   own and may be keyed off `msg.sender`.
+/// - Read what a beacon answers to `Ownable.owner()` — de-facto
+///   convention for beacons that inherit OZ `Ownable` or equivalent.
+///   Also an ordinary function, with the same caller sensitivity.
 /// - Hash a contract's runtime bytecode via `keccak256(addr.code)` to
 ///   compare against an expected template.
 ///
@@ -42,34 +45,47 @@ bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.
 /// The slot constants are exported so callers that have storage access
 /// elsewhere use a single canonical source for the slot addresses.
 library LibExtrospectERC1967BeaconProxy {
-    /// @notice Verify that a beacon's current implementation has runtime
-    /// bytecode matching `expectedRuntimeHash`. Useful for asserting a
-    /// known-good implementation is behind the beacon without trusting
-    /// any storage-side state. A target that doesn't expose
-    /// `implementation()` (or whose call reverts) is not a valid beacon
-    /// and trivially fails the check — returns false rather than
+    /// @notice Report whether the address `beacon` returns from
+    /// `implementation()` to `msg.sender` has runtime bytecode matching
+    /// `expectedRuntimeHash`. The answer is the beacon's, not a storage
+    /// slot this library reads, so the result holds for the calling
+    /// contract only: a beacon that keys `implementation()` off
+    /// `msg.sender` returns true here and serves a different
+    /// implementation to the proxies it fronts, in the same
+    /// transaction. `Extrospect` calls the beacon as itself, so its
+    /// answer and this library's answer, invoked from a different
+    /// contract, can differ for the same beacon. A target that doesn't
+    /// expose `implementation()` (or whose call reverts) is not a valid
+    /// beacon and trivially fails the check — returns false rather than
     /// reverting, so integrators can collapse the predicate into a
     /// single boolean assertion.
     /// @param beacon The beacon address to query.
     /// @param expectedRuntimeHash The expected `keccak256` of the
     /// implementation's runtime bytecode.
-    /// @return True if the beacon's current implementation has matching
-    /// runtime bytecode. False if the call to `implementation()` fails
-    /// for any reason.
+    /// @return True if the implementation the beacon returns to
+    /// `msg.sender` has matching runtime bytecode. False if the call to
+    /// `implementation()` fails for any reason.
     function isBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash) internal view returns (bool) {
         (bool ok, address impl) = _tryGetAddress(beacon, IBeacon.implementation.selector);
         return ok && keccak256(impl.code) == expectedRuntimeHash;
     }
 
-    /// @notice Verify that `beacon`'s current owner equals
-    /// `expectedOwner`. A target that doesn't expose `owner()` (or
-    /// whose call reverts) is not a valid beacon and trivially fails
-    /// the check — returns false rather than reverting, so integrators
-    /// can collapse the predicate into a single boolean assertion.
+    /// @notice Report whether the address `beacon` returns from
+    /// `owner()` to `msg.sender` equals `expectedOwner`. The answer is
+    /// the beacon's, not a storage slot this library reads, so the
+    /// result holds for the calling contract only: a beacon that keys
+    /// `owner()` off `msg.sender` returns true here while reporting a
+    /// different owner to everyone else. `Extrospect` calls the beacon
+    /// as itself, so its answer and this library's answer, invoked from
+    /// a different contract, can differ for the same beacon. A target
+    /// that doesn't expose `owner()` (or whose call reverts) is not a
+    /// valid beacon and trivially fails the check — returns false
+    /// rather than reverting, so integrators can collapse the predicate
+    /// into a single boolean assertion.
     /// @param beacon The beacon address to query.
     /// @param expectedOwner The owner address the beacon should report.
-    /// @return True if the ownership matches. False if the call to
-    /// `owner()` fails for any reason.
+    /// @return True if the owner the beacon reports to `msg.sender`
+    /// matches. False if the call to `owner()` fails for any reason.
     function isBeaconOwner(address beacon, address expectedOwner) internal view returns (bool) {
         (bool ok, address own) = _tryGetAddress(beacon, IOwnable.owner.selector);
         return ok && own == expectedOwner;

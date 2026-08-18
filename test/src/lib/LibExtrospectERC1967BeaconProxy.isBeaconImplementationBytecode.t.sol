@@ -6,6 +6,7 @@ import {Test} from "forge-std-1.16.1/src/Test.sol";
 import {LibExtrospectERC1967BeaconProxy} from "src/lib/LibExtrospectERC1967BeaconProxy.sol";
 import {MockBeacon} from "test/concrete/MockBeacon.sol";
 import {EmptyContract} from "test/concrete/EmptyContract.sol";
+import {CallerKeyedBeacon} from "test/concrete/CallerKeyedBeacon.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
 import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
 import {WrongLengthBeacon} from "test/concrete/WrongLengthBeacon.sol";
@@ -125,5 +126,26 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         RevertingWithAddressBeacon beacon = new RevertingWithAddressBeacon();
         assertEq(keccak256(REVERTING_WITH_ADDRESS_BEACON_PAYLOAD.code), keccak256(""));
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+    }
+
+    /// The predicate reports the implementation the beacon returns to
+    /// `msg.sender`. A beacon that keys `implementation()` off its
+    /// caller flips the predicate for the caller it singles out, with
+    /// no state change between the two calls.
+    function testImplementationIsTheBeaconAnswerToTheCaller() external {
+        EmptyContract impl = new EmptyContract();
+        address singledOut = address(uint160(0xBEEF));
+        CallerKeyedBeacon beacon = new CallerKeyedBeacon(singledOut, address(impl), address(0));
+        bytes32 defaultHash = keccak256(address(impl).code);
+        bytes32 singledOutHash = keccak256("");
+        assertTrue(defaultHash != singledOutHash);
+
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), defaultHash));
+
+        vm.prank(singledOut);
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), defaultHash));
+
+        vm.prank(singledOut);
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), singledOutHash));
     }
 }
