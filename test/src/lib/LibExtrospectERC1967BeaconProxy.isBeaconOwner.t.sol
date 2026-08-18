@@ -9,6 +9,7 @@ import {EmptyContract} from "test/concrete/EmptyContract.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
 import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
 import {WrongLengthBeacon} from "test/concrete/WrongLengthBeacon.sol";
+import {PermissiveFallbackContract} from "test/concrete/PermissiveFallbackContract.sol";
 import {
     RevertingWithAddressBeacon,
     REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
@@ -30,8 +31,8 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), wrong));
     }
 
-    /// A target that doesn't expose `owner()` is not a valid beacon
-    /// and trivially fails the predicate. Returns false rather than
+    /// A target with no `owner()` function and no fallback reverts the
+    /// staticcall, so it fails the predicate. Returns false rather than
     /// reverting so integrators can collapse the check to a single
     /// boolean assertion.
     function testReturnsFalseOnNonOwnable(address expected) external {
@@ -99,5 +100,30 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
         assertFalse(
             LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), REVERTING_WITH_ADDRESS_BEACON_PAYLOAD)
         );
+    }
+
+    /// A target with no `owner()` function, but a fallback answering
+    /// every selector with 32 clean bytes, passes the predicate. The
+    /// fallback's return is byte-identical to a real `owner()` return,
+    /// so the staticcall cannot separate the two. A comparison against
+    /// any other address still fails, so the predicate is comparing
+    /// the fallback's answer rather than ignoring it.
+    function testAcceptsPermissiveFallbackAsOwner(address answer, address other) external {
+        vm.assume(other != answer);
+        PermissiveFallbackContract target = new PermissiveFallbackContract(answer);
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(target), answer));
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(target), other));
+    }
+
+    /// Non-fuzz pin at `answer = address(0)`: a fallback answering with
+    /// 32 zero bytes reports `address(0)` as the owner, which the
+    /// predicate accepts as a match for an `expectedOwner` of
+    /// `address(0)`. The result is the same one a beacon that reports
+    /// `address(0)` from a real `owner()` produces.
+    function testAcceptsZeroReturningFallbackAsOwner() external {
+        PermissiveFallbackContract target = new PermissiveFallbackContract(address(0));
+        MockBeacon beacon = new MockBeacon(address(this), address(0));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(target), address(0)));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), address(0)));
     }
 }
