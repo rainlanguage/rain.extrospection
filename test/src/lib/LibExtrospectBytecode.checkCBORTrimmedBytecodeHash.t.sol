@@ -121,4 +121,33 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
         vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.MetadataNotTrimmed.selector));
         this.externalCheckCBORTrimmedBytecodeHash(target, anyHash);
     }
+
+    /// `expected` covers only the bytecode left after trimming. Two accounts
+    /// whose code differs only in the 37 unconstrained trailer bytes satisfy
+    /// the same `expected` hash, including when one of them fills those bytes
+    /// with `JUMPDEST` and `SELFDESTRUCT`.
+    function testCheckCBORTrimmedBytecodeHashIgnoresUnconstrainedTrailerBytes() external {
+        bytes memory body = hex"6080604052600080fdfe";
+
+        bytes memory ipfsZero = new bytes(34);
+        bytes memory ipfsExecutable = new bytes(34);
+        for (uint256 i = 0; i < 34; i++) {
+            ipfsExecutable[i] = i % 2 == 0 ? bytes1(0x5B) : bytes1(0xFF);
+        }
+
+        bytes memory codeZero =
+            bytes.concat(body, hex"a264697066735822", ipfsZero, hex"64736f6c6343", hex"000819", hex"0033");
+        bytes memory codeExecutable =
+            bytes.concat(body, hex"a264697066735822", ipfsExecutable, hex"64736f6c6343", hex"FFFFFF", hex"0033");
+        assertTrue(keccak256(codeZero) != keccak256(codeExecutable), "distinct bytecode");
+
+        address zero = address(0xA11CE);
+        address executable = address(0xB0B);
+        vm.etch(zero, codeZero);
+        vm.etch(executable, codeExecutable);
+
+        bytes32 expected = keccak256(body);
+        LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(zero, expected);
+        LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(executable, expected);
+    }
 }

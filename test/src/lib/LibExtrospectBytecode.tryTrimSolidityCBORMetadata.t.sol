@@ -143,4 +143,28 @@ contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
         vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
         this.tryTrimSolidityCBORMetadataExternal(eofBytecode);
     }
+
+    /// Exactly 16 of the 53 trailer bytes are constrained: offsets 0-7, 42-47
+    /// and 51-52. Flipping any one of those stops the trailer being
+    /// recognised. Flipping any of the other 37 leaves it recognised and
+    /// trimmed.
+    function testTryTrimSolidityCBORMetadataConstrainedTrailerBytes() external pure {
+        bytes memory base = SOLIDITY_CBOR_RUNTIME_FIXTURE;
+        uint256 trailerStart = base.length - 53;
+        uint256 constrainedCount = 0;
+        for (uint256 i = 0; i < 53; i++) {
+            bool constrained = i < 8 || (i >= 42 && i < 48) || i >= 51;
+            if (constrained) {
+                constrainedCount++;
+            }
+
+            bytes memory candidate = bytes.concat(base);
+            candidate[trailerStart + i] = bytes1(uint8(candidate[trailerStart + i]) ^ 0xFF);
+            string memory offset = string.concat("trailer offset ", vm.toString(i));
+
+            assertEq(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(candidate), !constrained, offset);
+            assertEq(candidate.length, constrained ? base.length : trailerStart, offset);
+        }
+        assertEq(constrainedCount, 16, "constrained trailer bytes");
+    }
 }
