@@ -15,11 +15,12 @@ uint256 constant SOLIDITY_CBOR_METADATA_LENGTH = 53;
 
 /// @dev Mask for the first of the two overlapping 32-byte words that cover the
 /// final `SOLIDITY_CBOR_METADATA_LENGTH` bytes of bytecode. That word holds the
-/// 11 bytes of bytecode preceding the metadata followed by metadata bytes 0-20.
-/// The mask keeps metadata bytes 0-7 (`a2` map header, `64` text header,
-/// `69706673` as `ipfs`, `5822` byte string header) and zeros both the 11
-/// preceding bytecode bytes and metadata bytes 8-20, which are the first 13
-/// bytes of the 34-byte IPFS hash.
+/// 11 bytes preceding the metadata in memory, which are bytecode unless the
+/// bytecode is shorter than 64 bytes, followed by metadata bytes 0-20. The mask
+/// keeps metadata bytes 0-7 (`a2` map header, `64` text header, `69706673` as
+/// `ipfs`, `5822` byte string header) and zeros both those 11 preceding bytes
+/// and metadata bytes 8-20, which are the first 13 bytes of the 34-byte IPFS
+/// hash.
 //slither-disable-next-line too-many-digits
 uint256 constant SOLIDITY_CBOR_METADATA_HEAD_MASK = 0xFFFFFFFFFFFFFFFF00000000000000000000000000;
 

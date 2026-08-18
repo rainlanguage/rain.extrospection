@@ -13,7 +13,7 @@ import {SOLIDITY_CBOR_RUNTIME_FIXTURE} from "test/concrete/SolidityCBORFixture.s
 
 /// @dev The two 32-byte words that the head and tail masks leave behind for
 /// bytecode ending in standard Solidity CBOR metadata. The head word is 11
-/// zeroed bytes of preceding bytecode, then metadata bytes 0-7
+/// zeroed bytes preceding the metadata, then metadata bytes 0-7
 /// `a2 64 69706673 5822`, then 13 zeroed bytes of IPFS hash.
 bytes32 constant EXPECTED_MASKED_HEAD_WORD = 0x0000000000000000000000a26469706673582200000000000000000000000000;
 
@@ -22,13 +22,13 @@ bytes32 constant EXPECTED_MASKED_HEAD_WORD = 0x0000000000000000000000a2646970667
 /// then metadata bytes 51-52 `0033`.
 bytes32 constant EXPECTED_MASKED_TAIL_WORD = 0x00000000000000000000000000000000000000000064736f6c63430000000033;
 
-/// @dev Number of bytes of bytecode that precede the metadata inside the first
+/// @dev Number of bytes that precede the metadata inside the first
 /// of the two overlapping 32-byte reads.
 uint256 constant HEAD_WORD_PREFIX_LENGTH = 11;
 
 contract LibExtrospectBytecodeConstantsTest is Test {
     /// Builds the 64 bytes that the two overlapping reads cover: an arbitrary
-    /// 11-byte bytecode prefix followed by 53 bytes of metadata, then returns
+    /// 11-byte prefix followed by 53 bytes of metadata, then returns
     /// the two words with the pinned masks applied.
     function maskWindow(bytes memory prefix, bytes memory metadata)
         internal
@@ -59,7 +59,7 @@ contract LibExtrospectBytecodeConstantsTest is Test {
     }
 
     /// The masks zero every byte outside the fixed CBOR structure, including
-    /// the bytecode that precedes the metadata, the 34-byte IPFS hash and the
+    /// the 11 bytes that precede the metadata, the 34-byte IPFS hash and the
     /// 3-byte solc version, when all of those bytes are set.
     function testSolidityCBORMetadataMasksZeroVariableBytes() external pure {
         bytes memory ipfsHash = new bytes(34);
