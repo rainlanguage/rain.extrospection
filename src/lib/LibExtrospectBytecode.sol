@@ -40,7 +40,8 @@ library LibExtrospectBytecode {
         }
     }
 
-    /// Checks that the bytecode is not in EOF format. Reverts if it is.
+    /// Checks that the bytecode is not in EOF format. Reverts with
+    /// `EOFBytecodeNotSupported` if it is.
     /// @param bytecode The bytecode to check.
     //forge-lint: disable-next-line(mixed-case-function)
     function checkNotEOFBytecode(bytes memory bytecode) internal pure {
@@ -76,8 +77,8 @@ library LibExtrospectBytecode {
     ///
     /// NOTE bytecode is mutated in place.
     ///
-    /// NOTE EOF bytecode is not supported by this function and will cause a
-    /// revert.
+    /// NOTE EOF bytecode is not supported by this function and reverts with
+    /// `EOFBytecodeNotSupported`.
     ///
     /// NOTE this function makes some large assumptions about the structure of
     /// the metadata. It probably won't trim metadata inappropriately because it
@@ -121,8 +122,13 @@ library LibExtrospectBytecode {
     }
 
     /// Checks that the bytecode of an account, after trimming Solidity CBOR
-    /// metadata, matches an expected hash. Reverts if the metadata was not
-    /// trimmed or if the hash does not match after trimming.
+    /// metadata, matches an expected hash. Reverts with `MetadataNotTrimmed` if
+    /// the metadata was not trimmed, or with `BytecodeHashMismatch` if the hash
+    /// does not match after trimming.
+    ///
+    /// NOTE EOF bytecode is not supported by this function and reverts with
+    /// `EOFBytecodeNotSupported` before either of the above are reached.
+    ///
     /// @param account The account whose bytecode to check.
     /// @param expected The expected hash of the trimmed bytecode.
     function checkCBORTrimmedBytecodeHash(address account, bytes32 expected) internal view {
@@ -138,10 +144,17 @@ library LibExtrospectBytecode {
     }
 
     /// Checks that no standard Solidity CBOR metadata is present in the
-    /// bytecode of an account. Reverts if metadata is detected. This is the
-    /// inverse of `checkCBORTrimmedBytecodeHash` — use this when bytecode
-    /// should have been compiled without metadata (e.g. `cbor_metadata = false`
-    /// in foundry.toml) as a defense against the metamorphic metadata attack.
+    /// bytecode of an account. Reverts with `UnexpectedMetadata` if metadata is
+    /// detected. This is the inverse of `checkCBORTrimmedBytecodeHash` — use
+    /// this when bytecode should have been compiled without metadata (e.g.
+    /// `cbor_metadata = false` in foundry.toml) as a defense against the
+    /// metamorphic metadata attack.
+    ///
+    /// NOTE EOF bytecode is not supported by this function. An account whose
+    /// bytecode is EOF reverts with `EOFBytecodeNotSupported` rather than
+    /// passing or reverting with `UnexpectedMetadata`, so this function does not
+    /// answer the metadata question for EOF accounts at all.
+    ///
     /// @param account The account whose bytecode to check.
     //forge-lint: disable-next-line(mixed-case-function)
     function checkNoSolidityCBORMetadata(address account) internal view {
@@ -215,6 +228,8 @@ library LibExtrospectBytecode {
     /// Scans all opcodes present in bytecode, respecting PUSH* inline data.
     /// Adapted from
     /// https://github.com/a16z/metamorphic-contract-detector/blob/main/metamorphic_detect/opcodes.py#L52
+    /// NOTE: Reverts with `EOFBytecodeNotSupported` if the bytecode is EOF
+    /// (EIP-7692).
     /// @param bytecode The bytecode to scan.
     /// @return bytesPresent A `uint256` where each bit represents the presence
     /// of an opcode in the source bytecode.
