@@ -51,6 +51,11 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
         vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
         vm.assume(!LibExtrospectBytecode.tryTrimSolidityCBORMetadata(code));
 
+        // vm.etch treats bytecode whose first two bytes are 0xef01 as an
+        // EIP-7702 delegation designator and rejects it unless it is exactly
+        // 23 bytes.
+        vm.assume(code.length < 2 || code.length == 23 || uint8(code[0]) != 0xEF || uint8(code[1]) != 0x01);
+
         address target = address(0xBEEF);
         vm.etch(target, code);
         LibExtrospectBytecode.checkNoSolidityCBORMetadata(target);
@@ -74,6 +79,11 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
 
         bytes memory withMetadata =
             bytes.concat(code, hex"a264697066735822", ipfsHash, hex"64736f6c6343", solcVersion, hex"0033");
+
+        // vm.etch treats bytecode whose first two bytes are 0xef01 as an
+        // EIP-7702 delegation designator and rejects it unless it is exactly
+        // 23 bytes. withMetadata is always at least 53 bytes.
+        vm.assume(uint8(withMetadata[0]) != 0xEF || uint8(withMetadata[1]) != 0x01);
 
         address target = address(0xBEEF);
         vm.etch(target, withMetadata);
