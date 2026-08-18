@@ -5,6 +5,7 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std-1.16.1/src/Test.sol";
 import {LibExtrospectTestProd} from "test/lib/LibExtrospectTestProd.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
+import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
 
 contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
     address constant PROD_ARBITRUM_CLONE_FACTORY_ADDRESS_V1 = address(0xe01Db32B1E03976b24e3A948A560f4b97Dd732dA);
@@ -86,7 +87,7 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
 
         // Etch the bytecode onto an address.
         address target = address(0xBEEF);
-        vm.etch(target, withMetadata);
+        LibExtrospectTestEtch.assumeEtch(vm, target, withMetadata);
 
         // Correct hash should succeed.
         LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(target, expectedHash);
@@ -116,7 +117,7 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
         vm.assume(!LibExtrospectBytecode.tryTrimSolidityCBORMetadata(code));
 
         address target = address(0xBEEF);
-        vm.etch(target, code);
+        LibExtrospectTestEtch.assumeEtch(vm, target, code);
 
         vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.MetadataNotTrimmed.selector));
         this.externalCheckCBORTrimmedBytecodeHash(target, anyHash);

@@ -6,6 +6,7 @@ import {Test} from "forge-std-1.16.1/src/Test.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 import {SOLIDITY_CBOR_RUNTIME_FIXTURE} from "test/concrete/SolidityCBORFixture.sol";
+import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
 
 contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
     /// External wrapper for revert tests.
@@ -52,7 +53,7 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
         vm.assume(!LibExtrospectBytecode.tryTrimSolidityCBORMetadata(code));
 
         address target = address(0xBEEF);
-        vm.etch(target, code);
+        LibExtrospectTestEtch.assumeEtch(vm, target, code);
         LibExtrospectBytecode.checkNoSolidityCBORMetadata(target);
     }
 
@@ -76,7 +77,7 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
             bytes.concat(code, hex"a264697066735822", ipfsHash, hex"64736f6c6343", solcVersion, hex"0033");
 
         address target = address(0xBEEF);
-        vm.etch(target, withMetadata);
+        LibExtrospectTestEtch.assumeEtch(vm, target, withMetadata);
         vm.expectRevert(LibExtrospectBytecode.UnexpectedMetadata.selector);
         this.checkNoSolidityCBORMetadataExternal(target);
     }
