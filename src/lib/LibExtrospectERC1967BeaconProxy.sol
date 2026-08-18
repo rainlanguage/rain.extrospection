@@ -84,19 +84,33 @@ library LibExtrospectERC1967BeaconProxy {
     /// catches the first three but lets the dirty-address Panic
     /// escape, so we go through the low-level call to fold all four
     /// into a single boolean.
+    ///
+    /// The call forwards all remaining gas.
+    ///
+    /// The call discards its return data. The size is read from
+    /// `returndatasize()` and at most 32 bytes are ever copied into
+    /// memory, so the caller's memory cost is the same constant for
+    /// every target, whatever the target returns.
     function _tryGetAddress(address target, bytes4 selector) private view returns (bool, address) {
         // Low-level staticcall is required to validate return-data length
         // and reject dirty address bits ourselves; high-level
         // `try IBeacon(...).implementation() returns (address)` lets the
         // dirty-address Panic escape past the catch.
-        //slither-disable-next-line low-level-calls
-        (bool success, bytes memory returnData) = target.staticcall(abi.encodeWithSelector(selector));
-        if (!success || returnData.length != 32) return (false, address(0));
+        uint256 ok;
         uint256 raw;
         assembly ("memory-safe") {
-            raw := mload(add(returnData, 0x20))
+            // Scratch space at 0x00 holds the 4 byte calldata, then the
+            // 32 bytes of return data. `selector` is left aligned in its
+            // word, so the 4 selector bytes land at 0x00.
+            mstore(0, selector)
+            ok := staticcall(gas(), target, 0, 4, 0, 0)
+            ok := and(ok, eq(returndatasize(), 0x20))
+            if ok {
+                returndatacopy(0, 0, 0x20)
+                raw := mload(0)
+            }
         }
-        if (raw > type(uint160).max) return (false, address(0));
+        if (ok == 0 || raw > type(uint160).max) return (false, address(0));
         return (true, address(uint160(raw)));
     }
 }
