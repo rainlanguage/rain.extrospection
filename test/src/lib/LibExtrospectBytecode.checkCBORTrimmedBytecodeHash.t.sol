@@ -40,8 +40,10 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
     /// Test that an empty account (no deployed code) reverts with
     /// MetadataNotTrimmed since there is no metadata to trim.
     function testCheckCBORTrimmedBytecodeHashEmptyAccount() external {
+        address codeless = address(0xdead);
+        assertEq(codeless.code.length, 0);
         vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.MetadataNotTrimmed.selector));
-        this.externalCheckCBORTrimmedBytecodeHash(address(0xdead), bytes32(0));
+        this.externalCheckCBORTrimmedBytecodeHash(codeless, bytes32(0));
     }
 
     function testCheckCBORTrimmedBytecodeHashMetadataNotTrimmed() external {

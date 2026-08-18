@@ -123,6 +123,10 @@ library LibExtrospectBytecode {
     /// Checks that the bytecode of an account, after trimming Solidity CBOR
     /// metadata, matches an expected hash. Reverts if the metadata was not
     /// trimmed or if the hash does not match after trimming.
+    /// An account with no code — an externally owned account, an unoccupied
+    /// `CREATE2` target, or a self-destructed account — reads as empty
+    /// bytecode, which is too short to carry metadata, so it reverts
+    /// `MetadataNotTrimmed` before any hash is compared.
     /// @param account The account whose bytecode to check.
     /// @param expected The expected hash of the trimmed bytecode.
     function checkCBORTrimmedBytecodeHash(address account, bytes32 expected) internal view {
@@ -142,6 +146,12 @@ library LibExtrospectBytecode {
     /// inverse of `checkCBORTrimmedBytecodeHash` — use this when bytecode
     /// should have been compiled without metadata (e.g. `cbor_metadata = false`
     /// in foundry.toml) as a defense against the metamorphic metadata attack.
+    /// An account with no code — an externally owned account, an unoccupied
+    /// `CREATE2` target, or a self-destructed account — reads as empty
+    /// bytecode, which carries no metadata, so it passes on the same terms as
+    /// an account whose code was compiled without metadata. Whether the account
+    /// has any code at all is not checked here, so the two account-taking
+    /// checks answer a codeless account in opposite directions.
     /// @param account The account whose bytecode to check.
     //forge-lint: disable-next-line(mixed-case-function)
     function checkNoSolidityCBORMetadata(address account) internal view {

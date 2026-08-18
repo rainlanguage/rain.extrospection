@@ -16,7 +16,9 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
 
     /// Account with no code passes (no metadata to detect).
     function testCheckNoMetadataEmptyAccount() external view {
-        LibExtrospectBytecode.checkNoSolidityCBORMetadata(address(0xdead));
+        address codeless = address(0xdead);
+        assertEq(codeless.code.length, 0);
+        LibExtrospectBytecode.checkNoSolidityCBORMetadata(codeless);
     }
 
     /// Contract compiled without metadata passes. This project compiles with

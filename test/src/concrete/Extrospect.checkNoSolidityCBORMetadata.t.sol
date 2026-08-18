@@ -14,8 +14,10 @@ contract ExtrospectCheckNoSolidityCBORMetadataTest is ExtrospectEquivalence {
 
     function testCheckNoSolidityCBORMetadataEquivalencePass() external view {
         // Account with no code passes both.
-        extrospect.checkNoSolidityCBORMetadata(address(0xdead));
-        LibExtrospectBytecode.checkNoSolidityCBORMetadata(address(0xdead));
+        address codeless = address(0xdead);
+        assertEq(codeless.code.length, 0);
+        extrospect.checkNoSolidityCBORMetadata(codeless);
+        LibExtrospectBytecode.checkNoSolidityCBORMetadata(codeless);
     }
 
     function testCheckNoSolidityCBORMetadataEquivalenceRevert() external {
