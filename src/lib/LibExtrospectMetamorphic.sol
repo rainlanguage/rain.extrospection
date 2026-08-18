@@ -7,8 +7,7 @@ import {METAMORPHIC_OPS} from "./EVMOpcodes.sol";
 
 /// @title LibExtrospectMetamorphic
 /// @notice Detection and guarding against metamorphic contract risk. Scans
-/// bytecode for reachable opcodes that could enable a contract to be destroyed
-/// and redeployed with different code at the same address.
+/// bytecode for reachable opcodes in `METAMORPHIC_OPS`.
 library LibExtrospectMetamorphic {
     /// Thrown when metamorphic risk opcodes are reachable in bytecode.
     /// @param riskyOpcodes Bitmap of reachable metamorphic opcodes.

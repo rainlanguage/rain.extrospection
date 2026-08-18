@@ -193,15 +193,13 @@ uint256 constant HALTING_BITMAP = (1 << EVM_OP_STOP) | (1 << EVM_OP_RETURN) | (1
     //forge-lint: disable-next-line(incorrect-shift)
     | (1 << EVM_OP_JUMP);
 
-/// @dev Bitmap of opcodes that indicate metamorphic risk. A contract with any
-/// of these opcodes reachable could potentially be destroyed and redeployed
-/// with different code at the same address.
-/// - SELFDESTRUCT: direct contract destruction
-/// - DELEGATECALL: can execute arbitrary code (including SELFDESTRUCT) in the
-///   contract's own context
-/// - CALLCODE: deprecated equivalent of DELEGATECALL
-/// - CREATE: can deploy child contracts
-/// - CREATE2: can deploy children at deterministic (reusable) addresses
+/// @dev Bitmap of opcodes that indicate metamorphic risk. Members: SELFDESTRUCT,
+/// DELEGATECALL, CALLCODE, CREATE, CREATE2.
+/// `LibExtrospectMetamorphic.scanMetamorphicRisk` masks a reachable-opcode scan
+/// against this bitmap and `checkNotMetamorphic` rejects any bytecode with a
+/// non-zero result. Membership is by opcode alone and is not conditioned on
+/// whether the bytecode's own code can in fact be replaced, so bytecode that
+/// only deploys child contracts is rejected for CREATE or CREATE2.
 //forge-lint: disable-next-line(incorrect-shift)
 uint256 constant METAMORPHIC_OPS = (1 << EVM_OP_SELFDESTRUCT) | (1 << EVM_OP_DELEGATECALL)
     //forge-lint: disable-next-line(incorrect-shift)

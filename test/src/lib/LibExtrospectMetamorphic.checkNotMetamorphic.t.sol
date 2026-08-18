@@ -5,6 +5,7 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std-1.16.1/src/Test.sol";
 import {LibExtrospectMetamorphic} from "src/lib/LibExtrospectMetamorphic.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
+import {EVM_OP_CREATE, EVM_OP_CREATE2} from "src/lib/EVMOpcodes.sol";
 import {METAMORPHIC_METADATA} from "test/lib/LibExtrospectBytecode.testConstants.sol";
 import {HasSelfdestruct} from "test/concrete/HasSelfdestruct.sol";
 import {HasDelegatecall} from "test/concrete/HasDelegatecall.sol";
@@ -12,6 +13,8 @@ import {HasCreate2} from "test/concrete/HasCreate2.sol";
 import {HasCallcode} from "test/concrete/HasCallcode.sol";
 import {HasCreate} from "test/concrete/HasCreate.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
+import {CreateChildFactory} from "test/concrete/CreateChildFactory.sol";
+import {Create2ChildFactory} from "test/concrete/Create2ChildFactory.sol";
 
 contract LibExtrospectMetamorphicCheckNotMetamorphicTest is Test {
     /// External wrapper for revert tests.
@@ -78,6 +81,30 @@ contract LibExtrospectMetamorphicCheckNotMetamorphicTest is Test {
         HasCreate c = new HasCreate();
         bytes memory code = address(c).code;
         uint256 risk = LibExtrospectMetamorphic.scanMetamorphicRisk(code);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectMetamorphic.Metamorphic.selector, risk));
+        this.checkNotMetamorphicExternal(code);
+    }
+
+    /// A factory that deploys a single fixed child type with CREATE is rejected,
+    /// with the CREATE bit alone reported.
+    function testCheckNotMetamorphicRevertsOnCreateChildFactory() external {
+        CreateChildFactory factory = new CreateChildFactory();
+        bytes memory code = address(factory).code;
+        //forge-lint: disable-next-line(incorrect-shift)
+        uint256 risk = 1 << uint256(EVM_OP_CREATE);
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(code), risk);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectMetamorphic.Metamorphic.selector, risk));
+        this.checkNotMetamorphicExternal(code);
+    }
+
+    /// A factory that deploys a single fixed child type with CREATE2 is rejected,
+    /// with the CREATE2 bit alone reported.
+    function testCheckNotMetamorphicRevertsOnCreate2ChildFactory() external {
+        Create2ChildFactory factory = new Create2ChildFactory();
+        bytes memory code = address(factory).code;
+        //forge-lint: disable-next-line(incorrect-shift)
+        uint256 risk = 1 << uint256(EVM_OP_CREATE2);
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(code), risk);
         vm.expectRevert(abi.encodeWithSelector(LibExtrospectMetamorphic.Metamorphic.selector, risk));
         this.checkNotMetamorphicExternal(code);
     }
