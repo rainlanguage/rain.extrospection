@@ -32,6 +32,9 @@ nix develop -c rainix-sol-legal
 nix develop -c forge test
 nix develop -c forge test --match-contract LibExtrospectBytecodeIsEOFBytecodeTest
 nix develop -c forge test --match-test testFoo
+
+# Mutation / coverage campaigns — see .claude/rules/mutation-profile.md
+nix develop -c bash -c 'FOUNDRY_PROFILE=mutation forge test'
 ```
 
 ## Architecture

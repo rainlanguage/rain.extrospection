@@ -18,6 +18,16 @@ libs = ["dependencies"]
 [fuzz]
 runs = 2048
 
+# Behaviour-only view of the test suite, for mutation and coverage campaigns.
+# `ExtrospectConstantsTest` pins `type(Extrospect).creationCode` and
+# `type(Extrospect).runtimeCode`, which change for any edit to any source file
+# reachable from `Extrospect`. Those pins therefore fail under every source
+# mutation, observable or not, so a campaign that includes them scores every
+# mutant as killed. This profile drops them and inherits everything else from
+# `default`.
+[profile.mutation]
+no_match_contract = "ExtrospectConstantsTest"
+
 [dependencies]
 forge-std = "1.16.1"
 "rain-solmem" = "0.1.3"
