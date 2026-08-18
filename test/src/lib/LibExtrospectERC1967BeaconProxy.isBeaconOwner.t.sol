@@ -9,6 +9,10 @@ import {EmptyContract} from "test/concrete/EmptyContract.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
 import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
 import {WrongLengthBeacon} from "test/concrete/WrongLengthBeacon.sol";
+import {
+    RevertingWithAddressBeacon,
+    REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
+} from "test/concrete/RevertingWithAddressBeacon.sol";
 
 /// @title LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest
 /// @notice Tests `LibExtrospectERC1967BeaconProxy.isBeaconOwner`.
@@ -81,5 +85,19 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
     function testReturnsFalseOnWrongLengthReturn() external {
         WrongLengthBeacon beacon = new WrongLengthBeacon();
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), address(uint160(0x20))));
+    }
+
+    /// A beacon whose `owner()` reverts with exactly 32 bytes that
+    /// decode cleanly as an address must still fail the predicate. The
+    /// revert data is byte-identical to a successful `address` return,
+    /// so only the staticcall's `success` flag separates the two: a
+    /// wrapper that ignored `success` would report
+    /// `REVERTING_WITH_ADDRESS_BEACON_PAYLOAD` as the owner and return
+    /// true here.
+    function testReturnsFalseOnRevertWithAddressSizedData() external {
+        RevertingWithAddressBeacon beacon = new RevertingWithAddressBeacon();
+        assertFalse(
+            LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), REVERTING_WITH_ADDRESS_BEACON_PAYLOAD)
+        );
     }
 }
