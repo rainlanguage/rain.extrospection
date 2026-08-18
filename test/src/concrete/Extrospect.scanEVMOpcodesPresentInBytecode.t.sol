@@ -36,4 +36,14 @@ contract ExtrospectScanEVMOpcodesPresentInBytecodeTest is ExtrospectEquivalence 
     function testScanEVMOpcodesPresentInBytecodeEquivalenceEOF() external {
         assertScanEquivalence(hex"EF0000");
     }
+
+    /// `hex"00F0"` is STOP followed by CREATE, so CREATE is present in the
+    /// bytecode but unreachable (no JUMPDEST resumes execution after the halt).
+    /// The concrete must report the PRESENT bitmap — STOP and CREATE — which a
+    /// delegation to the reachable scan would not contain.
+    function testScanEVMOpcodesPresentInBytecodeUnreachableCreateCounted() external view {
+        //forge-lint: disable-next-line(incorrect-shift)
+        uint256 expected = uint256(1) | (uint256(1) << uint256(0xF0));
+        assertEq(extrospect.scanEVMOpcodesPresentInBytecode(hex"00F0"), expected);
+    }
 }
