@@ -55,4 +55,33 @@ contract ExtrospectConstantsTest is Test {
         bytes32 actual = keccak256(type(Extrospect).runtimeCode);
         assertEq(actual, EXTROSPECT_RUNTIME_CODEHASH_V1, "EXTROSPECT_RUNTIME_CODEHASH_V1 drifted from runtime bytecode");
     }
+
+    /// The three pinned constants describe one deployment, so they must agree
+    /// with each other when the pinned creation bytecode is actually executed.
+    /// Running it through the real Zoltu factory bytecode lands at
+    /// `EXTROSPECT_ZOLTU_ADDRESS_V1` and leaves code hashing to
+    /// `EXTROSPECT_RUNTIME_CODEHASH_V1`, and that runtime code is byte for byte
+    /// `type(Extrospect).runtimeCode`. Deterministic and offline: the factory is
+    /// etched from its own pinned bytecode, so no network is involved.
+    function testExtrospectDeployRecordReproduces() external {
+        LibRainDeploy.etchZoltuFactory(vm);
+
+        address deployed = LibRainDeploy.deployZoltu(EXTROSPECT_CREATION_BYTECODE_V1);
+
+        assertEq(
+            deployed,
+            EXTROSPECT_ZOLTU_ADDRESS_V1,
+            "pinned creation bytecode does not deploy to EXTROSPECT_ZOLTU_ADDRESS_V1"
+        );
+        assertEq(
+            deployed.codehash,
+            EXTROSPECT_RUNTIME_CODEHASH_V1,
+            "deployed runtime code does not hash to EXTROSPECT_RUNTIME_CODEHASH_V1"
+        );
+        assertEq(
+            deployed.code,
+            type(Extrospect).runtimeCode,
+            "deployed runtime code differs from type(Extrospect).runtimeCode"
+        );
+    }
 }
