@@ -151,9 +151,8 @@ library LibExtrospectBytecode {
     /// metamorphic metadata attack.
     ///
     /// NOTE EOF bytecode is not supported by this function. An account whose
-    /// bytecode is EOF reverts with `EOFBytecodeNotSupported` rather than
-    /// passing or reverting with `UnexpectedMetadata`, so this function does not
-    /// answer the metadata question for EOF accounts at all.
+    /// bytecode is EOF reverts with `EOFBytecodeNotSupported`, so for such an
+    /// account neither the passing case nor `UnexpectedMetadata` is reached.
     ///
     /// @param account The account whose bytecode to check.
     //forge-lint: disable-next-line(mixed-case-function)
