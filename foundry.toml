@@ -1,4 +1,8 @@
-[package]
+# Release metadata, not foundry config. `rainix-autopublish` reads `version` as
+# the next, unpublished Soldeer release and rewrites the line when it publishes.
+# `[external.*]` is the section foundry reserves for another tool's config and
+# ignores.
+[external.package]
 name = "rain-extrospection"
 version = "0.1.6"
 
