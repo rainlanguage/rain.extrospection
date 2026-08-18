@@ -160,6 +160,10 @@ library LibExtrospectBytecode {
     /// a halt and the next JUMPDEST are treated as unreachable and excluded.
     /// This is an over-approximation because not all JUMPDESTs are actually
     /// reachable at runtime.
+    /// The sweep does not distinguish code from data, so a JUMPDEST byte that it
+    /// lands on inside a data region such as Solidity CBOR metadata resumes
+    /// scanning, and the opcodes after it in that region are reported as
+    /// reachable.
     /// Adapted from https://github.com/MrLuit/selfdestruct-detect/blob/master/src/index.ts
     /// NOTE: Reverts with `EOFBytecodeNotSupported` if the bytecode is EOF
     /// (EIP-7692).
