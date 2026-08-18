@@ -5,6 +5,10 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std-1.16.1/src/Test.sol";
 import {LibExtrospectTestProd} from "test/lib/LibExtrospectTestProd.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
+import {
+    SOLIDITY_CBOR_RUNTIME_FIXTURE,
+    SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED
+} from "test/concrete/SolidityCBORFixture.sol";
 
 contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
     address constant PROD_ARBITRUM_CLONE_FACTORY_ADDRESS_V1 = address(0xe01Db32B1E03976b24e3A948A560f4b97Dd732dA);
@@ -120,5 +124,26 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.MetadataNotTrimmed.selector));
         this.externalCheckCBORTrimmedBytecodeHash(target, anyHash);
+    }
+
+    /// The hash this check matches is `keccak256` of the account's bytecode
+    /// with the 53-byte Solidity CBOR trailer removed. The whole-runtime hash
+    /// that `LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode`
+    /// matches for the same account is a different value, and reverts here.
+    function testCheckCBORTrimmedBytecodeHashRejectsWholeRuntimeHash() external {
+        address target = address(0xBEEF);
+        vm.etch(target, SOLIDITY_CBOR_RUNTIME_FIXTURE);
+
+        assertEq(SOLIDITY_CBOR_RUNTIME_FIXTURE.length, SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED.length + 53);
+
+        bytes32 trimmedHash = keccak256(SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED);
+        bytes32 wholeRuntimeHash = keccak256(SOLIDITY_CBOR_RUNTIME_FIXTURE);
+
+        LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(target, trimmedHash);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(LibExtrospectBytecode.BytecodeHashMismatch.selector, wholeRuntimeHash, trimmedHash)
+        );
+        this.externalCheckCBORTrimmedBytecodeHash(target, wholeRuntimeHash);
     }
 }

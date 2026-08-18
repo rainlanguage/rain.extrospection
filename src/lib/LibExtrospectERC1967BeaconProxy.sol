@@ -52,7 +52,11 @@ library LibExtrospectERC1967BeaconProxy {
     /// single boolean assertion.
     /// @param beacon The beacon address to query.
     /// @param expectedRuntimeHash The expected `keccak256` of the
-    /// implementation's runtime bytecode.
+    /// implementation's whole runtime bytecode, including any Solidity CBOR
+    /// metadata trailer. Not the same value as
+    /// `LibExtrospectBytecode.checkCBORTrimmedBytecodeHash`'s
+    /// `expectedTrimmedHash`, which hashes runtime bytecode with that trailer
+    /// removed.
     /// @return True if the beacon's current implementation has matching
     /// runtime bytecode. False if the call to `implementation()` fails
     /// for any reason.

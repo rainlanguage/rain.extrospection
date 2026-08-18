@@ -10,6 +10,10 @@ import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
 import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
 import {WrongLengthBeacon} from "test/concrete/WrongLengthBeacon.sol";
 import {
+    SOLIDITY_CBOR_RUNTIME_FIXTURE,
+    SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED
+} from "test/concrete/SolidityCBORFixture.sol";
+import {
     RevertingWithAddressBeacon,
     REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
 } from "test/concrete/RevertingWithAddressBeacon.sol";
@@ -125,5 +129,29 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         RevertingWithAddressBeacon beacon = new RevertingWithAddressBeacon();
         assertEq(keccak256(REVERTING_WITH_ADDRESS_BEACON_PAYLOAD.code), keccak256(""));
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+    }
+
+    /// The hash this predicate matches is `keccak256` of the
+    /// implementation's whole runtime bytecode, CBOR metadata trailer
+    /// included. The trimmed hash that
+    /// `LibExtrospectBytecode.checkCBORTrimmedBytecodeHash` matches for the
+    /// same implementation is a different value, and is rejected here.
+    function testRejectsCBORTrimmedHash() external {
+        address impl = address(0xbeef);
+        vm.etch(impl, SOLIDITY_CBOR_RUNTIME_FIXTURE);
+        MockBeacon beacon = new MockBeacon(impl, address(this));
+
+        assertEq(SOLIDITY_CBOR_RUNTIME_FIXTURE.length, SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED.length + 53);
+
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(SOLIDITY_CBOR_RUNTIME_FIXTURE)
+            )
+        );
+        assertFalse(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED)
+            )
+        );
     }
 }
