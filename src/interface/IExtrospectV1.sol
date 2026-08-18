@@ -40,7 +40,14 @@ interface IExtrospectV1 {
     /// @notice See `LibExtrospectMetamorphic.scanMetamorphicRisk`.
     function scanMetamorphicRisk(bytes memory bytecode) external pure returns (uint256);
 
-    /// @notice See `LibExtrospectBytecode.tryTrimSolidityCBORMetadata`.
+    /// @notice See `LibExtrospectBytecode.tryTrimSolidityCBORMetadata`. That
+    /// library function trims in place, shortening the array it is handed.
+    /// Here `bytecode` arrives as a fresh copy decoded from calldata, so the
+    /// trim lands on that copy and the copy is returned as `trimmedBytecode`.
+    /// @param bytecode The bytecode to trim metadata from.
+    /// @return didTrim Whether metadata was detected and trimmed.
+    /// @return trimmedBytecode `bytecode` less its final 53 metadata bytes when
+    /// `didTrim` is true, otherwise `bytecode` unchanged.
     function tryTrimSolidityCBORMetadata(bytes memory bytecode)
         external
         pure

@@ -137,6 +137,20 @@ contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
         assertEq(code.length, 52);
     }
 
+    /// Trimming writes the shorter length over the array's own length word, so
+    /// a second reference to that array observes the trim.
+    function testTryTrimSolidityCBORMetadataAliasObservesTrim() external pure {
+        bytes memory bytecode = SOLIDITY_CBOR_RUNTIME_FIXTURE;
+        bytes memory aliased = bytecode;
+        uint256 lengthBefore = bytecode.length;
+
+        assertTrue(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(aliased));
+
+        assertEq(aliased.length, lengthBefore - 53);
+        assertEq(bytecode.length, lengthBefore - 53);
+        assertEq(bytecode, hex"6080604052600080fdfe");
+    }
+
     /// EOF bytecode is not supported.
     function testTryTrimSolidityCBORMetadataRevertsOnEOF() external {
         bytes memory eofBytecode = hex"EF00010203";
