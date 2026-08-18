@@ -24,6 +24,12 @@ contract ExtrospectScanMetamorphicRiskTest is ExtrospectEquivalence {
     }
 
     /// Concrete and library return the byte-identical metamorphic-risk bitmap
+    /// for empty bytecode, which is the bytecode of every account with no code.
+    function testScanMetamorphicRiskEquivalenceEmpty() external {
+        assertScanEquivalence(hex"");
+    }
+
+    /// Concrete and library return the byte-identical metamorphic-risk bitmap
     /// for bytecode containing a reachable DELEGATECALL.
     function testScanMetamorphicRiskEquivalenceWithDelegatecall() external {
         assertScanEquivalence(hex"60006000600060006000F4");

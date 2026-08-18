@@ -25,6 +25,12 @@ contract ExtrospectCheckNotMetamorphicTest is ExtrospectEquivalence {
         assertCheckNotMetamorphicEquivalence(clean);
     }
 
+    /// Concrete and library agree on the empty-bytecode success path, which is
+    /// the bytecode of every account with no code.
+    function testCheckNotMetamorphicEquivalenceEmpty() external {
+        assertCheckNotMetamorphicEquivalence(hex"");
+    }
+
     /// Concrete and library revert with the byte-identical `Metamorphic`
     /// payload (selector + the exact reachable-opcode bitmap) for risky
     /// bytecode.

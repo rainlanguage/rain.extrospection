@@ -32,6 +32,14 @@ contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
         assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(hex""), 0);
     }
 
+    /// An account with no code reads as empty bytecode and so has no
+    /// metamorphic risk.
+    function testScanMetamorphicRiskCodelessAccount() external view {
+        address codeless = address(0xC2);
+        assertEq(codeless.code.length, 0);
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(codeless.code), 0);
+    }
+
     /// Clean contract with no metamorphic ops returns 0.
     function testScanMetamorphicRiskClean() external {
         NonMetamorphic clean = new NonMetamorphic();
