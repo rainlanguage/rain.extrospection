@@ -58,6 +58,14 @@ account is a proxy and extract the implementation address that is being proxied.
 Having a canonical onchain check for this simplifies downstream tooling and
 minimises the surface area for implementation bugs.
 
+The check is exact. Only the canonical 45 byte form matches: the 10 byte prefix,
+a `PUSH20` implementation address, and the 15 byte suffix whose jump target is
+`0x2b`. The vanity proxies of the EIP, which shorten the bytecode to `45 - Z`
+bytes when the implementation address has `Z` leading zero bytes, do not match.
+Neither do `PUSH0` based minimal proxies, nor EIP-7702 delegation designators. A
+`false` result says that the bytecode is not the canonical minimal proxy, not
+that the account runs its own code.
+
 ### `IExtrospectInterpreterV1`
 
 Check if a candidate interpreter contract is fundamentally UNSAFE due to
