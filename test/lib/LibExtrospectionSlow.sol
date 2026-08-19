@@ -2,9 +2,63 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {HALTING_BITMAP, METAMORPHIC_OPS, EVM_OP_JUMPDEST} from "src/lib/EVMOpcodes.sol";
-import {ERC1167_PREFIX_HASH, ERC1167_SUFFIX_HASH} from "src/lib/LibExtrospectERC1167Proxy.sol";
+/// @dev The 10 bytes before the implementation address in the ERC1167 minimal
+/// proxy runtime bytecode published at
+/// https://eips.ethereum.org/EIPS/eip-1167#specification
+bytes constant SLOW_ERC1167_PREFIX = hex"363d3d373d3d3d363d73";
 
+/// @dev The 15 bytes after the implementation address in the ERC1167 minimal
+/// proxy runtime bytecode published at
+/// https://eips.ethereum.org/EIPS/eip-1167#specification
+bytes constant SLOW_ERC1167_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3";
+
+/// @dev The implementation address in an ERC1167 minimal proxy is 20 bytes.
+uint256 constant SLOW_ERC1167_ADDRESS_LENGTH = 20;
+
+/// @dev `JUMPDEST` opcode byte.
+uint8 constant SLOW_OP_JUMPDEST = 0x5B;
+
+/// @dev The first `PUSH*` opcode byte, `PUSH1`.
+uint8 constant SLOW_OP_PUSH1 = 0x60;
+
+/// @dev The last `PUSH*` opcode byte, `PUSH32`.
+uint8 constant SLOW_OP_PUSH32 = 0x7F;
+
+/// @dev Opcode bytes that halt the current execution path: `STOP`, `JUMP`,
+/// `RETURN`, `REVERT`, `INVALID`, `SELFDESTRUCT`.
+uint256 constant SLOW_HALTING_BITMAP =
+//forge-lint: disable-next-line(incorrect-shift)
+ (uint256(1) << 0x00)
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (uint256(1) << 0x56)
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (uint256(1) << 0xF3)
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (uint256(1) << 0xFD)
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (uint256(1) << 0xFE)
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (uint256(1) << 0xFF);
+
+/// @dev Opcode bytes that indicate metamorphic risk: `SELFDESTRUCT`,
+/// `DELEGATECALL`, `CALLCODE`, `CREATE`, `CREATE2`.
+uint256 constant SLOW_METAMORPHIC_BITMAP =
+//forge-lint: disable-next-line(incorrect-shift)
+ (uint256(1) << 0xFF)
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (uint256(1) << 0xF4)
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (uint256(1) << 0xF2)
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (uint256(1) << 0xF0)
+    //forge-lint: disable-next-line(incorrect-shift)
+    | (uint256(1) << 0xF5);
+
+/// @title LibExtrospectionSlow
+/// @notice Reference implementations used as differential oracles for
+/// `src`. Every opcode byte, bitmap and bytecode literal used here is
+/// declared in this file from the published EVM and ERC specifications, so
+/// `src` and the oracle share no state.
 library LibExtrospectionSlow {
     /// KISS implementation of isEOFBytecode.
     //forge-lint: disable-next-line(mixed-case-function)
@@ -18,39 +72,60 @@ library LibExtrospectionSlow {
         return isEOF;
     }
 
-    /// KISS implementation of a presence scan.
+    /// Decodes `data` to the sequence of opcode bytes it contains, dropping
+    /// the inline data bytes that follow each `PUSH*`. A `PUSH*` whose inline
+    /// data runs past the end of `data` contributes only itself.
+    /// @param data The bytecode to decode.
+    /// @return ops The opcode bytes in the order they appear.
+    function decodeOpcodesSlow(bytes memory data) internal pure returns (bytes memory ops) {
+        bytes memory buffer = new bytes(data.length);
+        uint256 count = 0;
+        uint256 i = 0;
+        while (i < data.length) {
+            uint8 op = uint8(data[i]);
+            buffer[count] = bytes1(op);
+            count++;
+            if (SLOW_OP_PUSH1 <= op && op <= SLOW_OP_PUSH32) {
+                i += uint256(op) - uint256(SLOW_OP_PUSH1) + 1;
+            }
+            i++;
+        }
+        ops = new bytes(count);
+        for (uint256 j = 0; j < count; j++) {
+            ops[j] = buffer[j];
+        }
+    }
+
+    /// KISS implementation of a presence scan. Every decoded opcode is
+    /// present.
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesPresentInBytecodeSlow(bytes memory data) internal pure returns (uint256) {
+        bytes memory ops = decodeOpcodesSlow(data);
         uint256 scan = 0;
-        for (uint256 i = 0; i < data.length; i++) {
-            uint8 op = uint8(data[i]);
-            scan = scan | (uint256(1) << uint256(op));
-
-            if (0x60 <= op && op < 0x80) {
-                i += op - 0x5f;
-            }
+        for (uint256 i = 0; i < ops.length; i++) {
+            scan = scan | opcodeBit(uint8(ops[i]));
         }
         return scan;
     }
 
-    /// KISS implementation of a reachability scan.
+    /// KISS implementation of a reachability scan. Decoded opcodes are
+    /// reachable until a halting opcode, and reachable again from the next
+    /// `JUMPDEST`.
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesReachableInBytecodeSlow(bytes memory data) internal pure returns (uint256) {
+        bytes memory ops = decodeOpcodesSlow(data);
         uint256 scan = 0;
-        bool halted = false;
-        for (uint256 i = 0; i < data.length; i++) {
-            uint8 op = uint8(data[i]);
-            if (0x60 <= op && op < 0x80) {
-                i += op - 0x5f;
-            }
-            if (!halted) {
-                scan = scan | (uint256(1) << uint256(op));
-                if ((HALTING_BITMAP & (uint256(1) << uint256(op))) > 0) {
-                    halted = true;
+        bool reachable = true;
+        for (uint256 i = 0; i < ops.length; i++) {
+            uint8 op = uint8(ops[i]);
+            if (reachable) {
+                scan = scan | opcodeBit(op);
+                if ((SLOW_HALTING_BITMAP & opcodeBit(op)) != 0) {
+                    reachable = false;
                 }
-            } else if (op == EVM_OP_JUMPDEST) {
-                halted = false;
-                scan = scan | (uint256(1) << uint256(op));
+            } else if (op == SLOW_OP_JUMPDEST) {
+                reachable = true;
+                scan = scan | opcodeBit(op);
             }
         }
         return scan;
@@ -58,44 +133,46 @@ library LibExtrospectionSlow {
 
     /// KISS implementation of metamorphic risk scan.
     function scanMetamorphicRiskSlow(bytes memory data) internal pure returns (uint256) {
-        return scanEVMOpcodesReachableInBytecodeSlow(data) & METAMORPHIC_OPS;
+        return scanEVMOpcodesReachableInBytecodeSlow(data) & SLOW_METAMORPHIC_BITMAP;
     }
 
-    /// KISS implementation of ERC1167 proxy detection.
+    /// KISS implementation of ERC1167 proxy detection. Compares the bytecode
+    /// byte for byte against the published minimal proxy runtime.
     function isERC1167ProxySlow(bytes memory bytecode)
         internal
         pure
         returns (bool result, address implementationAddress)
     {
-        if (bytecode.length != 45) {
+        bytes memory prefix = SLOW_ERC1167_PREFIX;
+        bytes memory suffix = SLOW_ERC1167_SUFFIX;
+
+        if (bytecode.length != prefix.length + SLOW_ERC1167_ADDRESS_LENGTH + suffix.length) {
             return (false, address(0));
         }
 
-        bytes memory bytecodePrefix = new bytes(10);
-        for (uint256 i = 0; i < 10; i++) {
-            bytecodePrefix[i] = bytecode[i];
-        }
-        bytes memory bytecodeSuffix = new bytes(15);
-        for (uint256 i = 0; i < 15; i++) {
-            bytecodeSuffix[i] = bytecode[30 + i];
+        for (uint256 i = 0; i < prefix.length; i++) {
+            if (bytecode[i] != prefix[i]) {
+                return (false, address(0));
+            }
         }
 
-        if (keccak256(bytecodePrefix) != ERC1167_PREFIX_HASH) {
-            return (false, address(0));
+        for (uint256 i = 0; i < suffix.length; i++) {
+            if (bytecode[prefix.length + SLOW_ERC1167_ADDRESS_LENGTH + i] != suffix[i]) {
+                return (false, address(0));
+            }
         }
 
-        if (keccak256(bytecodeSuffix) != ERC1167_SUFFIX_HASH) {
-            return (false, address(0));
+        uint160 accumulator = 0;
+        for (uint256 i = 0; i < SLOW_ERC1167_ADDRESS_LENGTH; i++) {
+            accumulator = (accumulator << 8) | uint160(uint8(bytecode[prefix.length + i]));
         }
+        return (true, address(accumulator));
+    }
 
-        bytes memory implementationAddressBytes = new bytes(20);
-        for (uint256 i = 0; i < 20; i++) {
-            implementationAddressBytes[i] = bytecode[10 + i];
-        }
-        uint256 implementationAddressMask = type(uint160).max;
-        assembly {
-            implementationAddress := and(mload(add(implementationAddressBytes, 20)), implementationAddressMask)
-        }
-        return (true, implementationAddress);
+    /// The bit representing `op` in an opcode bitmap.
+    /// @param op The opcode byte.
+    /// @return The bitmap with only the bit for `op` set.
+    function opcodeBit(uint8 op) internal pure returns (uint256) {
+        return uint256(1) << uint256(op);
     }
 }
