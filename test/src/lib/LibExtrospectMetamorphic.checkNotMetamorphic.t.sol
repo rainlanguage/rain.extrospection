@@ -15,11 +15,17 @@ import {HasCreate} from "test/concrete/HasCreate.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 import {CreateChildFactory} from "test/concrete/CreateChildFactory.sol";
 import {Create2ChildFactory} from "test/concrete/Create2ChildFactory.sol";
+import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
 
 contract LibExtrospectMetamorphicCheckNotMetamorphicTest is Test {
     /// External wrapper for revert tests.
     function checkNotMetamorphicExternal(bytes memory bytecode) external pure {
         LibExtrospectMetamorphic.checkNotMetamorphic(bytecode);
+    }
+
+    /// External wrapper for address entry point revert tests.
+    function checkNotMetamorphicAddressExternal(address account) external view {
+        LibExtrospectMetamorphic.checkNotMetamorphic(account);
     }
 
     /// Clean contract passes.
@@ -120,6 +126,57 @@ contract LibExtrospectMetamorphicCheckNotMetamorphicTest is Test {
     function testCheckNotMetamorphicRevertsOnEOF() external {
         vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
         this.checkNotMetamorphicExternal(hex"EF00010203");
+    }
+
+    /// Address entry point: a codeless account reverts with `CodelessAccount`
+    /// carrying the address. The bytes entry point passes the same account's
+    /// (empty) code, pinned by `testCheckNotMetamorphicCodelessAccount`; only
+    /// the address boundary can refuse to vouch for a codeless account.
+    function testCheckNotMetamorphicAddressRevertsOnCodelessAccount() external {
+        address codeless = address(0xC2);
+        assertEq(codeless.code.length, 0);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.CodelessAccount.selector, codeless));
+        this.checkNotMetamorphicAddressExternal(codeless);
+    }
+
+    /// Address entry point: clean contract passes.
+    function testCheckNotMetamorphicAddressClean() external {
+        NonMetamorphic clean = new NonMetamorphic();
+        LibExtrospectMetamorphic.checkNotMetamorphic(address(clean));
+    }
+
+    /// Address entry point: contract with SELFDESTRUCT reverts with the same
+    /// `Metamorphic` error as the bytes entry point.
+    function testCheckNotMetamorphicAddressRevertsOnSelfdestruct() external {
+        HasSelfdestruct c = new HasSelfdestruct();
+        uint256 risk = LibExtrospectMetamorphic.scanMetamorphicRisk(address(c).code);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectMetamorphic.Metamorphic.selector, risk));
+        this.checkNotMetamorphicAddressExternal(address(c));
+    }
+
+    /// Address entry point: EOF code etched onto an account reverts with
+    /// `EOFBytecodeNotSupported` via delegation to the bytes entry point.
+    function testCheckNotMetamorphicAddressRevertsOnEOF() external {
+        address target = address(0xBEEF);
+        vm.etch(target, hex"EF00010203");
+        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
+        this.checkNotMetamorphicAddressExternal(target);
+    }
+
+    /// Fuzz: for an account with nonempty non-EOF code, the address entry
+    /// point and the bytes entry point agree: both revert with the same
+    /// `Metamorphic` bitmap or both pass.
+    function testCheckNotMetamorphicAddressEquivalenceFuzz(bytes memory code) external {
+        vm.assume(code.length > 0);
+        vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
+        address target = address(0xBEEF);
+        LibExtrospectTestEtch.assumeEtch(vm, target, code);
+
+        uint256 risk = LibExtrospectMetamorphic.scanMetamorphicRisk(code);
+        if (risk != 0) {
+            vm.expectRevert(abi.encodeWithSelector(LibExtrospectMetamorphic.Metamorphic.selector, risk));
+        }
+        this.checkNotMetamorphicAddressExternal(target);
     }
 
     /// Fuzz: checkNotMetamorphic reverts iff scanMetamorphicRisk is non-zero.

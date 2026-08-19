@@ -65,6 +65,12 @@ library LibExtrospectERC1167Proxy {
     /// A `false` result says that the bytecode is not the canonical minimal
     /// proxy. It does not say that the account runs its own code.
     ///
+    /// Empty bytecode is not 45 bytes long, so it returns
+    /// `(false, address(0))` like every other length mismatch — explicitly
+    /// including the empty code of a codeless account, for which `false`
+    /// says only that no proxy code is present now, not that the account can
+    /// never gain any.
+    ///
     /// The verdict is a function of the 45 bytes alone. It is the same whether
     /// or not the implementation account exists or has code.
     ///

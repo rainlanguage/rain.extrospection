@@ -163,6 +163,26 @@ contract LibExtrospectERC1167ProxyTest is Test {
         assertEq(implementationResult, implementation);
     }
 
+    /// Empty bytecode is not the 45 byte proxy: `(false, address(0))`. Pins
+    /// the documented empty-input meaning.
+    function testIsERC1167ProxyEmpty() external pure {
+        (bool result, address implementationAddress) = LibExtrospectERC1167Proxy.isERC1167Proxy(hex"");
+        assertFalse(result);
+        assertEq(implementationAddress, address(0));
+    }
+
+    /// The empty code of a codeless account is not the 45 byte proxy. Pins
+    /// the documented empty-input meaning at the account reading: `false`
+    /// here says the bytes are not the canonical minimal proxy, not that the
+    /// account runs its own code or has any code at all.
+    function testIsERC1167ProxyCodelessAccount() external view {
+        address codeless = address(0xC2);
+        assertEq(codeless.code.length, 0);
+        (bool result, address implementationAddress) = LibExtrospectERC1167Proxy.isERC1167Proxy(codeless.code);
+        assertFalse(result);
+        assertEq(implementationAddress, address(0));
+    }
+
     /// A 45-byte clone encoding `address(0)` as the implementation is detected
     /// as a proxy, so `(true, address(0))` is a reachable return value and the
     /// returned address alone does not distinguish a proxy from a non-proxy.

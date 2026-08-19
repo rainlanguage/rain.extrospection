@@ -155,6 +155,15 @@ contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex""), 0);
     }
 
+    /// The empty code of a codeless account scans to a zero bitmap. Pins the
+    /// documented empty-input meaning at the account reading: zero here says
+    /// no opcodes were read, not that the account can never gain any.
+    function testScanEVMOpcodesPresentCodelessAccount() public view {
+        address codeless = address(0xC2);
+        assertEq(codeless.code.length, 0);
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(codeless.code), 0);
+    }
+
     /// Test single-byte non-PUSH bytecodes.
     function testScanEVMOpcodesPresentSingleByte() public pure {
         // STOP
