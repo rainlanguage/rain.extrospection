@@ -118,10 +118,12 @@ library LibExtrospectBytecode {
     /// The length of the metadata must always be 51+2 bytes, as the dynamic
     /// parts still have constant length.
     ///
-    /// NOTE bytecode is mutated in place.
+    /// NOTE bytecode is mutated in place. Trimming writes the shorter length
+    /// over the array's own length word, so every reference to that same array
+    /// observes the trim, not just the one passed here.
     ///
-    /// NOTE EOF bytecode is not supported by this function and will cause a
-    /// revert.
+    /// NOTE EOF bytecode is not supported by this function and reverts with
+    /// `EOFBytecodeNotSupported`.
     ///
     /// NOTE this function constrains only the 16 structural bytes of the 53
     /// byte trailer. Taking the first trailer byte as offset 0, the constrained
@@ -172,8 +174,12 @@ library LibExtrospectBytecode {
     }
 
     /// Checks that the bytecode of an account, after trimming Solidity CBOR
-    /// metadata, matches an expected hash. Reverts if the metadata was not
-    /// trimmed or if the hash does not match after trimming.
+    /// metadata, matches an expected hash. Reverts with `MetadataNotTrimmed` if
+    /// the metadata was not trimmed, or with `BytecodeHashMismatch` if the hash
+    /// does not match after trimming.
+    ///
+    /// NOTE EOF bytecode is not supported by this function and reverts with
+    /// `EOFBytecodeNotSupported` before either of the above is reached.
     ///
     /// NOTE `expectedTrimmedHash` covers only the bytecode left after
     /// trimming. The 53 trimmed bytes are runtime code that the EVM executes
@@ -198,10 +204,15 @@ library LibExtrospectBytecode {
     }
 
     /// Checks that no standard Solidity CBOR metadata is present in the
-    /// bytecode of an account. Reverts if metadata is detected. This is the
-    /// inverse of `checkCBORTrimmedBytecodeHash` — use this when bytecode
-    /// should have been compiled without metadata (e.g. `cbor_metadata = false`
-    /// in foundry.toml) as a defense against the metamorphic metadata attack.
+    /// bytecode of an account. Reverts with `UnexpectedMetadata` if metadata is
+    /// detected. This is the inverse of `checkCBORTrimmedBytecodeHash` — use
+    /// this when bytecode should have been compiled without metadata (e.g.
+    /// `cbor_metadata = false` in foundry.toml) as a defense against the
+    /// metamorphic metadata attack.
+    ///
+    /// NOTE EOF bytecode is not supported by this function. An account whose
+    /// bytecode is EOF reverts with `EOFBytecodeNotSupported`, so for such an
+    /// account neither the passing case nor `UnexpectedMetadata` is reached.
     ///
     /// NOTE detection is `tryTrimSolidityCBORMetadata`, which constrains only
     /// 16 of the 53 trailer bytes, so an account whose code merely ends with
@@ -230,6 +241,10 @@ library LibExtrospectBytecode {
     /// This is an over-approximation: not all JUMPDESTs are actually reachable
     /// at runtime, and the byte values Cancun leaves unassigned other than
     /// INVALID do not pause scanning even though the EVM halts on them.
+    /// A trailing PUSH* whose inline data runs past the end of the bytecode
+    /// ends the scan. The PUSH* opcode itself is recorded per the rules above,
+    /// and every byte after it is treated as that PUSH*'s inline data, so none
+    /// of those bytes are scanned as opcodes.
     /// Adapted from https://github.com/MrLuit/selfdestruct-detect/blob/master/src/index.ts
     /// NOTE: Reverts with `EOFBytecodeNotSupported` if the bytecode is EOF
     /// (EIP-7692).
@@ -283,8 +298,14 @@ library LibExtrospectBytecode {
     }
 
     /// Scans all opcodes present in bytecode, respecting PUSH* inline data.
+    /// A trailing PUSH* whose inline data runs past the end of the bytecode
+    /// ends the scan. The PUSH* opcode itself is recorded, and every byte after
+    /// it is treated as that PUSH*'s inline data, so none of those bytes are
+    /// scanned as opcodes.
     /// Adapted from
     /// https://github.com/a16z/metamorphic-contract-detector/blob/main/metamorphic_detect/opcodes.py#L52
+    /// NOTE: Reverts with `EOFBytecodeNotSupported` if the bytecode is EOF
+    /// (EIP-7692).
     /// @param bytecode The bytecode to scan.
     /// @return bytesPresent A `uint256` where each bit represents the presence
     /// of an opcode in the source bytecode.
