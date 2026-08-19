@@ -202,6 +202,9 @@ uint256 constant HALTING_BITMAP = (1 << EVM_OP_STOP) | (1 << EVM_OP_RETURN) | (1
 /// non-zero result. Membership is by opcode alone and is not conditioned on
 /// whether the bytecode's own code can in fact be replaced, so bytecode that
 /// only deploys child contracts is rejected for CREATE or CREATE2.
+/// Bytecode whose first byte is the EIP-3541 reserved `0xEF` never reaches
+/// this mask: `scanMetamorphicRisk` fails closed on it first and reports
+/// `1 << 0xEF`, a bit that is not a member here.
 //forge-lint: disable-next-line(incorrect-shift)
 uint256 constant METAMORPHIC_OPS = (1 << EVM_OP_SELFDESTRUCT) | (1 << EVM_OP_DELEGATECALL)
     //forge-lint: disable-next-line(incorrect-shift)
