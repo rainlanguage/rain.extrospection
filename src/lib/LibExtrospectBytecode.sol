@@ -205,6 +205,10 @@ library LibExtrospectBytecode {
     /// INVALID, SELFDESTRUCT, or unconditional JUMP per `HALTING_BITMAP`),
     /// scanning pauses. Scanning resumes at the next JUMPDEST. Opcodes between
     /// a halt and the next JUMPDEST are treated as unreachable and excluded.
+    /// The sweep does not distinguish code from data, so a JUMPDEST byte that it
+    /// lands on inside a data region such as Solidity CBOR metadata resumes
+    /// scanning, and the opcodes after it in that region are reported as
+    /// reachable.
     /// This is an over-approximation: not all JUMPDESTs are actually reachable
     /// at runtime, and the byte values Cancun leaves unassigned other than
     /// INVALID do not pause scanning even though the EVM halts on them.

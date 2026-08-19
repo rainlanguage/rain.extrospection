@@ -47,14 +47,17 @@ as due to bytes in the CBOR metadata commonly appended to contracts by solidity.
 CBOR metadata MAY be disabled in newer versions of Solidity and is not present
 in other EVM language compilers.
 
-The "reachable in" scan understands enough about the EVM execution environment to
-ignore data that is not reachable by a `JUMPDEST`. This is achieved by pausing
-the scanner after any opcode that halts execution, then resuming it once a jump
-destination is found. This scan DOES NOT cause false positives due to metdata or
-similar "data only" regions of a contract, however it is susceptible to breakages
-if the EVM execution model ever changes. For example, if the set of halting ops
-ever changes, or a new `JUMPDEST` alternative is invented, the scanner will
-require an entirely new implementation and redeployment to support this.
+The "reachable in" scan understands enough about the EVM execution environment
+to ignore data that is not reachable by a `JUMPDEST`. This is achieved by
+pausing the scanner after any opcode that halts execution, then resuming it once
+a jump destination is found. A "data only" region such as the CBOR metadata is
+skipped only for as long as the scanner stays paused. A `0x5b` byte that the
+linear sweep lands on inside such a region resumes the scan, and every opcode
+after it in that region is reported as reachable. The scanner is susceptible to
+breakages if the EVM execution model ever changes. For example, if the set of
+halting ops ever changes, or a new `JUMPDEST` alternative is invented, the
+scanner will require an entirely new implementation and redeployment to support
+this.
 
 Both scans revert with `EOFBytecodeNotSupported` on EOF bytecode.
 
