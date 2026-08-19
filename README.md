@@ -34,9 +34,9 @@ opcodes found in the bytecode passed to them. This bitmap is built as
 `1 << opcode` where opcode is a single byte, and the scan is a `uint256` so the
 space of all opcodes as a `uint8` maps perfectly to all the bits in an EVM word.
 
-Both scans take bytecode as `bytes memory` rather than an address, so the caller
-chooses what to feed them: `account.code`, a constructor argument, or bytecode
-already trimmed by `tryTrimSolidityCBORMetadata`.
+Both scans take bytecode as `bytes memory`, so the caller chooses what to feed
+them: `account.code`, a constructor argument, or bytecode already trimmed by
+`tryTrimSolidityCBORMetadata`.
 
 The "present in" scan simply loops over the entire bytecode, but is `PUSH*`
 aware so knows that the inline argument to any `PUSH` opcode is not itself an
@@ -60,6 +60,15 @@ scanner will require an entirely new implementation and redeployment to support
 this.
 
 Both scans revert with `EOFBytecodeNotSupported` on EOF bytecode.
+
+Both scans also have address-taking entry points that read the account's code,
+revert with `CodelessAccount` when there is none, and delegate to the bytes
+functions otherwise. An account with no code can gain any code later — an
+unoccupied `CREATE2` target, a self-destructed account between incarnations, or
+an EOA that can gain code by EIP-7702 delegation — so a zero bitmap for it would
+vouch for nothing, and only the address boundary has the information to refuse.
+The bytes entry points answer only about the bytes given: empty bytecode scans
+to a zero bitmap.
 
 ### Bytecode hashing and Solidity CBOR metadata
 
