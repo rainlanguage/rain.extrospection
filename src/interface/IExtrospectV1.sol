@@ -12,18 +12,21 @@ pragma solidity ^0.8.25;
 /// `LibExtrospectMetamorphic`.
 interface IExtrospectV1 {
     /// @notice Reads `account`'s runtime bytecode, trims trailing Solidity CBOR
-    /// metadata from it, and reverts unless what remains hashes to `expected`.
-    /// Reverts `MetadataNotTrimmed` when the bytecode does not end in the exact
-    /// metadata structure the trimmer recognises, so nothing was trimmed.
-    /// Reverts `BytecodeHashMismatch(expected, actual)` when the trimmed
-    /// bytecode hashes to something other than `expected`. Reverts
+    /// metadata from it, and reverts unless what remains hashes to
+    /// `expectedTrimmedHash`. Reverts `MetadataNotTrimmed` when the bytecode
+    /// does not end in the exact metadata structure the trimmer recognises,
+    /// so nothing was trimmed. Reverts
+    /// `BytecodeHashMismatch(expectedTrimmedHash, actual)` when the trimmed
+    /// bytecode hashes to something other than `expectedTrimmedHash`. Reverts
     /// `EOFBytecodeNotSupported` when `account`'s bytecode is EOF. Returns
     /// nothing when the hash matches.
     /// @dev See `LibExtrospectBytecode.checkCBORTrimmedBytecodeHash`.
     /// @param account The account whose runtime bytecode is read and checked.
-    /// @param expected `keccak256` of the bytecode AFTER its last 53 bytes are
-    /// removed, not of the full runtime bytecode.
-    function checkCBORTrimmedBytecodeHash(address account, bytes32 expected) external view;
+    /// @param expectedTrimmedHash `keccak256` of the bytecode AFTER its last
+    /// 53 bytes are removed, not of the full runtime bytecode. Not the same
+    /// value as `isBeaconImplementationBytecode`'s `expectedRuntimeHash`,
+    /// which hashes runtime bytecode whole.
+    function checkCBORTrimmedBytecodeHash(address account, bytes32 expectedTrimmedHash) external view;
 
     /// @notice Reads `account`'s runtime bytecode and reverts
     /// `UnexpectedMetadata` when its last 53 bytes are the exact Solidity CBOR
@@ -54,7 +57,9 @@ interface IExtrospectV1 {
     /// @dev See `LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode`.
     /// @param beacon The address to static-call `implementation()` on.
     /// @param expectedRuntimeHash `keccak256` of the implementation's runtime
-    /// bytecode exactly as deployed, with no metadata trimming. For an
+    /// bytecode exactly as deployed, with no metadata trimming. Not the same
+    /// value as `checkCBORTrimmedBytecodeHash`'s `expectedTrimmedHash`, which
+    /// hashes runtime bytecode with its metadata trailer removed. For an
     /// implementation with no code this is `keccak256` of empty bytes.
     /// @return True when the static call succeeds, returns exactly 32 bytes
     /// whose top 12 bytes are zero, and the address in those bytes has runtime

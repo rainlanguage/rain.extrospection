@@ -3,6 +3,10 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.16.1/src/Test.sol";
+import {
+    SOLIDITY_CBOR_RUNTIME_FIXTURE,
+    SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED
+} from "test/concrete/SolidityCBORFixture.sol";
 import {LibExtrospectERC1967BeaconProxy} from "src/lib/LibExtrospectERC1967BeaconProxy.sol";
 import {MockBeacon} from "test/concrete/MockBeacon.sol";
 import {EmptyContract} from "test/concrete/EmptyContract.sol";
@@ -217,6 +221,30 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         assertFalse(
             LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
                 address(beacon), keccak256(address(delegate).code)
+            )
+        );
+    }
+
+    /// The hash this predicate matches is `keccak256` of the
+    /// implementation's whole runtime bytecode, CBOR metadata trailer
+    /// included. The trimmed hash that
+    /// `LibExtrospectBytecode.checkCBORTrimmedBytecodeHash` matches for the
+    /// same implementation is a different value, and is rejected here.
+    function testRejectsCBORTrimmedHash() external {
+        address impl = address(0xbeef);
+        vm.etch(impl, SOLIDITY_CBOR_RUNTIME_FIXTURE);
+        MockBeacon beacon = new MockBeacon(impl, address(this));
+
+        assertEq(SOLIDITY_CBOR_RUNTIME_FIXTURE.length, SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED.length + 53);
+
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(SOLIDITY_CBOR_RUNTIME_FIXTURE)
+            )
+        );
+        assertFalse(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED)
             )
         );
     }
