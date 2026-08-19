@@ -14,6 +14,11 @@ import {
     RevertingWithAddressBeacon,
     REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
 } from "test/concrete/RevertingWithAddressBeacon.sol";
+import {
+    LibEIP7702Designator,
+    EIP7702_DELEGATION_PREFIX,
+    EIP7702_DESIGNATOR_LENGTH
+} from "test/lib/LibEIP7702Designator.sol";
 
 /// @title LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest
 /// @notice Tests `LibExtrospectERC1967BeaconProxy.isBeaconOwner`.
@@ -125,5 +130,37 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
         MockBeacon beacon = new MockBeacon(address(this), address(0));
         assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(target), address(0)));
         assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), address(0)));
+    }
+
+    /// An account whose code is an EIP-7702 delegation designator runs
+    /// the delegate's code, so `owner()` is answered by the delegate
+    /// and the predicate returns true for the delegating account. The
+    /// predicate never reads the target's own code, so the designator
+    /// is not distinguished from beacon-contract code.
+    function testMatchesForDelegatedAccount(address own) external {
+        MockBeacon delegate = new MockBeacon(address(this), own);
+        address delegating = address(uint160(uint256(keccak256("delegating account"))));
+        vm.etch(delegating, LibEIP7702Designator.designator(address(delegate)));
+
+        assertEq(delegating.code.length, EIP7702_DESIGNATOR_LENGTH);
+        assertEq(bytes3(delegating.code), EIP7702_DELEGATION_PREFIX);
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(delegating, own));
+    }
+
+    /// Repointing an EIP-7702 delegation designator at a delegate that
+    /// reports a different owner flips the predicate for the same
+    /// address, with no change to the code of either delegate.
+    function testDelegatedAccountRepointChangesResult(address own, address otherOwn) external {
+        vm.assume(own != otherOwn);
+        MockBeacon delegate = new MockBeacon(address(this), own);
+        MockBeacon otherDelegate = new MockBeacon(address(this), otherOwn);
+        address delegating = address(uint160(uint256(keccak256("delegating account"))));
+
+        vm.etch(delegating, LibEIP7702Designator.designator(address(delegate)));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(delegating, own));
+
+        vm.etch(delegating, LibEIP7702Designator.designator(address(otherDelegate)));
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(delegating, own));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(delegating, otherOwn));
     }
 }

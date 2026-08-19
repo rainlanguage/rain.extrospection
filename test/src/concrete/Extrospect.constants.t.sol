@@ -16,6 +16,9 @@ import {LibRainDeploy} from "rain-deploy-0.1.3/src/lib/LibRainDeploy.sol";
 /// deterministic Zoltu address, runtime codehash — so the deploy script
 /// and downstream consumers can rely on them as source of truth. If any
 /// fails the constant must be updated to match the current source.
+/// @dev These pin compiler output, not behaviour: they fail for any edit to
+/// any source file reachable from `Extrospect`. The `mutation` foundry
+/// profile excludes this contract by name.
 contract ExtrospectConstantsTest is Test {
     /// `EXTROSPECT_CREATION_BYTECODE_V1` matches the current compiler
     /// output. Compiler/optimizer settings affect creation bytecode, so

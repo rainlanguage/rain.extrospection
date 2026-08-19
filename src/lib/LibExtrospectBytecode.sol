@@ -124,16 +124,19 @@ library LibExtrospectBytecode {
     /// metadata, matches an expected hash. Reverts if the metadata was not
     /// trimmed or if the hash does not match after trimming.
     /// @param account The account whose bytecode to check.
-    /// @param expected The expected hash of the trimmed bytecode.
-    function checkCBORTrimmedBytecodeHash(address account, bytes32 expected) internal view {
+    /// @param expectedTrimmedHash The expected hash of the trimmed bytecode.
+    /// Not the same value as
+    /// `LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode`'s
+    /// `expectedRuntimeHash`, which hashes runtime bytecode whole.
+    function checkCBORTrimmedBytecodeHash(address account, bytes32 expectedTrimmedHash) internal view {
         bytes memory bytecode = account.code;
         bool didTrim = tryTrimSolidityCBORMetadata(bytecode);
         if (!didTrim) {
             revert MetadataNotTrimmed();
         }
         bytes32 actual = keccak256(bytecode);
-        if (expected != actual) {
-            revert BytecodeHashMismatch(expected, actual);
+        if (expectedTrimmedHash != actual) {
+            revert BytecodeHashMismatch(expectedTrimmedHash, actual);
         }
     }
 
