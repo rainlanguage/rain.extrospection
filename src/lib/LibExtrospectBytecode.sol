@@ -60,9 +60,8 @@ library LibExtrospectBytecode {
     /// @param actual The actual bytecode hash.
     error BytecodeHashMismatch(bytes32 expected, bytes32 actual);
 
-    /// Thrown when CBOR metadata is unexpectedly present in bytecode.
-    /// The common defense against the metamorphic metadata attack is to
-    /// compile without CBOR metadata entirely.
+    /// Thrown when bytecode ends in the one Solidity CBOR metadata layout that
+    /// `tryTrimSolidityCBORMetadata` matches.
     error UnexpectedMetadata();
 
     /// Returns whether the first two bytes of the bytecode are the EOF magic
@@ -225,6 +224,15 @@ library LibExtrospectBytecode {
     /// 16 of the 53 trailer bytes, so an account whose code merely ends with
     /// those 16 bytes at the expected offsets reverts here even if no compiler
     /// emitted metadata for it.
+    ///
+    /// NOTE every trailer `tryTrimSolidityCBORMetadata` does not match returns
+    /// without reverting, and that includes Solidity CBOR metadata in other
+    /// encodings: the solc-version-only trailer emitted when `bytecode_hash` is
+    /// `none` and `cbor_metadata` is left on, `bzzr1`/Swarm hashes, reordered
+    /// or additional CBOR map keys, and solc versions not encoded as `0x43`
+    /// plus three bytes. Returning without reverting therefore establishes that
+    /// this one layout is absent, not that the account carries no metadata.
+    ///
     /// @param account The account whose bytecode to check.
     //forge-lint: disable-next-line(mixed-case-function)
     function checkNoSolidityCBORMetadata(address account) internal view {
