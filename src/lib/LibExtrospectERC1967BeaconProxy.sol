@@ -50,6 +50,15 @@ library LibExtrospectERC1967BeaconProxy {
     /// and trivially fails the check — returns false rather than
     /// reverting, so integrators can collapse the predicate into a
     /// single boolean assertion.
+    ///
+    /// An implementation address with no code — an externally owned
+    /// account, an unoccupied `CREATE2` target, a self-destructed
+    /// account, or `address(0)` — reads as empty bytecode and hashes to
+    /// `keccak256("")`, so `expectedRuntimeHash == keccak256("")` is
+    /// satisfied by every codeless implementation. Whether the
+    /// implementation has any code at all is not checked. Deploying code
+    /// to a codeless implementation turns that same call from true to
+    /// false.
     /// @param beacon The beacon address to query.
     /// @param expectedRuntimeHash The expected `keccak256` of the
     /// implementation's runtime bytecode.
