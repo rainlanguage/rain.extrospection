@@ -10,6 +10,7 @@ import {
     ERC1167_PROXY_LENGTH,
     ERC1167_PREFIX_LENGTH,
     ERC1167_SUFFIX_LENGTH,
+    ERC1167_IMPLEMENTATION_ADDRESS_LENGTH,
     ERC1167_PREFIX_HASH,
     ERC1167_SUFFIX_HASH
 } from "src/lib/LibExtrospectERC1167Proxy.sol";
@@ -252,7 +253,17 @@ contract LibExtrospectERC1167ProxyTest is Test {
         assertEq(ERC1167_SUFFIX, hex"5af43d82803e903d91602b57fd5bf3");
         assertEq(ERC1167_PREFIX_LENGTH, 10);
         assertEq(ERC1167_SUFFIX_LENGTH, 15);
+        assertEq(ERC1167_IMPLEMENTATION_ADDRESS_LENGTH, 20);
         assertEq(ERC1167_PROXY_LENGTH, 45);
+    }
+
+    /// The declared lengths are the lengths of the byte constants and of the
+    /// address that they describe.
+    function testERC1167ConstantLengths(address implementation) external pure {
+        assertEq(ERC1167_PREFIX.length, ERC1167_PREFIX_LENGTH);
+        assertEq(ERC1167_SUFFIX.length, ERC1167_SUFFIX_LENGTH);
+        assertEq(abi.encodePacked(implementation).length, ERC1167_IMPLEMENTATION_ADDRESS_LENGTH);
+        assertEq(abi.encodePacked(ERC1167_PREFIX, implementation, ERC1167_SUFFIX).length, ERC1167_PROXY_LENGTH);
     }
 
     /// The hash constants are literals, pinned here against the byte sequences

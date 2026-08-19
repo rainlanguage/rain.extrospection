@@ -6,13 +6,17 @@ pragma solidity ^0.8.25;
 bytes constant ERC1167_PREFIX = hex"363d3d373d3d3d363d73";
 /// @dev The 15 bytes after the implementation address in an ERC1167 proxy.
 bytes constant ERC1167_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3";
-/// @dev The ERC1167 proxy prefix is a known length.
+/// @dev The length in bytes of `ERC1167_PREFIX`.
 uint256 constant ERC1167_PREFIX_LENGTH = 10;
-/// @dev The ERC1167 proxy suffix is a known length.
+/// @dev The length in bytes of `ERC1167_SUFFIX`.
 uint256 constant ERC1167_SUFFIX_LENGTH = 15;
-/// @dev The length of a proxy contract is constant as the implementation
-/// address is always 20 bytes.
-uint256 constant ERC1167_PROXY_LENGTH = 20 + ERC1167_PREFIX_LENGTH + ERC1167_SUFFIX_LENGTH;
+/// @dev The length in bytes of the implementation address in an ERC1167 proxy.
+/// An address is 20 bytes.
+uint256 constant ERC1167_IMPLEMENTATION_ADDRESS_LENGTH = 20;
+/// @dev The length of a proxy contract is the prefix, then the implementation
+/// address, then the suffix, each of which is a constant length.
+uint256 constant ERC1167_PROXY_LENGTH =
+    ERC1167_PREFIX_LENGTH + ERC1167_IMPLEMENTATION_ADDRESS_LENGTH + ERC1167_SUFFIX_LENGTH;
 /// @dev We can more efficiently compare equality of hashes of regions of memory
 /// than the regions themselves.
 /// This is `keccak256(ERC1167_PREFIX)`, spelled as a literal so that using it
@@ -24,13 +28,19 @@ bytes32 constant ERC1167_PREFIX_HASH = 0x63d391efc3119310b9796819854d0555ea77fb3
 /// allocates no memory.
 bytes32 constant ERC1167_SUFFIX_HASH = 0x11a195f66c9175f46895bae2006d40848a680c7068b9fc4af248ff9a54a47e45;
 /// @dev The bounds of the ERC1167 proxy prefix are constant.
-/// This is the start offset of the ERC1167 proxy prefix.
+/// This is the start offset of the ERC1167 proxy prefix, measured from the
+/// pointer to the bytecode. The first `0x20` bytes at the pointer are the
+/// length of the bytecode, so the bytecode itself starts `0x20` after it.
 uint256 constant ERC1167_PREFIX_START = 0x20;
 /// @dev The bounds of the ERC1167 proxy suffix are constant.
 /// This is the start offset of the ERC1167 proxy suffix.
-uint256 constant ERC1167_SUFFIX_START = 0x20 + ERC1167_PROXY_LENGTH - ERC1167_SUFFIX_LENGTH;
-/// @dev The implementation address read offset is constant.
-uint256 constant ERC1167_IMPLEMENTATION_ADDRESS_OFFSET = ERC1167_PREFIX_LENGTH + 20;
+uint256 constant ERC1167_SUFFIX_START = ERC1167_PREFIX_START + ERC1167_PROXY_LENGTH - ERC1167_SUFFIX_LENGTH;
+/// @dev The implementation address read offset is constant. The address is read
+/// with a single `mload`, which reads the `0x20` bytes at and above its
+/// argument, so the argument is `0x20` below the end of the address. The end of
+/// the address is the start of the prefix, plus the prefix, plus the address.
+uint256 constant ERC1167_IMPLEMENTATION_ADDRESS_OFFSET =
+    ERC1167_PREFIX_START + ERC1167_PREFIX_LENGTH + ERC1167_IMPLEMENTATION_ADDRESS_LENGTH - 0x20;
 
 /// @title LibExtrospectERC1167Proxy
 /// @notice Detection of ERC-1167 minimal proxy contracts and extraction of
