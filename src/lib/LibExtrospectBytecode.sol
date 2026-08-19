@@ -125,16 +125,19 @@ library LibExtrospectBytecode {
     /// NOTE EOF bytecode is not supported by this function and reverts with
     /// `EOFBytecodeNotSupported`.
     ///
-    /// NOTE this function makes some large assumptions about the structure of
-    /// the metadata. It probably won't trim metadata inappropriately because it
-    /// is looking for an exact match with the assumed structure, including the
-    /// length and every CBOR byte. However, it may fail to trim metadata that
-    /// doesn't follow the assumed structure, even if it is valid Solidity CBOR
-    /// metadata or some other form of metadata. I.e. false positives are
-    /// unlikely but false negatives are to be expected at least some of the
-    /// time. For this reason, false negatives DO NOT revert or cause any other
-    /// issues, they just cause the function to return `false` and leave the
-    /// bytecode untrimmed.
+    /// NOTE this function constrains only the 16 structural bytes of the 53
+    /// byte trailer. Taking the first trailer byte as offset 0, the constrained
+    /// offsets are 0-7 (`a2 64 "ipfs" 5822`), 42-47 (`64 "solc" 43`) and 51-52
+    /// (`0033`). The 34 IPFS hash bytes at offsets 8-41 and the 3 solc version
+    /// bytes at offsets 48-50, 37 bytes in total, are unconstrained and may
+    /// hold any value. Any 53 byte tail carrying the 16 structural bytes at
+    /// those offsets is trimmed, whether or not a compiler emitted it.
+    ///
+    /// NOTE metadata that does not match the assumed structure is not trimmed,
+    /// even if it is valid Solidity CBOR metadata or some other form of
+    /// metadata, and even if it is 53 bytes long. That case DOES NOT revert or
+    /// cause any other issues, it just causes the function to return `false`
+    /// and leave the bytecode untrimmed.
     ///
     /// @param bytecode The bytecode to trim metadata from.
     /// @return didTrim Whether metadata was detected and trimmed.
@@ -178,6 +181,11 @@ library LibExtrospectBytecode {
     /// NOTE EOF bytecode is not supported by this function and reverts with
     /// `EOFBytecodeNotSupported` before either of the above is reached.
     ///
+    /// NOTE `expectedTrimmedHash` covers only the bytecode left after
+    /// trimming. The 53 trimmed bytes are runtime code that the EVM executes
+    /// if a jump lands in them, and 37 of them are unconstrained by
+    /// `tryTrimSolidityCBORMetadata`. Two accounts whose code differs only in
+    /// those 37 bytes both satisfy the same `expectedTrimmedHash`.
     /// @param account The account whose bytecode to check.
     /// @param expectedTrimmedHash The expected hash of the trimmed bytecode.
     /// Not the same value as
@@ -206,6 +214,10 @@ library LibExtrospectBytecode {
     /// bytecode is EOF reverts with `EOFBytecodeNotSupported`, so for such an
     /// account neither the passing case nor `UnexpectedMetadata` is reached.
     ///
+    /// NOTE detection is `tryTrimSolidityCBORMetadata`, which constrains only
+    /// 16 of the 53 trailer bytes, so an account whose code merely ends with
+    /// those 16 bytes at the expected offsets reverts here even if no compiler
+    /// emitted metadata for it.
     /// @param account The account whose bytecode to check.
     //forge-lint: disable-next-line(mixed-case-function)
     function checkNoSolidityCBORMetadata(address account) internal view {
