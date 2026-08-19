@@ -48,10 +48,13 @@ interface IExtrospectV1 {
     /// @param bytecode The bytecode to check.
     function checkNotEOFBytecode(bytes memory bytecode) external pure;
 
-    /// @notice Reverts `Metamorphic(riskyOpcodes)` when any metamorphic risk
-    /// opcode is reachable in `bytecode`, carrying the same bitmap
-    /// `scanMetamorphicRisk` returns. Reverts `EOFBytecodeNotSupported` when
-    /// `bytecode` is EOF. Returns nothing when that bitmap is zero.
+    /// @notice Reverts `Metamorphic(riskyOpcodes)` when `scanMetamorphicRisk`
+    /// reports a non-zero bitmap for `bytecode`, carrying that bitmap: any
+    /// reachable metamorphic risk opcode, or a first byte of the EIP-3541
+    /// reserved `0xEF` (an EOF container, an EIP-7702 delegation designator,
+    /// or any future assignment of the prefix), which reverts
+    /// `Metamorphic(1 << 0xEF)`. Never reverts `EOFBytecodeNotSupported`.
+    /// Returns nothing when that bitmap is zero.
     /// @dev See `LibExtrospectMetamorphic.checkNotMetamorphic`.
     /// @param bytecode The bytecode to check.
     function checkNotMetamorphic(bytes memory bytecode) external pure;
@@ -127,11 +130,15 @@ interface IExtrospectV1 {
     /// @notice Bitmap of the metamorphic risk opcodes
     /// (`SELFDESTRUCT`, `DELEGATECALL`, `CALLCODE`, `CREATE`, `CREATE2`) that
     /// `scanEVMOpcodesReachableInBytecode` finds reachable in `bytecode`.
-    /// Reverts `EOFBytecodeNotSupported` when `bytecode` is EOF.
+    /// Bytecode whose first byte is the EIP-3541 reserved `0xEF` — an EOF
+    /// container, an EIP-7702 delegation designator, or any future
+    /// assignment of the prefix — fails closed to a bitmap of exactly
+    /// `1 << 0xEF` instead of being scanned. Never reverts.
     /// @dev See `LibExtrospectMetamorphic.scanMetamorphicRisk`.
     /// @param bytecode The bytecode to scan.
     /// @return A bitmap, not a count or a score: bit `N` is set when
-    /// metamorphic opcode `N` is reachable. Zero when none are.
+    /// metamorphic opcode `N` is reachable, and bit `0xEF` alone is set when
+    /// the first byte is the reserved `0xEF`. Zero when neither holds.
     function scanMetamorphicRisk(bytes memory bytecode) external pure returns (uint256);
 
     /// @notice Removes the last 53 bytes of `bytecode` when they are the exact

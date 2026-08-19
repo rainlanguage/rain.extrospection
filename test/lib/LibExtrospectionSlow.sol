@@ -40,6 +40,15 @@ uint256 constant SLOW_HALTING_BITMAP =
     //forge-lint: disable-next-line(incorrect-shift)
     | (uint256(1) << 0xFF);
 
+/// @dev The lead byte EIP-3541 reserves: since the London hard fork no
+/// ordinary deployment can produce code whose first byte is `0xEF`. New
+/// post-London code beginning with it comes from a protocol feature — an
+/// EOF container, an EIP-7702 delegation designator, or whatever the
+/// prefix is assigned next — while pre-London deployments and chains
+/// without EIP-3541 can carry it as plain legacy code; the slow scan
+/// mirrors the first-byte-only fail-closed rule.
+uint8 constant SLOW_EIP3541_LEAD_BYTE = 0xEF;
+
 /// @dev Opcode bytes that indicate metamorphic risk: `SELFDESTRUCT`,
 /// `DELEGATECALL`, `CALLCODE`, `CREATE`, `CREATE2`.
 uint256 constant SLOW_METAMORPHIC_BITMAP =
@@ -131,8 +140,14 @@ library LibExtrospectionSlow {
         return scan;
     }
 
-    /// KISS implementation of metamorphic risk scan.
+    /// KISS implementation of metamorphic risk scan. Fails closed on the
+    /// EIP-3541 reserved prefix: bytecode whose first byte is `0xEF` reports
+    /// that byte's bit alone, before any opcode scan.
     function scanMetamorphicRiskSlow(bytes memory data) internal pure returns (uint256) {
+        if (data.length > 0 && uint8(data[0]) == SLOW_EIP3541_LEAD_BYTE) {
+            //forge-lint: disable-next-line(incorrect-shift)
+            return uint256(1) << SLOW_EIP3541_LEAD_BYTE;
+        }
         return scanEVMOpcodesReachableInBytecodeSlow(data) & SLOW_METAMORPHIC_BITMAP;
     }
 

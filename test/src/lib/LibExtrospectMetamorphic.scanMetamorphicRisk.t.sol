@@ -26,11 +26,6 @@ import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
 
 contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
-    /// External wrapper for EOF revert test.
-    function scanMetamorphicRiskExternal(bytes memory bytecode) external pure returns (uint256) {
-        return LibExtrospectMetamorphic.scanMetamorphicRisk(bytecode);
-    }
-
     /// External wrapper for address entry point revert tests.
     function scanMetamorphicRiskAddressExternal(address account) external view returns (uint256) {
         return LibExtrospectMetamorphic.scanMetamorphicRisk(account);
@@ -64,20 +59,32 @@ contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
         assertEq(risk, LibExtrospectMetamorphic.scanMetamorphicRisk(address(c).code));
     }
 
-    /// Address entry point: EOF code etched onto an account reverts with
-    /// `EOFBytecodeNotSupported` via delegation to the bytes entry point.
-    function testScanMetamorphicRiskAddressRevertsOnEOF() external {
+    /// Address entry point: EOF code etched onto an account reports the
+    /// EIP-3541 reserved `0xEF` lead byte as the risky element, via delegation
+    /// to the bytes entry point.
+    function testScanMetamorphicRiskAddressEOFReservedPrefix() external {
         address target = address(0xBEEF);
         vm.etch(target, hex"EF00010203");
-        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
-        this.scanMetamorphicRiskAddressExternal(target);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(target), uint256(1) << 0xEF);
     }
 
-    /// Fuzz: for an account with nonempty non-EOF code, the address entry
+    /// Address entry point: an account whose code is an EIP-7702 delegation
+    /// designator reports the EIP-3541 reserved `0xEF` lead byte as the risky
+    /// element, via delegation to the bytes entry point.
+    function testScanMetamorphicRiskAddressEIP7702DelegationDesignator() external {
+        address target = address(0xBEEF);
+        vm.etch(target, abi.encodePacked(hex"ef0100", address(0x1234567890123456789012345678901234567890)));
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(target), uint256(1) << 0xEF);
+    }
+
+    /// Fuzz: for an account with nonempty etchable code, the address entry
     /// point returns exactly what the bytes entry point returns for that code.
+    /// EOF code and EIP-7702 delegation designators are included: both entry
+    /// points report `1 << 0xEF` for them.
     function testScanMetamorphicRiskAddressEquivalenceFuzz(bytes memory code) external {
         vm.assume(code.length > 0);
-        vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
         address target = address(0xBEEF);
         LibExtrospectTestEtch.assumeEtch(vm, target, code);
 
@@ -194,16 +201,67 @@ contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
         assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(hex"61F4"), 0);
     }
 
-    /// Fuzz test against slow reference.
+    /// Fuzz test against slow reference, total over all bytes: the scan
+    /// never reverts, including on the EIP-3541 reserved `0xEF` prefix.
     function testScanMetamorphicRiskReference(bytes memory data) external pure {
-        vm.assume(!LibExtrospectBytecode.isEOFBytecode(data));
         assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(data), LibExtrospectionSlow.scanMetamorphicRiskSlow(data));
     }
 
-    /// EOF bytecode reverts.
-    function testScanMetamorphicRiskRevertsOnEOF() external {
-        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
-        this.scanMetamorphicRiskExternal(hex"EF00010203");
+    /// EOF bytecode reports the EIP-3541 reserved `0xEF` lead byte as the
+    /// risky element instead of reverting `EOFBytecodeNotSupported`.
+    function testScanMetamorphicRiskEOFReservedPrefix() external pure {
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(hex"EF00010203"), uint256(1) << 0xEF);
+    }
+
+    /// The EIP-7702 delegation designator `0xEF0100 || address` reports the
+    /// EIP-3541 reserved `0xEF` lead byte as the risky element. The account
+    /// holder can repoint or revoke the delegation with one transaction, so
+    /// the code at the account is the live "different code at the same
+    /// address" case. Inverts the repro on #54, which pinned a zero scan.
+    /// `isEOFBytecode` stays `false` for the designator per #53: the gate
+    /// lives in the metamorphic scan, not in the EOF predicate.
+    function testScanMetamorphicRiskEIP7702DelegationDesignator() external pure {
+        bytes memory designator = abi.encodePacked(hex"ef0100", address(0x1234567890123456789012345678901234567890));
+        assertEq(designator.length, 23);
+        assertFalse(LibExtrospectBytecode.isEOFBytecode(designator));
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(designator), uint256(1) << 0xEF);
+    }
+
+    /// The designator verdict does not depend on the delegate address's hex
+    /// digits. This delegate spells `JUMPDEST DELEGATECALL` in its leading
+    /// bytes, which previously resumed the legacy scan inside the address and
+    /// flipped the verdict to `1 << DELEGATECALL`; now every designator
+    /// reports the same `0xEF` bit.
+    function testScanMetamorphicRiskEIP7702DelegationDesignatorDelegateIndependent() external pure {
+        bytes memory designator = abi.encodePacked(hex"ef0100", address(0x5BF4000000000000000000000000000000000000));
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(designator), uint256(1) << 0xEF);
+    }
+
+    /// A single bare `0xEF` byte reports itself as the risky element: the
+    /// fail-closed rule is the first byte alone, not any longer prefix shape.
+    function testScanMetamorphicRiskBareReservedByte() external pure {
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(hex"EF"), uint256(1) << 0xEF);
+    }
+
+    /// An EOF container of a future version (`0xEF02...`) reports the
+    /// EIP-3541 reserved `0xEF` lead byte as the risky element: the rule
+    /// covers every future assignment of the prefix, not a registry of known
+    /// formats.
+    function testScanMetamorphicRiskFutureReservedPrefix() external pure {
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(hex"EF02010203"), uint256(1) << 0xEF);
+    }
+
+    /// Fuzz: ANY bytecode whose first byte is `0xEF` scans to exactly
+    /// `1 << 0xEF`, whatever follows the first byte.
+    function testScanMetamorphicRiskReservedPrefixFuzz(bytes memory tail) external pure {
+        bytes memory bytecode = abi.encodePacked(hex"ef", tail);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(bytecode), uint256(1) << 0xEF);
     }
 
     /// `hex"00F0"` is STOP followed by CREATE. CREATE is a metamorphic op but is

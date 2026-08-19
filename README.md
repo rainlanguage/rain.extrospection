@@ -125,6 +125,19 @@ against `METAMORPHIC_OPS` and returns the risky opcodes that are reachable.
 `checkNotMetamorphic` reverts with `Metamorphic(riskyOpcodes)` when that result
 is non-zero.
 
+Bytecode whose first byte is `0xEF` fails closed: `scanMetamorphicRisk` reports
+a bitmap of exactly `1 << 0xEF` without scanning, and `checkNotMetamorphic`
+therefore reverts. EIP-3541 reserves that lead byte for protocol features — an
+EOF container (`0xEF00`), an EIP-7702 delegation designator
+(`0xEF0100 || address`, which the account holder repoints or revokes with one
+transaction), or whatever the prefix is assigned next — that a legacy opcode
+scan cannot reason about; pre-London deployments and chains without EIP-3541 can
+hold `0xEF`-lead legacy code indistinguishable by inspection. The scan keys on
+the first byte alone and refuses to vouch rather than misread the bytes as
+opcodes. This makes the metamorphic pair total over bytes: it is the one place
+that answers the reserved prefix with a verdict, while the raw opcode scans keep
+reverting `EOFBytecodeNotSupported` on the `0xEF00` EOF magic.
+
 Both functions also have address-taking entry points that read the account's
 code, revert with `CodelessAccount` when there is none, and delegate to the
 bytes functions otherwise. An account with no code is the maximally metamorphic
