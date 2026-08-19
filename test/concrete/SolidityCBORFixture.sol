@@ -3,9 +3,9 @@
 pragma solidity =0.8.25;
 
 /// @dev Minimal Solidity runtime bytecode with the standard 53-byte CBOR
-/// metadata trailer appended. Used across the CBOR-related tests both in
-/// `test/src/lib/LibExtrospectBytecode.*` and in
-/// `test/src/concrete/Extrospect.*` to exercise the trim and reject paths.
+/// metadata trailer appended. Used across the CBOR-related tests in
+/// `test/src/lib/LibExtrospectBytecode.*` to exercise the trim and reject
+/// paths.
 ///
 /// Layout: `6080604052600080fdfe` (push 0x80, push 0x40, mstore, push 0,
 /// dup1, revert, invalid) followed by the 53-byte CBOR trailer

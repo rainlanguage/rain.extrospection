@@ -3,8 +3,10 @@
 pragma solidity ^0.8.25;
 
 /// @title IExtrospectV1
-/// @notice External interface for the concrete `Extrospect` contract. Every
-/// function forwards to the library function it names.
+/// @notice External interface to the extrospection libraries. Every
+/// function forwards to the library function it names. The concrete
+/// implementation (`Extrospect`) and its deployment live in
+/// rain.extrospection.deploy.
 /// @dev The custom errors named below are declared by the libraries, not by
 /// this interface. `EOFBytecodeNotSupported`, `MetadataNotTrimmed`,
 /// `BytecodeHashMismatch` and `UnexpectedMetadata` come from
