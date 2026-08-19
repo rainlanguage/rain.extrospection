@@ -198,8 +198,9 @@ library LibExtrospectBytecode {
     /// INVALID, SELFDESTRUCT, or unconditional JUMP per `HALTING_BITMAP`),
     /// scanning pauses. Scanning resumes at the next JUMPDEST. Opcodes between
     /// a halt and the next JUMPDEST are treated as unreachable and excluded.
-    /// This is an over-approximation because not all JUMPDESTs are actually
-    /// reachable at runtime.
+    /// This is an over-approximation: not all JUMPDESTs are actually reachable
+    /// at runtime, and the byte values Cancun leaves unassigned other than
+    /// INVALID do not pause scanning even though the EVM halts on them.
     /// Adapted from https://github.com/MrLuit/selfdestruct-detect/blob/master/src/index.ts
     /// NOTE: Reverts with `EOFBytecodeNotSupported` if the bytecode is EOF
     /// (EIP-7692).
