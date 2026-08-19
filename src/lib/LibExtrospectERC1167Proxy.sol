@@ -37,12 +37,38 @@ uint256 constant ERC1167_IMPLEMENTATION_ADDRESS_OFFSET = ERC1167_PREFIX_LENGTH +
 /// their implementation address from bytecode.
 /// https://eips.ethereum.org/EIPS/eip-1167
 library LibExtrospectERC1167Proxy {
-    /// @notice Checks if the given bytecode is an ERC1167 proxy. If so,
-    /// returns the implementation address.
+    /// @notice Checks if the given bytecode is the canonical ERC1167 minimal
+    /// proxy. If so, returns the implementation address.
+    ///
+    /// Exactly one byte sequence matches: the 10 byte prefix, then a 20 byte
+    /// implementation address pushed by `PUSH20`, then the 15 byte suffix
+    /// whose jump target is `0x2b`. Every other bytecode does not match,
+    /// including bytecode that delegates all of its calls to another account:
+    /// - ERC1167 vanity proxies, which push the implementation address with
+    ///   `PUSH(20 - Z)` and jump to `0x2b - Z` for a total length of `45 - Z`
+    ///   when the address has `Z` leading zero bytes;
+    /// - minimal proxies that push their zero constants with `PUSH0` instead of
+    ///   `RETURNDATASIZE`;
+    /// - EIP-7702 delegation designators, which are `0xef0100` followed by the
+    ///   20 byte address that the account delegates to.
+    ///
+    /// A `false` result says that the bytecode is not the canonical minimal
+    /// proxy. It does not say that the account runs its own code.
+    ///
+    /// The verdict is a function of the 45 bytes alone. It is the same whether
+    /// or not the implementation account exists or has code.
+    ///
+    /// EOF bytecode does not revert. An EOF container begins with `0xEF00`,
+    /// which is not `ERC1167_PREFIX`, so EOF bytecode returns
+    /// `(false, address(0))`.
     /// @param bytecode The bytecode to check.
-    /// @return result True if the bytecode is an ERC1167 proxy.
+    /// @return result True if the bytecode is the canonical ERC1167 minimal
+    /// proxy.
     /// @return implementationAddress The address of the implementation contract.
-    /// This is only valid if `result` is true, else it is zero.
+    /// This is only valid if `result` is true, else it is zero. When `result`
+    /// is true this is whatever address the bytecode encodes, which includes
+    /// `address(0)`, so `result` is the only discriminator between a proxy and
+    /// a non-proxy.
     function isERC1167Proxy(bytes memory bytecode) internal pure returns (bool result, address implementationAddress) {
         unchecked {
             {
