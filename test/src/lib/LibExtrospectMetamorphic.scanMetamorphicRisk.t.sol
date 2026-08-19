@@ -104,4 +104,19 @@ contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
         vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
         this.scanMetamorphicRiskExternal(hex"EF00010203");
     }
+
+    /// `hex"00F0"` is STOP followed by CREATE. CREATE is a metamorphic op but is
+    /// not REACHABLE here (no JUMPDEST resumes execution after the halt), so the
+    /// risk bitmap is zero: the scan is over reachable opcodes, not present ones.
+    function testScanMetamorphicRiskCreateAfterHaltNotReachable() external pure {
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(hex"00F0"), 0);
+    }
+
+    /// A bare reachable CREATE yields exactly the CREATE bit and nothing else,
+    /// pinning both the mask and its polarity.
+    function testScanMetamorphicRiskBareCreateExactBitmap() external pure {
+        //forge-lint: disable-next-line(incorrect-shift)
+        uint256 expected = uint256(1) << uint256(EVM_OP_CREATE);
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(hex"F0"), expected);
+    }
 }
