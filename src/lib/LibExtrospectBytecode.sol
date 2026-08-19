@@ -52,7 +52,7 @@ library LibExtrospectBytecode {
     /// Thrown when bytecode metadata is not trimmed as expected.
     error MetadataNotTrimmed();
 
-    /// Thrown when processing an EOF formatted bytecode.
+    /// Thrown when `isEOFBytecode` reports the bytecode as EOF.
     error EOFBytecodeNotSupported();
 
     /// Thrown when the bytecode hash does not match the expected value.
@@ -65,9 +65,15 @@ library LibExtrospectBytecode {
     /// compile without CBOR metadata entirely.
     error UnexpectedMetadata();
 
-    /// Returns whether the bytecode is in EOF format.
+    /// Returns whether the first two bytes of the bytecode are the EOF magic
+    /// `0xEF00`. The version byte that follows the magic in an EIP-3540
+    /// container is not read, so `0xEF00` alone and `0xEF00` followed by any
+    /// version byte are both reported as EOF. Bytecode shorter than two bytes
+    /// is not reported as EOF, and neither is bytecode starting with `0xEF`
+    /// followed by any byte other than `0x00`, including the `0xEF01` of an
+    /// EIP-7702 delegation designator.
     /// @param bytecode The bytecode to check.
-    /// @return isEOF Whether the bytecode is in EOF format.
+    /// @return isEOF Whether the first two bytes are `0xEF00`.
     function isEOFBytecode(bytes memory bytecode) internal pure returns (bool isEOF) {
         if (bytecode.length >= 2) {
             assembly ("memory-safe") {
@@ -77,7 +83,8 @@ library LibExtrospectBytecode {
         }
     }
 
-    /// Checks that the bytecode is not in EOF format. Reverts if it is.
+    /// Reverts with `EOFBytecodeNotSupported` if `isEOFBytecode` returns true
+    /// for the bytecode.
     /// @param bytecode The bytecode to check.
     //forge-lint: disable-next-line(mixed-case-function)
     function checkNotEOFBytecode(bytes memory bytecode) internal pure {
