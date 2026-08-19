@@ -39,6 +39,9 @@ library LibExtrospectERC1167Proxy {
     /// returns the implementation address.
     /// The verdict is a function of the 45 bytes alone. It is the same whether
     /// or not the implementation account exists or has code.
+    /// EOF bytecode does not revert. An EOF container begins with `0xEF00`,
+    /// which is not `ERC1167_PREFIX`, so EOF bytecode returns
+    /// `(false, address(0))`.
     /// @param bytecode The bytecode to check.
     /// @return result True if the bytecode is an ERC1167 proxy.
     /// @return implementationAddress The address of the implementation contract.

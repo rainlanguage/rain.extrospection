@@ -3,6 +3,10 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.16.1/src/Test.sol";
+import {
+    SOLIDITY_CBOR_RUNTIME_FIXTURE,
+    SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED
+} from "test/concrete/SolidityCBORFixture.sol";
 import {LibExtrospectERC1967BeaconProxy} from "src/lib/LibExtrospectERC1967BeaconProxy.sol";
 import {MockBeacon} from "test/concrete/MockBeacon.sol";
 import {EmptyContract} from "test/concrete/EmptyContract.sol";
@@ -13,6 +17,11 @@ import {
     RevertingWithAddressBeacon,
     REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
 } from "test/concrete/RevertingWithAddressBeacon.sol";
+import {
+    LibEIP7702Designator,
+    EIP7702_DELEGATION_PREFIX,
+    EIP7702_DESIGNATOR_LENGTH
+} from "test/lib/LibEIP7702Designator.sol";
 
 /// @title LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest
 /// @notice Tests `LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode`.
@@ -46,6 +55,32 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         MockBeacon beacon = new MockBeacon(address(0), address(this));
         assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), emptyHash));
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), wrongHash));
+    }
+
+    /// Every codeless implementation reads as empty bytecode, so
+    /// `keccak256("")` is matched at a non-zero address the same way it
+    /// is at `address(0)`. An unoccupied `CREATE2` target is codeless
+    /// while the beacon already points at it, and deploying to that
+    /// target turns the same call from true to false.
+    function testCounterfactualImplementationMatchesEmptyHashUntilOccupied() external {
+        bytes32 salt = bytes32(uint256(0x5eed));
+        address counterfactual =
+            vm.computeCreate2Address(salt, keccak256(type(EmptyContract).creationCode), address(this));
+        assertEq(counterfactual.code.length, 0);
+        assertTrue(counterfactual != address(0));
+
+        MockBeacon beacon = new MockBeacon(counterfactual, address(this));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+
+        assertEq(address(new EmptyContract{salt: salt}()), counterfactual);
+        assertGt(counterfactual.code.length, 0);
+
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(counterfactual.code)
+            )
+        );
     }
 
     /// A target that doesn't expose `implementation()` is not a valid
@@ -125,5 +160,92 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         RevertingWithAddressBeacon beacon = new RevertingWithAddressBeacon();
         assertEq(keccak256(REVERTING_WITH_ADDRESS_BEACON_PAYLOAD.code), keccak256(""));
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+    }
+
+    /// An account whose code is an EIP-7702 delegation designator runs
+    /// the delegate's code, so `implementation()` is answered by the
+    /// delegate and the predicate returns true for the delegating
+    /// account. The predicate never reads the target's own code, so the
+    /// designator is not distinguished from beacon-contract code.
+    function testMatchesForDelegatedAccountBeacon() external {
+        EmptyContract impl = new EmptyContract();
+        MockBeacon delegate = new MockBeacon(address(impl), address(this));
+        address delegating = address(uint160(uint256(keccak256("delegating beacon"))));
+        vm.etch(delegating, LibEIP7702Designator.designator(address(delegate)));
+
+        assertEq(delegating.code.length, EIP7702_DESIGNATOR_LENGTH);
+        assertEq(bytes3(delegating.code), EIP7702_DELEGATION_PREFIX);
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(delegating, keccak256(address(impl).code))
+        );
+    }
+
+    /// Repointing an EIP-7702 delegation designator at a delegate that
+    /// reports a different implementation flips the predicate for the
+    /// same address, with no change to the code of either delegate.
+    function testDelegatedAccountBeaconRepointChangesResult() external {
+        EmptyContract impl = new EmptyContract();
+        MockBeacon delegate = new MockBeacon(address(impl), address(this));
+        MockBeacon otherDelegate = new MockBeacon(address(delegate), address(this));
+        address delegating = address(uint160(uint256(keccak256("delegating beacon"))));
+
+        vm.etch(delegating, LibEIP7702Designator.designator(address(delegate)));
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(delegating, keccak256(address(impl).code))
+        );
+
+        vm.etch(delegating, LibEIP7702Designator.designator(address(otherDelegate)));
+        assertFalse(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(delegating, keccak256(address(impl).code))
+        );
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                delegating, keccak256(address(delegate).code)
+            )
+        );
+    }
+
+    /// When `implementation()` returns an account whose code is an
+    /// EIP-7702 delegation designator, the hash compared is that of the
+    /// 23-byte designator, not that of the delegate's runtime bytecode.
+    function testDelegatedAccountImplementationHashesDesignator() external {
+        MockBeacon delegate = new MockBeacon(address(this), address(this));
+        address delegating = address(uint160(uint256(keccak256("delegating implementation"))));
+        bytes memory designator = LibEIP7702Designator.designator(address(delegate));
+        vm.etch(delegating, designator);
+        MockBeacon beacon = new MockBeacon(delegating, address(this));
+
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256(designator))
+        );
+        assertFalse(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(address(delegate).code)
+            )
+        );
+    }
+
+    /// The hash this predicate matches is `keccak256` of the
+    /// implementation's whole runtime bytecode, CBOR metadata trailer
+    /// included. The trimmed hash that
+    /// `LibExtrospectBytecode.checkCBORTrimmedBytecodeHash` matches for the
+    /// same implementation is a different value, and is rejected here.
+    function testRejectsCBORTrimmedHash() external {
+        address impl = address(0xbeef);
+        vm.etch(impl, SOLIDITY_CBOR_RUNTIME_FIXTURE);
+        MockBeacon beacon = new MockBeacon(impl, address(this));
+
+        assertEq(SOLIDITY_CBOR_RUNTIME_FIXTURE.length, SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED.length + 53);
+
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(SOLIDITY_CBOR_RUNTIME_FIXTURE)
+            )
+        );
+        assertFalse(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED)
+            )
+        );
     }
 }

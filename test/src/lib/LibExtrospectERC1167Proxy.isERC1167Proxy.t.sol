@@ -11,6 +11,7 @@ import {
     ERC1167_PREFIX_LENGTH,
     ERC1167_SUFFIX_LENGTH
 } from "src/lib/LibExtrospectERC1167Proxy.sol";
+import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {LibExtrospectionSlow} from "test/lib/LibExtrospectionSlow.sol";
 
 /// @title LibExtrospectERC1167ProxyTest
@@ -41,6 +42,55 @@ contract LibExtrospectERC1167ProxyTest is Test {
         (bool result, address impl) = LibExtrospectERC1167Proxy.isERC1167Proxy(extended);
         assertFalse(result);
         assertEq(impl, address(0));
+    }
+
+    /// EOF bytecode shorter than an ERC1167 proxy is not a proxy and does not
+    /// revert. Hits the length-check early return.
+    function testIsERC1167ProxyEOFShort() external pure {
+        bytes memory bytecode = hex"EF00";
+        assertTrue(LibExtrospectBytecode.isEOFBytecode(bytecode));
+        assertTrue(bytecode.length != ERC1167_PROXY_LENGTH);
+        (bool result, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        assertFalse(result);
+        assertEq(implementation, address(0));
+    }
+
+    /// An EOF container of a length other than 45 bytes is not a proxy and does
+    /// not revert. Hits the length-check early return.
+    function testIsERC1167ProxyEOFContainer() external pure {
+        bytes memory bytecode = hex"EF000101000402000100010400000000800000FE";
+        assertTrue(LibExtrospectBytecode.isEOFBytecode(bytecode));
+        assertTrue(bytecode.length != ERC1167_PROXY_LENGTH);
+        (bool result, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        assertFalse(result);
+        assertEq(implementation, address(0));
+    }
+
+    /// EOF bytecode of exactly the ERC1167 proxy length is not a proxy and does
+    /// not revert. Reaches the prefix hash comparison because the length check
+    /// passes.
+    function testIsERC1167ProxyEOFProxyLength() external pure {
+        bytes memory bytecode =
+            hex"EF0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        assertTrue(LibExtrospectBytecode.isEOFBytecode(bytecode));
+        assertEq(bytecode.length, ERC1167_PROXY_LENGTH);
+        (bool result, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        assertFalse(result);
+        assertEq(implementation, address(0));
+    }
+
+    /// EOF bytecode carrying a valid ERC1167 suffix at the correct length is
+    /// not a proxy and does not revert. The suffix hash matches and only the
+    /// prefix hash rejects it, so the implementation address is never read.
+    function testIsERC1167ProxyEOFWithValidSuffix() external pure {
+        bytes memory bytecode = abi.encodePacked(
+            hex"EF000000000000000000", address(0x1111111111111111111111111111111111111111), ERC1167_SUFFIX
+        );
+        assertTrue(LibExtrospectBytecode.isEOFBytecode(bytecode));
+        assertEq(bytecode.length, ERC1167_PROXY_LENGTH);
+        (bool result, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        assertFalse(result);
+        assertEq(implementation, address(0));
     }
 
     /// ERC1167 has known prefix so any other prefix is not a proxy.

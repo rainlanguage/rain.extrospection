@@ -19,4 +19,18 @@ contract ExtrospectIsERC1167ProxyTest is ExtrospectEquivalence {
         assertEq(extIsProxy, libIsProxy);
         assertEq(extImpl, libImpl);
     }
+
+    /// EOF bytecode of exactly the ERC1167 proxy length returns
+    /// `(false, address(0))` through the external entry point rather than
+    /// reverting.
+    function testIsERC1167ProxyEquivalenceEOF() external view {
+        bytes memory bytecode =
+            hex"EF0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        (bool extIsProxy, address extImpl) = extrospect.isERC1167Proxy(bytecode);
+        (bool libIsProxy, address libImpl) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        assertFalse(extIsProxy);
+        assertEq(extImpl, address(0));
+        assertEq(extIsProxy, libIsProxy);
+        assertEq(extImpl, libImpl);
+    }
 }
