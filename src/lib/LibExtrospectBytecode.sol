@@ -286,7 +286,8 @@ library LibExtrospectBytecode {
     /// NOTE: Empty bytecode scans to a zero bitmap: there are no bytes, so no
     /// opcode is reachable. The empty code of a codeless account scans the
     /// same way, and zero says nothing about what opcodes that account may
-    /// later gain.
+    /// later gain. Use `scanEVMOpcodesReachableInBytecode(address)` to bind
+    /// the scan to an account and reject a codeless one.
     /// @param bytecode The bytecode to scan.
     /// @return bytesReachable A `uint256` where each bit represents the presence
     /// of a reachable opcode in the source bytecode.
@@ -337,13 +338,22 @@ library LibExtrospectBytecode {
     }
 
     /// Reads `account`'s code and scans it for reachable opcodes, delegating
-    /// to `scanEVMOpcodesReachableInBytecode(bytes)`.
+    /// to `scanEVMOpcodesReachableInBytecode(bytes)`. Reverts with
+    /// `CodelessAccount` carrying the address when the account has no code:
+    /// an account with no code can gain any code later — an unoccupied
+    /// `CREATE2` target, a self-destructed account between incarnations, or
+    /// an EOA that can gain code by EIP-7702 delegation — so a zero bitmap
+    /// for it would vouch for nothing. Reverts with `EOFBytecodeNotSupported`
+    /// if the account's code is EOF, as the bytes scan does.
     /// @param account The account whose code to scan.
     /// @return A `uint256` where each bit represents the presence of a
     /// reachable opcode in the account's code.
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesReachableInBytecode(address account) internal view returns (uint256) {
         bytes memory bytecode = account.code;
+        if (bytecode.length == 0) {
+            revert CodelessAccount(account);
+        }
         return scanEVMOpcodesReachableInBytecode(bytecode);
     }
 
@@ -359,7 +369,8 @@ library LibExtrospectBytecode {
     /// NOTE: Empty bytecode scans to a zero bitmap: there are no bytes, so no
     /// opcode is present. The empty code of a codeless account scans the same
     /// way, and zero says nothing about what opcodes that account may later
-    /// gain.
+    /// gain. Use `scanEVMOpcodesPresentInBytecode(address)` to bind the scan
+    /// to an account and reject a codeless one.
     /// @param bytecode The bytecode to scan.
     /// @return bytesPresent A `uint256` where each bit represents the presence
     /// of an opcode in the source bytecode.
@@ -388,13 +399,22 @@ library LibExtrospectBytecode {
     }
 
     /// Reads `account`'s code and scans it for present opcodes, delegating to
-    /// `scanEVMOpcodesPresentInBytecode(bytes)`.
+    /// `scanEVMOpcodesPresentInBytecode(bytes)`. Reverts with
+    /// `CodelessAccount` carrying the address when the account has no code:
+    /// an account with no code can gain any code later — an unoccupied
+    /// `CREATE2` target, a self-destructed account between incarnations, or
+    /// an EOA that can gain code by EIP-7702 delegation — so a zero bitmap
+    /// for it would vouch for nothing. Reverts with `EOFBytecodeNotSupported`
+    /// if the account's code is EOF, as the bytes scan does.
     /// @param account The account whose code to scan.
     /// @return A `uint256` where each bit represents the presence of an
     /// opcode in the account's code.
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesPresentInBytecode(address account) internal view returns (uint256) {
         bytes memory bytecode = account.code;
+        if (bytecode.length == 0) {
+            revert CodelessAccount(account);
+        }
         return scanEVMOpcodesPresentInBytecode(bytecode);
     }
 }
