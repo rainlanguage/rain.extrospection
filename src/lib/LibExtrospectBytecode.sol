@@ -336,6 +336,17 @@ library LibExtrospectBytecode {
         }
     }
 
+    /// Reads `account`'s code and scans it for reachable opcodes, delegating
+    /// to `scanEVMOpcodesReachableInBytecode(bytes)`.
+    /// @param account The account whose code to scan.
+    /// @return A `uint256` where each bit represents the presence of a
+    /// reachable opcode in the account's code.
+    //forge-lint: disable-next-line(mixed-case-function)
+    function scanEVMOpcodesReachableInBytecode(address account) internal view returns (uint256) {
+        bytes memory bytecode = account.code;
+        return scanEVMOpcodesReachableInBytecode(bytecode);
+    }
+
     /// Scans all opcodes present in bytecode, respecting PUSH* inline data.
     /// A trailing PUSH* whose inline data runs past the end of the bytecode
     /// ends the scan. The PUSH* opcode itself is recorded, and every byte after
@@ -374,5 +385,16 @@ library LibExtrospectBytecode {
                 if lt(push, 0x20) { cursor := add(cursor, add(push, 1)) }
             }
         }
+    }
+
+    /// Reads `account`'s code and scans it for present opcodes, delegating to
+    /// `scanEVMOpcodesPresentInBytecode(bytes)`.
+    /// @param account The account whose code to scan.
+    /// @return A `uint256` where each bit represents the presence of an
+    /// opcode in the account's code.
+    //forge-lint: disable-next-line(mixed-case-function)
+    function scanEVMOpcodesPresentInBytecode(address account) internal view returns (uint256) {
+        bytes memory bytecode = account.code;
+        return scanEVMOpcodesPresentInBytecode(bytecode);
     }
 }

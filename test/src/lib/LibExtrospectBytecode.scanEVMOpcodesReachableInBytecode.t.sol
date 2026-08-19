@@ -148,6 +148,7 @@ import {HasLog4} from "test/concrete/HasLog4.sol";
 import {HasStop} from "test/concrete/HasStop.sol";
 import {HasRevert} from "test/concrete/HasRevert.sol";
 import {HasInvalid} from "test/concrete/HasInvalid.sol";
+import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
 
 contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
     using LibBytes for bytes;
@@ -936,5 +937,56 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         bytes memory eofBytecode = hex"EF00010203";
         vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
         this.scanEVMOpcodesReachableInBytecodeExternal(eofBytecode);
+    }
+
+    /// External wrapper for address entry point revert tests.
+    function scanEVMOpcodesReachableInBytecodeAddressExternal(address account) external view returns (uint256) {
+        return LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(account);
+    }
+
+    /// Address entry point: a codeless account reverts with `CodelessAccount`
+    /// carrying the address. The bytes entry point returns zero for the same
+    /// account's (empty) code, pinned by
+    /// `testScanEVMOpcodesReachableCodelessAccount`; only the address boundary
+    /// can refuse to vouch for a codeless account.
+    function testScanEVMOpcodesReachableAddressRevertsOnCodelessAccount() public {
+        address codeless = address(0xC2);
+        assertEq(codeless.code.length, 0);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.CodelessAccount.selector, codeless));
+        this.scanEVMOpcodesReachableInBytecodeAddressExternal(codeless);
+    }
+
+    /// Address entry point: contract with SELFDESTRUCT scans with the
+    /// SELFDESTRUCT bit reachable, same as the bytes entry point over its
+    /// code.
+    function testScanEVMOpcodesReachableAddressSelfdestruct() public {
+        HasSelfdestruct c = new HasSelfdestruct();
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c));
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << uint256(EVM_OP_SELFDESTRUCT)) != 0);
+        assertEq(scan, LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(address(c).code));
+    }
+
+    /// Address entry point: EOF code etched onto an account reverts with
+    /// `EOFBytecodeNotSupported` via delegation to the bytes entry point.
+    function testScanEVMOpcodesReachableAddressRevertsOnEOF() public {
+        address target = address(0xBEEF);
+        vm.etch(target, hex"EF00010203");
+        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
+        this.scanEVMOpcodesReachableInBytecodeAddressExternal(target);
+    }
+
+    /// Fuzz: for an account with nonempty non-EOF code, the address entry
+    /// point returns exactly what the bytes entry point returns for that code.
+    function testScanEVMOpcodesReachableAddressEquivalenceFuzz(bytes memory code) public {
+        vm.assume(code.length > 0);
+        vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
+        address target = address(0xBEEF);
+        LibExtrospectTestEtch.assumeEtch(vm, target, code);
+
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(target),
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(code)
+        );
     }
 }
