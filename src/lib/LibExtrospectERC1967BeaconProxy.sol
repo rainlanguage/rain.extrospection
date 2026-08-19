@@ -51,9 +51,7 @@ library LibExtrospectERC1967BeaconProxy {
     /// than reverting, so integrators can collapse the predicate into
     /// a single boolean assertion.
     ///
-    /// The caller is responsible for only calling this on actual
-    /// beacons; for any other target the result is just what that
-    /// target's code chose to answer.
+    /// The caller is responsible for only calling this on beacons.
     /// @param beacon The beacon address to query.
     /// @param expectedRuntimeHash The expected `keccak256` of the
     /// implementation's runtime bytecode.
@@ -72,9 +70,7 @@ library LibExtrospectERC1967BeaconProxy {
     /// so integrators can collapse the predicate into a single boolean
     /// assertion.
     ///
-    /// The caller is responsible for only calling this on actual
-    /// beacons; for any other target the result is just what that
-    /// target's code chose to answer.
+    /// The caller is responsible for only calling this on beacons.
     /// @param beacon The beacon address to query.
     /// @param expectedOwner The owner address the beacon should report.
     /// @return True if the ownership matches. False if the call to
