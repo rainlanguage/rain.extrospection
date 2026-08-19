@@ -13,6 +13,7 @@ import {EmptyContract} from "test/concrete/EmptyContract.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
 import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
 import {WrongLengthBeacon} from "test/concrete/WrongLengthBeacon.sol";
+import {PermissiveFallbackContract} from "test/concrete/PermissiveFallbackContract.sol";
 import {
     RevertingWithAddressBeacon,
     REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
@@ -83,10 +84,10 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         );
     }
 
-    /// A target that doesn't expose `implementation()` is not a valid
-    /// beacon and trivially fails the predicate. Returns false rather
-    /// than reverting so integrators can collapse the check to a single
-    /// boolean assertion.
+    /// A target with no `implementation()` function and no fallback
+    /// reverts the staticcall, so it fails the predicate. Returns false
+    /// rather than reverting so integrators can collapse the check to a
+    /// single boolean assertion.
     function testReturnsFalseOnNonBeacon(bytes32 expected) external {
         EmptyContract notABeacon = new EmptyContract();
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(notABeacon), expected));
@@ -160,6 +161,37 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         RevertingWithAddressBeacon beacon = new RevertingWithAddressBeacon();
         assertEq(keccak256(REVERTING_WITH_ADDRESS_BEACON_PAYLOAD.code), keccak256(""));
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+    }
+
+    /// A target with no `implementation()` function, but a fallback
+    /// answering every selector with 32 clean bytes, passes the
+    /// predicate against the runtime hash of whatever address that
+    /// fallback answers with. The fallback's return is byte-identical
+    /// to a real `implementation()` return, so the staticcall cannot
+    /// separate the two. A comparison against any other hash still
+    /// fails, so the predicate is hashing the fallback's answer rather
+    /// than ignoring it.
+    function testAcceptsPermissiveFallbackAsImplementation(bytes32 wrongHash) external {
+        EmptyContract impl = new EmptyContract();
+        vm.assume(wrongHash != keccak256(address(impl).code));
+        PermissiveFallbackContract target = new PermissiveFallbackContract(address(impl));
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(target), keccak256(address(impl).code)
+            )
+        );
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(target), wrongHash));
+    }
+
+    /// Non-fuzz pin at `answer = address(0)`: a fallback answering with
+    /// 32 zero bytes resolves to an empty-code account, so the
+    /// predicate matches `keccak256("")` — the same result a beacon
+    /// whose real `implementation()` returns `address(0)` produces.
+    function testAcceptsZeroReturningFallbackAsImplementation() external {
+        PermissiveFallbackContract target = new PermissiveFallbackContract(address(0));
+        MockBeacon beacon = new MockBeacon(address(0), address(this));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(target), keccak256("")));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
     }
 
     /// An account whose code is an EIP-7702 delegation designator runs
