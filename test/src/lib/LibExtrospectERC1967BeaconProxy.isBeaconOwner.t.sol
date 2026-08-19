@@ -9,6 +9,8 @@ import {EmptyContract} from "test/concrete/EmptyContract.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
 import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
 import {WrongLengthBeacon} from "test/concrete/WrongLengthBeacon.sol";
+import {OneAboveMaxAddressBeacon} from "test/concrete/OneAboveMaxAddressBeacon.sol";
+import {DirtyUpperByteBeacon} from "test/concrete/DirtyUpperByteBeacon.sol";
 import {PermissiveFallbackContract} from "test/concrete/PermissiveFallbackContract.sol";
 import {
     RevertingWithAddressBeacon,
@@ -86,6 +88,27 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
         address maxAddr = address(type(uint160).max);
         MockBeacon beacon = new MockBeacon(address(this), maxAddr);
         assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), maxAddr));
+    }
+
+    /// `2 ** 160` is the first value the dirty-bits gate
+    /// (`raw > type(uint160).max`) must reject — the reject side of the
+    /// boundary whose accept side `testMatchesAtMaxAddressBoundary`
+    /// pins. The expected owner is `address(0)`: exactly what a gate
+    /// widened past 160 bits would truncate `2 ** 160` to and report
+    /// as a match.
+    function testReturnsFalseAtOneAboveMaxAddressBoundary() external {
+        OneAboveMaxAddressBeacon beacon = new OneAboveMaxAddressBeacon();
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), address(0)));
+    }
+
+    /// A 32-byte return holding a real address with only bits 160-167
+    /// set above it must be rejected as dirty, not truncated. The
+    /// expected owner is the embedded address itself: exactly what a
+    /// gate widened to 168 bits or more would truncate the word to and
+    /// report as a match.
+    function testReturnsFalseOnDirtyUpperByteAboveRealAddress(address own) external {
+        DirtyUpperByteBeacon beacon = new DirtyUpperByteBeacon(own);
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), own));
     }
 
     /// A beacon whose `owner()` returns more than 32 bytes must also

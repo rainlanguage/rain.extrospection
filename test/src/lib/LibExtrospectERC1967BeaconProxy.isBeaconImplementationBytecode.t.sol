@@ -13,6 +13,8 @@ import {EmptyContract} from "test/concrete/EmptyContract.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
 import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
 import {WrongLengthBeacon} from "test/concrete/WrongLengthBeacon.sol";
+import {OneAboveMaxAddressBeacon} from "test/concrete/OneAboveMaxAddressBeacon.sol";
+import {DirtyUpperByteBeacon} from "test/concrete/DirtyUpperByteBeacon.sol";
 import {PermissiveFallbackContract} from "test/concrete/PermissiveFallbackContract.sol";
 import {
     RevertingWithAddressBeacon,
@@ -143,6 +145,32 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         MockBeacon beacon = new MockBeacon(maxAddr, address(this));
         assertTrue(
             LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256(maxAddr.code))
+        );
+    }
+
+    /// `2 ** 160` is the first value the dirty-bits gate
+    /// (`raw > type(uint160).max`) must reject — the reject side of the
+    /// boundary whose accept side `testMatchesAtMaxAddressBoundary`
+    /// pins. The expected hash is `keccak256("")`: exactly what a gate
+    /// widened past 160 bits would match after truncating `2 ** 160`
+    /// to the codeless `address(0)`.
+    function testReturnsFalseAtOneAboveMaxAddressBoundary() external {
+        OneAboveMaxAddressBeacon beacon = new OneAboveMaxAddressBeacon();
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+    }
+
+    /// A 32-byte return holding a real deployed address with only bits
+    /// 160-167 set above it must be rejected as dirty, not truncated.
+    /// The expected hash is that of the embedded address's runtime
+    /// bytecode: exactly what a gate widened to 168 bits or more would
+    /// match after truncating the word to that address.
+    function testReturnsFalseOnDirtyUpperByteAboveRealAddress() external {
+        EmptyContract impl = new EmptyContract();
+        DirtyUpperByteBeacon beacon = new DirtyUpperByteBeacon(address(impl));
+        assertFalse(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(address(impl).code)
+            )
         );
     }
 
