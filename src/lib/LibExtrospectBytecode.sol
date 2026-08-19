@@ -117,21 +117,26 @@ library LibExtrospectBytecode {
     /// The length of the metadata must always be 51+2 bytes, as the dynamic
     /// parts still have constant length.
     ///
-    /// NOTE bytecode is mutated in place.
+    /// NOTE bytecode is mutated in place. Trimming writes the shorter length
+    /// over the array's own length word, so every reference to that same array
+    /// observes the trim, not just the one passed here.
     ///
-    /// NOTE EOF bytecode is not supported by this function and will cause a
-    /// revert.
+    /// NOTE EOF bytecode is not supported by this function and reverts with
+    /// `EOFBytecodeNotSupported`.
     ///
-    /// NOTE this function makes some large assumptions about the structure of
-    /// the metadata. It probably won't trim metadata inappropriately because it
-    /// is looking for an exact match with the assumed structure, including the
-    /// length and every CBOR byte. However, it may fail to trim metadata that
-    /// doesn't follow the assumed structure, even if it is valid Solidity CBOR
-    /// metadata or some other form of metadata. I.e. false positives are
-    /// unlikely but false negatives are to be expected at least some of the
-    /// time. For this reason, false negatives DO NOT revert or cause any other
-    /// issues, they just cause the function to return `false` and leave the
-    /// bytecode untrimmed.
+    /// NOTE this function constrains only the 16 structural bytes of the 53
+    /// byte trailer. Taking the first trailer byte as offset 0, the constrained
+    /// offsets are 0-7 (`a2 64 "ipfs" 5822`), 42-47 (`64 "solc" 43`) and 51-52
+    /// (`0033`). The 34 IPFS hash bytes at offsets 8-41 and the 3 solc version
+    /// bytes at offsets 48-50, 37 bytes in total, are unconstrained and may
+    /// hold any value. Any 53 byte tail carrying the 16 structural bytes at
+    /// those offsets is trimmed, whether or not a compiler emitted it.
+    ///
+    /// NOTE metadata that does not match the assumed structure is not trimmed,
+    /// even if it is valid Solidity CBOR metadata or some other form of
+    /// metadata, and even if it is 53 bytes long. That case DOES NOT revert or
+    /// cause any other issues, it just causes the function to return `false`
+    /// and leave the bytecode untrimmed.
     ///
     /// @param bytecode The bytecode to trim metadata from.
     /// @return didTrim Whether metadata was detected and trimmed.
@@ -168,8 +173,18 @@ library LibExtrospectBytecode {
     }
 
     /// Checks that the bytecode of an account, after trimming Solidity CBOR
-    /// metadata, matches an expected hash. Reverts if the metadata was not
-    /// trimmed or if the hash does not match after trimming.
+    /// metadata, matches an expected hash. Reverts with `MetadataNotTrimmed` if
+    /// the metadata was not trimmed, or with `BytecodeHashMismatch` if the hash
+    /// does not match after trimming.
+    ///
+    /// NOTE EOF bytecode is not supported by this function and reverts with
+    /// `EOFBytecodeNotSupported` before either of the above is reached.
+    ///
+    /// NOTE `expectedTrimmedHash` covers only the bytecode left after
+    /// trimming. The 53 trimmed bytes are runtime code that the EVM executes
+    /// if a jump lands in them, and 37 of them are unconstrained by
+    /// `tryTrimSolidityCBORMetadata`. Two accounts whose code differs only in
+    /// those 37 bytes both satisfy the same `expectedTrimmedHash`.
     /// @param account The account whose bytecode to check.
     /// @param expectedTrimmedHash The expected hash of the trimmed bytecode.
     /// Not the same value as
@@ -187,15 +202,23 @@ library LibExtrospectBytecode {
         }
     }
 
-    /// Reverts with `UnexpectedMetadata` when `tryTrimSolidityCBORMetadata`
-    /// matches the bytecode of an account, i.e. when the final 53 bytes are
-    /// exactly the `ipfs` + `solc` layout documented on that function. Reverts
-    /// with `EOFBytecodeNotSupported` when the bytecode is EOF. This fires on
-    /// the same match as `checkCBORTrimmedBytecodeHash`, in the opposite
-    /// direction: that function reverts when the match fails, this one reverts
-    /// when it succeeds.
+    /// Checks that no standard Solidity CBOR metadata is present in the
+    /// bytecode of an account. Reverts with `UnexpectedMetadata` if metadata is
+    /// detected. This is the inverse of `checkCBORTrimmedBytecodeHash` — use
+    /// this when bytecode should have been compiled without metadata (e.g.
+    /// `cbor_metadata = false` in foundry.toml) as a defense against the
+    /// metamorphic metadata attack.
     ///
-    /// Every trailer `tryTrimSolidityCBORMetadata` does not match returns
+    /// NOTE EOF bytecode is not supported by this function. An account whose
+    /// bytecode is EOF reverts with `EOFBytecodeNotSupported`, so for such an
+    /// account neither the passing case nor `UnexpectedMetadata` is reached.
+    ///
+    /// NOTE detection is `tryTrimSolidityCBORMetadata`, which constrains only
+    /// 16 of the 53 trailer bytes, so an account whose code merely ends with
+    /// those 16 bytes at the expected offsets reverts here even if no compiler
+    /// emitted metadata for it.
+    ///
+    /// NOTE every trailer `tryTrimSolidityCBORMetadata` does not match returns
     /// without reverting, and that includes Solidity CBOR metadata in other
     /// encodings: the solc-version-only trailer emitted when `bytecode_hash` is
     /// `none` and `cbor_metadata` is left on, `bzzr1`/Swarm hashes, reordered
@@ -226,6 +249,10 @@ library LibExtrospectBytecode {
     /// This is an over-approximation: not all JUMPDESTs are actually reachable
     /// at runtime, and the byte values Cancun leaves unassigned other than
     /// INVALID do not pause scanning even though the EVM halts on them.
+    /// A trailing PUSH* whose inline data runs past the end of the bytecode
+    /// ends the scan. The PUSH* opcode itself is recorded per the rules above,
+    /// and every byte after it is treated as that PUSH*'s inline data, so none
+    /// of those bytes are scanned as opcodes.
     /// Adapted from https://github.com/MrLuit/selfdestruct-detect/blob/master/src/index.ts
     /// NOTE: Reverts with `EOFBytecodeNotSupported` if the bytecode is EOF
     /// (EIP-7692).
@@ -279,8 +306,14 @@ library LibExtrospectBytecode {
     }
 
     /// Scans all opcodes present in bytecode, respecting PUSH* inline data.
+    /// A trailing PUSH* whose inline data runs past the end of the bytecode
+    /// ends the scan. The PUSH* opcode itself is recorded, and every byte after
+    /// it is treated as that PUSH*'s inline data, so none of those bytes are
+    /// scanned as opcodes.
     /// Adapted from
     /// https://github.com/a16z/metamorphic-contract-detector/blob/main/metamorphic_detect/opcodes.py#L52
+    /// NOTE: Reverts with `EOFBytecodeNotSupported` if the bytecode is EOF
+    /// (EIP-7692).
     /// @param bytecode The bytecode to scan.
     /// @return bytesPresent A `uint256` where each bit represents the presence
     /// of an opcode in the source bytecode.
