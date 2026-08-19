@@ -4,25 +4,24 @@ Docs at https://rainprotocol.github.io/rain.extrospection
 
 ## Extrospection
 
-Extrospection is a collection of interfaces, libraries and an implementation
-contract that expose onchain logic to offchain tooling.
+Extrospection is a collection of interfaces and libraries that expose onchain
+logic to offchain tooling.
 
 Focus is on analysing the bytecode of contracts directly, such as deciding
-whether we can prove that an address is immutable due to the absence of all state
-changing opcodes.
+whether we can prove that an address is immutable due to the absence of all
+state changing opcodes.
 
-Efforts have been made to implement the logic efficiently but it is expected that
-the primary execution environment will be offchain, so there are somewhat gas
-intensive algorithms in this repository.
+Efforts have been made to implement the logic efficiently but it is expected
+that the primary execution environment will be offchain, so there are somewhat
+gas intensive algorithms in this repository.
 
-### `IExtrospectV1` and `Extrospect`
+### `IExtrospectV1`
 
-`src/interface/IExtrospectV1.sol` is the external interface and
-`src/concrete/Extrospect.sol` is its implementation. `Extrospect` has a
-parameterless constructor and holds no state, so a single deployment serves every
-caller. Each of its functions forwards to the library function of the same name
-and does nothing else, so the interface is a call-and-return view of the
-libraries below.
+`src/interface/IExtrospectV1.sol` is the external interface. Each of its
+functions forwards to the library function of the same name and does nothing
+else, so the interface is a call-and-return view of the libraries below. The
+concrete implementation (`Extrospect`) and its deterministic deployment live in
+the rain.extrospection.deploy repo.
 
 `src/interface/IBeacon.sol` and `src/interface/IOwnable.sol` are the minimal
 `implementation()` and `owner()` interfaces used to query beacons.
@@ -39,10 +38,11 @@ Both scans take bytecode as `bytes memory` rather than an address, so the caller
 chooses what to feed them: `account.code`, a constructor argument, or bytecode
 already trimmed by `tryTrimSolidityCBORMetadata`.
 
-The "present in" scan simply loops over the entire bytecode, but is `PUSH*` aware
-so knows that the inline argument to any `PUSH` opcode is not itself an opcode.
-This is the most conservative scan but can easily trigger false positives, such
-as due to bytes in the CBOR metadata commonly appended to contracts by solidity.
+The "present in" scan simply loops over the entire bytecode, but is `PUSH*`
+aware so knows that the inline argument to any `PUSH` opcode is not itself an
+opcode. This is the most conservative scan but can easily trigger false
+positives, such as due to bytes in the CBOR metadata commonly appended to
+contracts by solidity.
 
 CBOR metadata MAY be disabled in newer versions of Solidity and is not present
 in other EVM language compilers.
@@ -76,8 +76,8 @@ before any hash comparison happens.
 `checkNoSolidityCBORMetadata(account)` is the inverse: it reverts when metadata
 is detected at all, for bytecode that was compiled with metadata disabled.
 
-`isEOFBytecode` and `checkNotEOFBytecode` report and enforce that bytecode is not
-EOF formatted.
+`isEOFBytecode` and `checkNotEOFBytecode` report and enforce that bytecode is
+not EOF formatted.
 
 ### ERC-1167 minimal proxies
 
@@ -125,8 +125,8 @@ is non-zero.
 One fundamental hard requirement of an interpreter is that it is NOT mutable.
 Most obviously this includes `SELFDESTRUCT` as that would allow for things like
 metamorphic languages, which would completely undermine the integrity of any
-expression that runs on the interpreter. `METAMORPHIC_OPS` covers `SELFDESTRUCT`,
-`DELEGATECALL`, `CALLCODE`, `CREATE` and `CREATE2`.
+expression that runs on the interpreter. `METAMORPHIC_OPS` covers
+`SELFDESTRUCT`, `DELEGATECALL`, `CALLCODE`, `CREATE` and `CREATE2`.
 
 ### `EVMOpcodes` constants
 
@@ -145,10 +145,10 @@ The derived bitmaps are:
 - `INTERPRETER_DISALLOWED_OPS` — `NON_STATIC_OPS` plus `SLOAD`, `TLOAD`,
   `DELEGATECALL` and `CALLCODE`.
 
-`NON_STATIC_OPS` and `INTERPRETER_DISALLOWED_OPS` are exported constants only. No
-library, no `IExtrospectV1` function and no deployed contract in this repository
-reads either of them. A caller wanting an interpreter safety check masks a
-reachable scan against `INTERPRETER_DISALLOWED_OPS` itself.
+`NON_STATIC_OPS` and `INTERPRETER_DISALLOWED_OPS` are exported constants only.
+No library and no `IExtrospectV1` function in this repository reads either of
+them. A caller wanting an interpreter safety check masks a reachable scan
+against `INTERPRETER_DISALLOWED_OPS` itself.
 
 The opcode constants, and the bitmaps derived from them, are subject to change
 if/when new opcodes are supported by the EVM due to future hard forks.
