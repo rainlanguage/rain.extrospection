@@ -19,6 +19,9 @@ import {HasDelegatecall} from "test/concrete/HasDelegatecall.sol";
 import {HasCallcode} from "test/concrete/HasCallcode.sol";
 import {HasCreate} from "test/concrete/HasCreate.sol";
 import {HasCreate2} from "test/concrete/HasCreate2.sol";
+import {CreateChildFactory} from "test/concrete/CreateChildFactory.sol";
+import {Create2ChildFactory} from "test/concrete/Create2ChildFactory.sol";
+import {ChildLeaf} from "test/concrete/ChildLeaf.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 
 contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
@@ -91,6 +94,32 @@ contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
         uint256 risk = LibExtrospectMetamorphic.scanMetamorphicRisk(address(c).code);
         //forge-lint: disable-next-line(incorrect-shift)
         assertTrue(risk & (1 << uint256(EVM_OP_CREATE2)) != 0);
+    }
+
+    /// A factory whose own runtime code has no SELFDESTRUCT, DELEGATECALL or
+    /// CALLCODE, and which deploys a single fixed child type with CREATE, scans
+    /// as risky on the CREATE bit alone. The child scans clean.
+    function testScanMetamorphicRiskCreateChildFactory() external {
+        CreateChildFactory factory = new CreateChildFactory();
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(address(factory).code), 1 << uint256(EVM_OP_CREATE));
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(address(new ChildLeaf()).code), 0);
+    }
+
+    /// A factory whose own runtime code has no SELFDESTRUCT, DELEGATECALL or
+    /// CALLCODE, and which deploys a single fixed child type with CREATE2, scans
+    /// as risky on the CREATE2 bit alone. The child scans clean.
+    function testScanMetamorphicRiskCreate2ChildFactory() external {
+        Create2ChildFactory factory = new Create2ChildFactory();
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(address(factory).code), 1 << uint256(EVM_OP_CREATE2));
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(address(new ChildLeaf()).code), 0);
+    }
+
+    /// SELFDESTRUCT after STOP with no JUMPDEST is present in the bytecode but
+    /// not reachable, so it is not risky.
+    function testScanMetamorphicRiskUnreachableSelfdestruct() external pure {
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(hex"00FF"), 0);
     }
 
     /// A SELFDESTRUCT byte inside the inline data of a trailing truncated
