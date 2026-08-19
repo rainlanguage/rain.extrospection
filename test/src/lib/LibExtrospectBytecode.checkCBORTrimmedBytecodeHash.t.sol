@@ -4,6 +4,7 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.16.1/src/Test.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
+import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
 
 /// No test in this contract forks, so every test here runs without any RPC
 /// environment variable. The tests of `checkCBORTrimmedBytecodeHash` that fork
@@ -43,17 +44,12 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
         bytes memory withMetadata =
             bytes.concat(code, hex"a264697066735822", ipfsHash, hex"64736f6c6343", solcVersion, hex"0033");
 
-        // vm.etch treats bytecode whose first two bytes are 0xef01 as an
-        // EIP-7702 delegation designator and rejects it unless it is exactly
-        // 23 bytes. withMetadata is always at least 53 bytes.
-        vm.assume(uint8(withMetadata[0]) != 0xEF || uint8(withMetadata[1]) != 0x01);
-
         // Compute the expected trimmed hash (hash of code without metadata).
         bytes32 expectedHash = keccak256(code);
 
         // Etch the bytecode onto an address.
         address target = address(0xBEEF);
-        vm.etch(target, withMetadata);
+        LibExtrospectTestEtch.assumeEtch(vm, target, withMetadata);
 
         // Correct hash should succeed.
         LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(target, expectedHash);
@@ -82,13 +78,8 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
         // Ensure the code does not already contain valid CBOR metadata.
         vm.assume(!LibExtrospectBytecode.tryTrimSolidityCBORMetadata(code));
 
-        // vm.etch treats bytecode whose first two bytes are 0xef01 as an
-        // EIP-7702 delegation designator and rejects it unless it is exactly
-        // 23 bytes.
-        vm.assume(code.length < 2 || code.length == 23 || uint8(code[0]) != 0xEF || uint8(code[1]) != 0x01);
-
         address target = address(0xBEEF);
-        vm.etch(target, code);
+        LibExtrospectTestEtch.assumeEtch(vm, target, code);
 
         vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.MetadataNotTrimmed.selector));
         this.externalCheckCBORTrimmedBytecodeHash(target, anyHash);

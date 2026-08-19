@@ -6,6 +6,7 @@ import {Test} from "forge-std-1.16.1/src/Test.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 import {SOLIDITY_CBOR_RUNTIME_FIXTURE} from "test/concrete/SolidityCBORFixture.sol";
+import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
 
 /// @dev Total length of standard Solidity CBOR metadata, from the CBOR map
 /// header to the 2 byte length suffix.
@@ -95,11 +96,6 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
             short[0] = 0x00;
         }
 
-        // vm.etch treats bytecode whose first two bytes are 0xef01 as an
-        // EIP-7702 delegation designator and rejects it unless it is exactly
-        // 23 bytes.
-        vm.assume(code.length < 2 || code.length == 23 || uint8(code[0]) != 0xEF || uint8(code[1]) != 0x01);
-
         address target = address(0xBEEF);
         vm.etch(target, short);
         LibExtrospectBytecode.checkNoSolidityCBORMetadata(target);
@@ -127,13 +123,8 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
 
         bytes memory withMetadata = bytes.concat(code, solidityCBORMetadata(keccak256(code)));
 
-        // vm.etch treats bytecode whose first two bytes are 0xef01 as an
-        // EIP-7702 delegation designator and rejects it unless it is exactly
-        // 23 bytes. withMetadata is always at least 53 bytes.
-        vm.assume(uint8(withMetadata[0]) != 0xEF || uint8(withMetadata[1]) != 0x01);
-
         address target = address(0xBEEF);
-        vm.etch(target, withMetadata);
+        LibExtrospectTestEtch.assumeEtch(vm, target, withMetadata);
         vm.expectRevert(LibExtrospectBytecode.UnexpectedMetadata.selector);
         this.checkNoSolidityCBORMetadataExternal(target);
     }
