@@ -5,6 +5,43 @@ pragma solidity ^0.8.25;
 import {LibBytes, Pointer} from "rain-solmem-0.1.3/src/lib/LibBytes.sol";
 import {EVM_OP_JUMPDEST, HALTING_BITMAP} from "./EVMOpcodes.sol";
 
+/// @dev Byte length of the standard Solidity CBOR metadata trailer that
+/// `LibExtrospectBytecode.tryTrimSolidityCBORMetadata` matches and trims. The
+/// trailer is 51 bytes of CBOR body followed by 2 bytes that encode that body
+/// length, so every byte of it is accounted for by
+/// `SOLIDITY_CBOR_METADATA_HEAD_MASK` and `SOLIDITY_CBOR_METADATA_TAIL_MASK`
+/// together.
+uint256 constant SOLIDITY_CBOR_METADATA_LENGTH = 53;
+
+/// @dev Mask for the first of the two overlapping 32-byte words that cover the
+/// final `SOLIDITY_CBOR_METADATA_LENGTH` bytes of bytecode. That word holds the
+/// 11 bytes preceding the metadata in memory, which are bytecode unless the
+/// bytecode is shorter than 64 bytes, followed by metadata bytes 0-20. The mask
+/// keeps metadata bytes 0-7 (`a2` map header, `64` text header, `69706673` as
+/// `ipfs`, `5822` byte string header) and zeros both those 11 preceding bytes
+/// and metadata bytes 8-20, which are the first 13 bytes of the 34-byte IPFS
+/// hash.
+//slither-disable-next-line too-many-digits
+uint256 constant SOLIDITY_CBOR_METADATA_HEAD_MASK = 0xFFFFFFFFFFFFFFFF00000000000000000000000000;
+
+/// @dev Mask for the second of the two overlapping 32-byte words that cover the
+/// final `SOLIDITY_CBOR_METADATA_LENGTH` bytes of bytecode. That word holds
+/// metadata bytes 21-52. The mask keeps metadata bytes 42-47 (`64` text header,
+/// `736f6c63` as `solc`, `43` byte string header) and metadata bytes 51-52 (the
+/// 2-byte body length), and zeros metadata bytes 21-41, the last 21 bytes of the
+/// IPFS hash, along with metadata bytes 48-50, the 3-byte solc version.
+//slither-disable-next-line too-many-digits
+uint256 constant SOLIDITY_CBOR_METADATA_TAIL_MASK = 0x000000000000000000000000000000000000000000FFFFFFFFFFFF000000FFFF;
+
+/// @dev `keccak256` of `SOLIDITY_CBOR_METADATA_HEAD_MASK` applied to the first
+/// word concatenated with `SOLIDITY_CBOR_METADATA_TAIL_MASK` applied to the
+/// second, for bytecode whose final `SOLIDITY_CBOR_METADATA_LENGTH` bytes are
+/// standard Solidity CBOR metadata. Because the masks zero every variable byte,
+/// this single hash pins every structural byte the masks keep, including the
+/// `0033` body length that makes the trailer 53 bytes long.
+bytes32 constant SOLIDITY_CBOR_METADATA_MASKED_HASH =
+    0x0e55864b80a56accebaca64500e23598f6acfb743a5475323f0b7f2d0d268c62;
+
 /// @title LibExtrospectBytecode
 /// @notice Internal algorithms for extrospecting bytecode. Notably the EVM
 /// opcode scanning needs special care, as the other bytecode functions are mere
@@ -96,17 +133,17 @@ library LibExtrospectBytecode {
     function tryTrimSolidityCBORMetadata(bytes memory bytecode) internal pure returns (bool didTrim) {
         checkNotEOFBytecode(bytecode);
         uint256 length = bytecode.length;
-        if (length >= 53) {
-            // Two overlapping 32-byte reads cover the last 53 bytes of
-            // bytecode (the metadata). The masks zero out the variable parts
-            // (34-byte IPFS hash and 3-byte solc version), preserving only the
-            // fixed CBOR structure bytes: a2 64 "ipfs" 5822 ... 64 "solc" 43
-            // ... 0033. The expected hash is keccak256 of the masked result.
+        if (length >= SOLIDITY_CBOR_METADATA_LENGTH) {
+            // Two overlapping 32-byte reads cover the last
+            // `SOLIDITY_CBOR_METADATA_LENGTH` bytes of bytecode (the metadata).
+            // The masks zero out the variable parts, so the surviving
+            // structural bytes hash to `SOLIDITY_CBOR_METADATA_MASKED_HASH`
+            // exactly when the metadata matches.
             //slither-disable-next-line too-many-digits
-            uint256 maskA = 0xFFFFFFFFFFFFFFFF00000000000000000000000000;
+            uint256 maskA = SOLIDITY_CBOR_METADATA_HEAD_MASK;
             //slither-disable-next-line too-many-digits
-            uint256 maskB = 0x000000000000000000000000000000000000000000FFFFFFFFFFFF000000FFFF;
-            bytes32 expectedHash = bytes32(uint256(0x0e55864b80a56accebaca64500e23598f6acfb743a5475323f0b7f2d0d268c62));
+            uint256 maskB = SOLIDITY_CBOR_METADATA_TAIL_MASK;
+            bytes32 expectedHash = SOLIDITY_CBOR_METADATA_MASKED_HASH;
             bytes32 relevantHash;
             assembly ("memory-safe") {
                 // Point 0x20 bytes before the end of the bytecode.
@@ -115,7 +152,7 @@ library LibExtrospectBytecode {
                 mstore(0x20, and(maskB, mload(end)))
                 relevantHash := keccak256(0, 0x40)
                 didTrim := eq(relevantHash, expectedHash)
-                if didTrim { mstore(bytecode, sub(length, 53)) }
+                if didTrim { mstore(bytecode, sub(length, SOLIDITY_CBOR_METADATA_LENGTH)) }
             }
         }
     }
