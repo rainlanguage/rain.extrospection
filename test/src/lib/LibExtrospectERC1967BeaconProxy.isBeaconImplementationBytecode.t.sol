@@ -53,6 +53,32 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), wrongHash));
     }
 
+    /// Every codeless implementation reads as empty bytecode, so
+    /// `keccak256("")` is matched at a non-zero address the same way it
+    /// is at `address(0)`. An unoccupied `CREATE2` target is codeless
+    /// while the beacon already points at it, and deploying to that
+    /// target turns the same call from true to false.
+    function testCounterfactualImplementationMatchesEmptyHashUntilOccupied() external {
+        bytes32 salt = bytes32(uint256(0x5eed));
+        address counterfactual =
+            vm.computeCreate2Address(salt, keccak256(type(EmptyContract).creationCode), address(this));
+        assertEq(counterfactual.code.length, 0);
+        assertTrue(counterfactual != address(0));
+
+        MockBeacon beacon = new MockBeacon(counterfactual, address(this));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+
+        assertEq(address(new EmptyContract{salt: salt}()), counterfactual);
+        assertGt(counterfactual.code.length, 0);
+
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(counterfactual.code)
+            )
+        );
+    }
+
     /// A target that doesn't expose `implementation()` is not a valid
     /// beacon and trivially fails the predicate. Returns false rather
     /// than reverting so integrators can collapse the check to a single
