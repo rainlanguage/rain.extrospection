@@ -130,6 +130,24 @@ contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
         assertFalse(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
     }
 
+    /// Both bytes of the trailing metadata length are checked. A trailer that
+    /// is canonical except for the high byte of that length is not trimmed.
+    function testTryTrimSolidityCBORMetadataMetadataLengthHighByte() external pure {
+        bytes memory head = hex"6001600055";
+        bytes memory body =
+            hex"a26469706673582212200726074213b9ef2f5b41bf0bdd5bbd03a64652de62f1dfcda59625e106c52e8a64736f6c6343000819";
+
+        bytes memory trimmable = bytes.concat(head, body, hex"0033");
+        assertEq(trimmable.length, 58);
+        assertTrue(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(trimmable));
+        assertEq(trimmable, head);
+
+        bytes memory notTrimmable = bytes.concat(head, body, hex"0133");
+        assertEq(notTrimmable.length, 58);
+        assertFalse(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(notTrimmable));
+        assertEq(notTrimmable.length, 58);
+    }
+
     /// Test exactly 52-byte bytecode (off-by-one below the 53-byte minimum).
     function testTryTrimSolidityCBORMetadataExactly52Bytes() external pure {
         bytes memory code = new bytes(52);
