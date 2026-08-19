@@ -278,6 +278,34 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         );
     }
 
+    /// The byte values Cancun leaves unassigned, excluding INVALID (0xFE).
+    function undefinedInCancun(uint256 op) internal pure returns (bool) {
+        return (op >= 0x0C && op <= 0x0F) || (op >= 0x1E && op <= 0x1F) || (op >= 0x21 && op <= 0x2F)
+            || (op >= 0x4B && op <= 0x4F) || (op >= 0xA5 && op <= 0xEF) || (op >= 0xF6 && op <= 0xF9) || op == 0xFB
+            || op == 0xFC;
+    }
+
+    /// Every byte Cancun leaves unassigned, other than INVALID, leaves the
+    /// scan running, so a SELFDESTRUCT placed directly after one is reported
+    /// as reachable.
+    function testScanEVMOpcodesReachableUndefinedDoesNotHalt() public pure {
+        uint256 undefinedCount = 0;
+        for (uint256 op = 0; op < 0x100; op++) {
+            if (!undefinedInCancun(op)) {
+                continue;
+            }
+            undefinedCount++;
+            assertEq(
+                LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(
+                    abi.encodePacked(uint8(op), EVM_OP_SELFDESTRUCT)
+                ),
+                (uint256(1) << op) | (uint256(1) << uint256(EVM_OP_SELFDESTRUCT)),
+                "undefined opcode halted the scan"
+            );
+        }
+        assertEq(undefinedCount, 107);
+    }
+
     /// PUSH0 (0x5F) is NOT a PUSH with data — it pushes zero with no inline
     /// bytes. The next byte is a separate opcode, not skip data.
     function testScanEVMOpcodesReachablePush0Boundary() public pure {

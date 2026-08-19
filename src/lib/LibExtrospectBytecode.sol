@@ -5,6 +5,43 @@ pragma solidity ^0.8.25;
 import {LibBytes, Pointer} from "rain-solmem-0.1.3/src/lib/LibBytes.sol";
 import {EVM_OP_JUMPDEST, HALTING_BITMAP} from "./EVMOpcodes.sol";
 
+/// @dev Byte length of the standard Solidity CBOR metadata trailer that
+/// `LibExtrospectBytecode.tryTrimSolidityCBORMetadata` matches and trims. The
+/// trailer is 51 bytes of CBOR body followed by 2 bytes that encode that body
+/// length, so every byte of it is accounted for by
+/// `SOLIDITY_CBOR_METADATA_HEAD_MASK` and `SOLIDITY_CBOR_METADATA_TAIL_MASK`
+/// together.
+uint256 constant SOLIDITY_CBOR_METADATA_LENGTH = 53;
+
+/// @dev Mask for the first of the two overlapping 32-byte words that cover the
+/// final `SOLIDITY_CBOR_METADATA_LENGTH` bytes of bytecode. That word holds the
+/// 11 bytes preceding the metadata in memory, which are bytecode unless the
+/// bytecode is shorter than 64 bytes, followed by metadata bytes 0-20. The mask
+/// keeps metadata bytes 0-7 (`a2` map header, `64` text header, `69706673` as
+/// `ipfs`, `5822` byte string header) and zeros both those 11 preceding bytes
+/// and metadata bytes 8-20, which are the first 13 bytes of the 34-byte IPFS
+/// hash.
+//slither-disable-next-line too-many-digits
+uint256 constant SOLIDITY_CBOR_METADATA_HEAD_MASK = 0xFFFFFFFFFFFFFFFF00000000000000000000000000;
+
+/// @dev Mask for the second of the two overlapping 32-byte words that cover the
+/// final `SOLIDITY_CBOR_METADATA_LENGTH` bytes of bytecode. That word holds
+/// metadata bytes 21-52. The mask keeps metadata bytes 42-47 (`64` text header,
+/// `736f6c63` as `solc`, `43` byte string header) and metadata bytes 51-52 (the
+/// 2-byte body length), and zeros metadata bytes 21-41, the last 21 bytes of the
+/// IPFS hash, along with metadata bytes 48-50, the 3-byte solc version.
+//slither-disable-next-line too-many-digits
+uint256 constant SOLIDITY_CBOR_METADATA_TAIL_MASK = 0x000000000000000000000000000000000000000000FFFFFFFFFFFF000000FFFF;
+
+/// @dev `keccak256` of `SOLIDITY_CBOR_METADATA_HEAD_MASK` applied to the first
+/// word concatenated with `SOLIDITY_CBOR_METADATA_TAIL_MASK` applied to the
+/// second, for bytecode whose final `SOLIDITY_CBOR_METADATA_LENGTH` bytes are
+/// standard Solidity CBOR metadata. Because the masks zero every variable byte,
+/// this single hash pins every structural byte the masks keep, including the
+/// `0033` body length that makes the trailer 53 bytes long.
+bytes32 constant SOLIDITY_CBOR_METADATA_MASKED_HASH =
+    0x0e55864b80a56accebaca64500e23598f6acfb743a5475323f0b7f2d0d268c62;
+
 /// @title LibExtrospectBytecode
 /// @notice Internal algorithms for extrospecting bytecode. Notably the EVM
 /// opcode scanning needs special care, as the other bytecode functions are mere
@@ -15,7 +52,7 @@ library LibExtrospectBytecode {
     /// Thrown when bytecode metadata is not trimmed as expected.
     error MetadataNotTrimmed();
 
-    /// Thrown when processing an EOF formatted bytecode.
+    /// Thrown when `isEOFBytecode` reports the bytecode as EOF.
     error EOFBytecodeNotSupported();
 
     /// Thrown when the bytecode hash does not match the expected value.
@@ -28,9 +65,15 @@ library LibExtrospectBytecode {
     /// compile without CBOR metadata entirely.
     error UnexpectedMetadata();
 
-    /// Returns whether the bytecode is in EOF format.
+    /// Returns whether the first two bytes of the bytecode are the EOF magic
+    /// `0xEF00`. The version byte that follows the magic in an EIP-3540
+    /// container is not read, so `0xEF00` alone and `0xEF00` followed by any
+    /// version byte are both reported as EOF. Bytecode shorter than two bytes
+    /// is not reported as EOF, and neither is bytecode starting with `0xEF`
+    /// followed by any byte other than `0x00`, including the `0xEF01` of an
+    /// EIP-7702 delegation designator.
     /// @param bytecode The bytecode to check.
-    /// @return isEOF Whether the bytecode is in EOF format.
+    /// @return isEOF Whether the first two bytes are `0xEF00`.
     function isEOFBytecode(bytes memory bytecode) internal pure returns (bool isEOF) {
         if (bytecode.length >= 2) {
             assembly ("memory-safe") {
@@ -40,7 +83,8 @@ library LibExtrospectBytecode {
         }
     }
 
-    /// Checks that the bytecode is not in EOF format. Reverts if it is.
+    /// Reverts with `EOFBytecodeNotSupported` if `isEOFBytecode` returns true
+    /// for the bytecode.
     /// @param bytecode The bytecode to check.
     //forge-lint: disable-next-line(mixed-case-function)
     function checkNotEOFBytecode(bytes memory bytecode) internal pure {
@@ -96,17 +140,21 @@ library LibExtrospectBytecode {
     function tryTrimSolidityCBORMetadata(bytes memory bytecode) internal pure returns (bool didTrim) {
         checkNotEOFBytecode(bytecode);
         uint256 length = bytecode.length;
-        if (length >= 53) {
-            // Two overlapping 32-byte reads cover the last 53 bytes of
-            // bytecode (the metadata). The masks zero out the variable parts
+        if (length >= SOLIDITY_CBOR_METADATA_LENGTH) {
+            // Two adjacent 32-byte reads span the last
+            // `SOLIDITY_CBOR_METADATA_LENGTH` bytes of bytecode (the metadata)
+            // plus the 11 bytes of memory immediately before them. The masks
+            // zero those 11 bytes and the variable parts of the metadata
             // (34-byte IPFS hash and 3-byte solc version), preserving only the
             // fixed CBOR structure bytes: a2 64 "ipfs" 5822 ... 64 "solc" 43
-            // ... 0033. The expected hash is keccak256 of the masked result.
+            // ... 0033. The masked result hashes to
+            // `SOLIDITY_CBOR_METADATA_MASKED_HASH` exactly when the metadata
+            // matches.
             //slither-disable-next-line too-many-digits
-            uint256 maskA = 0xFFFFFFFFFFFFFFFF00000000000000000000000000;
+            uint256 maskA = SOLIDITY_CBOR_METADATA_HEAD_MASK;
             //slither-disable-next-line too-many-digits
-            uint256 maskB = 0x000000000000000000000000000000000000000000FFFFFFFFFFFF000000FFFF;
-            bytes32 expectedHash = bytes32(uint256(0x0e55864b80a56accebaca64500e23598f6acfb743a5475323f0b7f2d0d268c62));
+            uint256 maskB = SOLIDITY_CBOR_METADATA_TAIL_MASK;
+            bytes32 expectedHash = SOLIDITY_CBOR_METADATA_MASKED_HASH;
             bytes32 relevantHash;
             assembly ("memory-safe") {
                 // Point 0x20 bytes before the end of the bytecode.
@@ -115,7 +163,7 @@ library LibExtrospectBytecode {
                 mstore(0x20, and(maskB, mload(end)))
                 relevantHash := keccak256(0, 0x40)
                 didTrim := eq(relevantHash, expectedHash)
-                if didTrim { mstore(bytecode, sub(length, 53)) }
+                if didTrim { mstore(bytecode, sub(length, SOLIDITY_CBOR_METADATA_LENGTH)) }
             }
         }
     }
@@ -124,16 +172,19 @@ library LibExtrospectBytecode {
     /// metadata, matches an expected hash. Reverts if the metadata was not
     /// trimmed or if the hash does not match after trimming.
     /// @param account The account whose bytecode to check.
-    /// @param expected The expected hash of the trimmed bytecode.
-    function checkCBORTrimmedBytecodeHash(address account, bytes32 expected) internal view {
+    /// @param expectedTrimmedHash The expected hash of the trimmed bytecode.
+    /// Not the same value as
+    /// `LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode`'s
+    /// `expectedRuntimeHash`, which hashes runtime bytecode whole.
+    function checkCBORTrimmedBytecodeHash(address account, bytes32 expectedTrimmedHash) internal view {
         bytes memory bytecode = account.code;
         bool didTrim = tryTrimSolidityCBORMetadata(bytecode);
         if (!didTrim) {
             revert MetadataNotTrimmed();
         }
         bytes32 actual = keccak256(bytecode);
-        if (expected != actual) {
-            revert BytecodeHashMismatch(expected, actual);
+        if (expectedTrimmedHash != actual) {
+            revert BytecodeHashMismatch(expectedTrimmedHash, actual);
         }
     }
 
@@ -158,8 +209,13 @@ library LibExtrospectBytecode {
     /// INVALID, SELFDESTRUCT, or unconditional JUMP per `HALTING_BITMAP`),
     /// scanning pauses. Scanning resumes at the next JUMPDEST. Opcodes between
     /// a halt and the next JUMPDEST are treated as unreachable and excluded.
-    /// This is an over-approximation because not all JUMPDESTs are actually
-    /// reachable at runtime.
+    /// The sweep does not distinguish code from data, so a JUMPDEST byte that it
+    /// lands on inside a data region such as Solidity CBOR metadata resumes
+    /// scanning, and the opcodes after it in that region are reported as
+    /// reachable.
+    /// This is an over-approximation: not all JUMPDESTs are actually reachable
+    /// at runtime, and the byte values Cancun leaves unassigned other than
+    /// INVALID do not pause scanning even though the EVM halts on them.
     /// A trailing PUSH* whose inline data runs past the end of the bytecode
     /// ends the scan. The PUSH* opcode itself is recorded per the rules above,
     /// and every byte after it is treated as that PUSH*'s inline data, so none
