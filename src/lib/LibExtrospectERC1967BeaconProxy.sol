@@ -83,12 +83,13 @@ library LibExtrospectERC1967BeaconProxy {
 
     /// @notice Verify that a beacon's current implementation has runtime
     /// bytecode matching `expectedRuntimeHash`. Useful for asserting a
-    /// known-good implementation is behind the beacon without trusting
-    /// any storage-side state. A target that doesn't expose
-    /// `implementation()` (or whose call reverts) is not a valid beacon
-    /// and trivially fails the check — returns false rather than
-    /// reverting, so integrators can collapse the predicate into a
-    /// single boolean assertion.
+    /// known-good implementation is behind the beacon. A target whose
+    /// `implementation()` call reverts, or answers with anything other
+    /// than 32 bytes that decode as an address, fails the check —
+    /// returns false rather than reverting, so integrators can collapse
+    /// the predicate into a single boolean assertion.
+    ///
+    /// The caller is responsible for only calling this on beacons.
     ///
     /// An implementation address with no code — an externally owned
     /// account, an unoccupied `CREATE2` target, a self-destructed
@@ -120,12 +121,16 @@ library LibExtrospectERC1967BeaconProxy {
     }
 
     /// @notice Verify that `beacon`'s current owner equals
-    /// `expectedOwner`. A target that doesn't expose `owner()` (or
-    /// whose call reverts) is not a valid beacon and trivially fails
-    /// the check — returns false rather than reverting, so integrators
-    /// can collapse the predicate into a single boolean assertion. An
-    /// EIP-7702 delegated account answers `owner()` from its delegate
-    /// and so satisfies this check.
+    /// `expectedOwner`. A target whose `owner()` call reverts, or
+    /// answers with anything other than 32 bytes that decode as an
+    /// address, fails the check — returns false rather than reverting,
+    /// so integrators can collapse the predicate into a single boolean
+    /// assertion.
+    ///
+    /// The caller is responsible for only calling this on beacons.
+    ///
+    /// An EIP-7702 delegated account answers `owner()` from its
+    /// delegate and so satisfies this check.
     /// @param beacon The beacon address to query.
     /// @param expectedOwner The owner address the beacon should report.
     /// @return True if the ownership matches. False if the call to
@@ -136,14 +141,23 @@ library LibExtrospectERC1967BeaconProxy {
     }
 
     /// @dev Static-call `selector` on `target` and decode the return as
-    /// `address`. Returns `(false, _)` on any failure mode: low-level
-    /// call revert, missing selector, fallback returning the wrong
-    /// length, or 32-byte return data whose upper 12 bytes are
-    /// non-zero (which `abi.decode(_, (address))` would reject as a
-    /// dirty address). High-level `try IBeacon(...).implementation()`
-    /// catches the first three but lets the dirty-address Panic
-    /// escape, so we go through the low-level call to fold all four
-    /// into a single boolean.
+    /// `address`. Returns `(false, _)` on three failure modes:
+    /// low-level call revert, return data that isn't exactly 32 bytes,
+    /// or 32-byte return data whose upper 12 bytes are non-zero (which
+    /// `abi.decode(_, (address))` would reject as a dirty address).
+    ///
+    /// A missing selector is only ever rejected through one of those
+    /// three, via whatever `target`'s fallback does: no fallback or a
+    /// reverting one is the revert case, and a fallback answering with
+    /// something other than 32 clean bytes is one of the other two. A
+    /// fallback answering with 32 clean bytes is accepted, so
+    /// `(true, addr)` says that `target` answered `selector` with
+    /// `addr` and nothing more.
+    ///
+    /// High-level `try IBeacon(...).implementation()` catches the
+    /// first two but lets the dirty-address Panic escape, so we go
+    /// through the low-level call to fold all three into a single
+    /// boolean.
     function _tryGetAddress(address target, bytes4 selector) private view returns (bool, address) {
         // Low-level staticcall is required to validate return-data length
         // and reject dirty address bits ourselves; high-level
