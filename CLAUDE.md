@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-rain.extrospection is a Solidity library for analyzing EVM contract bytecode onchain. It provides opcode scanning (present vs. reachable), ERC1167 minimal proxy detection, Solidity CBOR metadata trimming, and interpreter safety validation. The library exposes onchain logic to offchain tooling — the algorithms are gas-intensive and primarily intended for offchain use.
+rain.extrospection is a Solidity library for analyzing EVM contract bytecode onchain. It provides opcode scanning (present vs. reachable), ERC1167 minimal proxy detection, ERC1967 beacon extrospection, Solidity CBOR metadata trimming, and metamorphic risk detection. The library exposes onchain logic to offchain tooling — the algorithms are gas-intensive and primarily intended for offchain use.
 
 License: LicenseRef-DCL-1.0 (DecentraLicense)
 
@@ -32,21 +32,20 @@ nix develop -c rainix-sol-legal
 nix develop -c forge test
 nix develop -c forge test --match-contract LibExtrospectBytecodeIsEOFBytecodeTest
 nix develop -c forge test --match-test testFoo
+
+# Mutation / coverage campaigns — see .claude/rules/mutation-profile.md
+nix develop -c bash -c 'FOUNDRY_PROFILE=mutation forge test'
 ```
 
 ## Architecture
 
-**Source layout:** `src/lib/` for library implementations. No concrete deployed contracts — libraries only.
+**Key pattern:** Opcodes are encoded as a single `uint256` bitmap where bit N represents opcode 0xN. Bitwise AND against reference bitmaps checks for (un)desired opcodes in one operation. `EVMOpcodes` defines one `EVM_OP_*` constant per opcode defined through Cancun — 149 of the 256 byte values; the rest are unassigned.
 
-**Core libraries:**
-- `LibExtrospectBytecode` — Opcode scanning (present scan: linear pass respecting PUSH\* inline data; reachable scan: halt-aware with JUMPDEST tracking), CBOR metadata trimming, EOF detection
-- `LibExtrospectERC1167Proxy` — ERC1167 minimal proxy detection and implementation address extraction
-- `LibExtrospectMetamorphic` — Metamorphic risk detection (scans for reachable SELFDESTRUCT, DELEGATECALL, CALLCODE, CREATE, CREATE2)
-- `EVMOpcodes` — Constants for all 256 EVM opcodes and derived bitmaps (e.g. `HALTING_BITMAP`, `METAMORPHIC_OPS`)
+**Deploy pin:** `src/concrete/Extrospect.sol` is the one deployed contract and pins its own creation bytecode, deterministic Zoltu address and runtime codehash as constants. Any source change reaching it invalidates all three and supersedes the deployed address.
 
-**Key pattern:** Opcodes are encoded as a single `uint256` bitmap where bit N represents opcode 0xN. Bitwise AND against reference bitmaps checks for (un)desired opcodes in one operation.
+**Orphaned bitmaps:** `NON_STATIC_OPS` and `INTERPRETER_DISALLOWED_OPS` have no consumer in `src/`. Only `test/src/lib/EVMOpcodes.t.sol` reads them, so they look load-bearing and are not.
 
-**Test layout:** `test/src/lib/` mirrors source structure. Test files named `LibName.functionName.t.sol`. Test helpers in `test/lib/` include slow reference implementations (`LibExtrospectionSlow`) used for property-based fuzz verification.
+**Test layout:** `test/src/` mirrors `src/` by subject path. Test files named `Subject.functionName.t.sol`. `test/lib/` and `test/concrete/` are test-only helpers, including slow reference implementations (`LibExtrospectionSlow`) used for property-based fuzz verification.
 
 ## Conventions
 

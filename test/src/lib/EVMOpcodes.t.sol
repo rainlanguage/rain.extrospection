@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.16.1/src/Test.sol";
-import {LibCtPop} from "rain-math-binary-0.1.3/src/lib/LibCtPop.sol";
+import {LibCtPop} from "rain-math-binary-0.1.4/src/lib/LibCtPop.sol";
 
 import {
     EVM_OP_STOP,

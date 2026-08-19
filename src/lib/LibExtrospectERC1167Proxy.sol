@@ -52,11 +52,21 @@ library LibExtrospectERC1167Proxy {
     ///
     /// A `false` result says that the bytecode is not the canonical minimal
     /// proxy. It does not say that the account runs its own code.
+    ///
+    /// The verdict is a function of the 45 bytes alone. It is the same whether
+    /// or not the implementation account exists or has code.
+    ///
+    /// EOF bytecode does not revert. An EOF container begins with `0xEF00`,
+    /// which is not `ERC1167_PREFIX`, so EOF bytecode returns
+    /// `(false, address(0))`.
     /// @param bytecode The bytecode to check.
     /// @return result True if the bytecode is the canonical ERC1167 minimal
     /// proxy.
     /// @return implementationAddress The address of the implementation contract.
-    /// This is only valid if `result` is true, else it is zero.
+    /// This is only valid if `result` is true, else it is zero. When `result`
+    /// is true this is whatever address the bytecode encodes, which includes
+    /// `address(0)`, so `result` is the only discriminator between a proxy and
+    /// a non-proxy.
     function isERC1167Proxy(bytes memory bytecode) internal pure returns (bool result, address implementationAddress) {
         unchecked {
             {
