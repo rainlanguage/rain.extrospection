@@ -77,9 +77,12 @@ library LibExtrospectBytecode {
     /// `0xEF00`. The version byte that follows the magic in an EIP-3540
     /// container is not read, so `0xEF00` alone and `0xEF00` followed by any
     /// version byte are both reported as EOF. Bytecode shorter than two bytes
-    /// is not reported as EOF, and neither is bytecode starting with `0xEF`
-    /// followed by any byte other than `0x00`, including the `0xEF01` of an
-    /// EIP-7702 delegation designator.
+    /// is not reported as EOF — explicitly including empty bytecode, such as
+    /// the code of an account that has none — and neither is bytecode starting
+    /// with `0xEF` followed by any byte other than `0x00`, including the
+    /// `0xEF01` of an EIP-7702 delegation designator. A `false` result says
+    /// the bytes are not an EOF container; over empty bytes it says nothing
+    /// about what code a codeless account may later gain.
     /// @param bytecode The bytecode to check.
     /// @return isEOF Whether the first two bytes are `0xEF00`.
     function isEOFBytecode(bytes memory bytecode) internal pure returns (bool isEOF) {
@@ -242,10 +245,18 @@ library LibExtrospectBytecode {
     /// plus three bytes. Returning without reverting therefore establishes that
     /// this one layout is absent, not that the account carries no metadata.
     ///
+    /// NOTE an account with no code reverts with `CodelessAccount` carrying
+    /// the address, before metadata detection is attempted. Absence of code
+    /// is not absence of metadata risk: a codeless account can gain any code
+    /// later, so this check refuses to vouch for it.
+    ///
     /// @param account The account whose bytecode to check.
     //forge-lint: disable-next-line(mixed-case-function)
     function checkNoSolidityCBORMetadata(address account) internal view {
         bytes memory bytecode = account.code;
+        if (bytecode.length == 0) {
+            revert CodelessAccount(account);
+        }
         bool didTrim = tryTrimSolidityCBORMetadata(bytecode);
         if (didTrim) {
             revert UnexpectedMetadata();
@@ -272,6 +283,10 @@ library LibExtrospectBytecode {
     /// Adapted from https://github.com/MrLuit/selfdestruct-detect/blob/master/src/index.ts
     /// NOTE: Reverts with `EOFBytecodeNotSupported` if the bytecode is EOF
     /// (EIP-7692).
+    /// NOTE: Empty bytecode scans to a zero bitmap: there are no bytes, so no
+    /// opcode is reachable. The empty code of a codeless account scans the
+    /// same way, and zero says nothing about what opcodes that account may
+    /// later gain.
     /// @param bytecode The bytecode to scan.
     /// @return bytesReachable A `uint256` where each bit represents the presence
     /// of a reachable opcode in the source bytecode.
@@ -330,6 +345,10 @@ library LibExtrospectBytecode {
     /// https://github.com/a16z/metamorphic-contract-detector/blob/main/metamorphic_detect/opcodes.py#L52
     /// NOTE: Reverts with `EOFBytecodeNotSupported` if the bytecode is EOF
     /// (EIP-7692).
+    /// NOTE: Empty bytecode scans to a zero bitmap: there are no bytes, so no
+    /// opcode is present. The empty code of a codeless account scans the same
+    /// way, and zero says nothing about what opcodes that account may later
+    /// gain.
     /// @param bytecode The bytecode to scan.
     /// @return bytesPresent A `uint256` where each bit represents the presence
     /// of an opcode in the source bytecode.

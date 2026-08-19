@@ -74,7 +74,10 @@ with `MetadataNotTrimmed` when there was no metadata trailer to trim at all,
 before any hash comparison happens.
 
 `checkNoSolidityCBORMetadata(account)` is the inverse: it reverts when metadata
-is detected at all, for bytecode that was compiled with metadata disabled.
+is detected at all, for bytecode that was compiled with metadata disabled. It
+also reverts with `CodelessAccount` when the account has no code at all: no
+absence check answers "no code" as a pass, because a codeless account can gain
+any code later.
 
 `isEOFBytecode` and `checkNotEOFBytecode` report and enforce that bytecode is
 not EOF formatted.
@@ -121,6 +124,14 @@ needs storage access that a runtime contract context does not have.
 against `METAMORPHIC_OPS` and returns the risky opcodes that are reachable.
 `checkNotMetamorphic` reverts with `Metamorphic(riskyOpcodes)` when that result
 is non-zero.
+
+Both functions also have address-taking entry points that read the account's
+code, revert with `CodelessAccount` when there is none, and delegate to the
+bytes functions otherwise. An account with no code is the maximally metamorphic
+state — an unoccupied `CREATE2` target, a self-destructed account between
+incarnations, or an EOA that can gain code by EIP-7702 delegation — so only the
+address boundary has the information to refuse to vouch for it. The bytes entry
+points stay total over bytes and answer only about the bytes given.
 
 One fundamental hard requirement of an interpreter is that it is NOT mutable.
 Most obviously this includes `SELFDESTRUCT` as that would allow for things like

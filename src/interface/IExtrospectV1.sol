@@ -9,8 +9,8 @@ pragma solidity ^0.8.25;
 /// rain.extrospection.deploy.
 /// @dev The custom errors named below are declared by the libraries, not by
 /// this interface. `EOFBytecodeNotSupported`, `MetadataNotTrimmed`,
-/// `BytecodeHashMismatch` and `UnexpectedMetadata` come from
-/// `LibExtrospectBytecode`; `Metamorphic` comes from
+/// `BytecodeHashMismatch`, `UnexpectedMetadata` and `CodelessAccount` come
+/// from `LibExtrospectBytecode`; `Metamorphic` comes from
 /// `LibExtrospectMetamorphic`.
 interface IExtrospectV1 {
     /// @notice Reads `account`'s runtime bytecode, trims trailing Solidity CBOR
@@ -33,9 +33,11 @@ interface IExtrospectV1 {
     /// @notice Reads `account`'s runtime bytecode and reverts
     /// `UnexpectedMetadata` when its last 53 bytes are the exact Solidity CBOR
     /// metadata structure `tryTrimSolidityCBORMetadata` recognises. Reverts
-    /// `EOFBytecodeNotSupported` when `account`'s bytecode is EOF. Returns
-    /// nothing when no such metadata is detected, including an account with no
-    /// code, and metadata in any other shape.
+    /// `CodelessAccount(account)` when `account` has no code: absence of code
+    /// is not absence of metadata risk, so the check refuses to vouch for a
+    /// codeless account. Reverts `EOFBytecodeNotSupported` when `account`'s
+    /// bytecode is EOF. Returns nothing when the account has code in which no
+    /// such metadata is detected, including metadata in any other shape.
     /// @dev See `LibExtrospectBytecode.checkNoSolidityCBORMetadata`.
     /// @param account The account whose runtime bytecode is read and checked.
     function checkNoSolidityCBORMetadata(address account) external view;
