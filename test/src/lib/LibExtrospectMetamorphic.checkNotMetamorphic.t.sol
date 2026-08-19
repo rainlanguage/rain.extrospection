@@ -30,6 +30,13 @@ contract LibExtrospectMetamorphicCheckNotMetamorphicTest is Test {
         LibExtrospectMetamorphic.checkNotMetamorphic(hex"");
     }
 
+    /// An account with no code reads as empty bytecode and so passes.
+    function testCheckNotMetamorphicCodelessAccount() external view {
+        address codeless = address(0xC2);
+        assertEq(codeless.code.length, 0);
+        LibExtrospectMetamorphic.checkNotMetamorphic(codeless.code);
+    }
+
     /// METAMORPHIC_METADATA reverts with Metamorphic error.
     function testCheckNotMetamorphicRevertsOnMetamorphicMetadata() external {
         uint256 risk = LibExtrospectMetamorphic.scanMetamorphicRisk(METAMORPHIC_METADATA);

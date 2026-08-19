@@ -18,13 +18,19 @@ library LibExtrospectMetamorphic {
     /// `EOFBytecodeNotSupported` if the bytecode is EOF.
     /// @param bytecode The bytecode to scan.
     /// @return riskyOpcodes Bitmap of reachable metamorphic opcodes. Zero if
-    /// no metamorphic risk opcodes are reachable.
+    /// no metamorphic risk opcodes are reachable, including when `bytecode` is
+    /// empty.
     function scanMetamorphicRisk(bytes memory bytecode) internal pure returns (uint256 riskyOpcodes) {
         riskyOpcodes = LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(bytecode) & METAMORPHIC_OPS;
     }
 
     /// Reverts if any metamorphic risk opcodes are reachable in bytecode.
     /// Also reverts with `EOFBytecodeNotSupported` if the bytecode is EOF.
+    /// Empty bytecode has no reachable metamorphic opcodes and does not revert,
+    /// so an account with no code — an externally owned account, an unoccupied
+    /// `CREATE2` target, or a self-destructed account — passes this check on
+    /// the same terms as an account whose code has no reachable metamorphic
+    /// opcodes. Whether the account has any code at all is not checked here.
     /// @param bytecode The bytecode to check.
     function checkNotMetamorphic(bytes memory bytecode) internal pure {
         uint256 riskyOpcodes = scanMetamorphicRisk(bytecode);
