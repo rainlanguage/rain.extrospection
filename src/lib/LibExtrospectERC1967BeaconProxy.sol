@@ -39,6 +39,14 @@ bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.
 ///   `eth_getStorageAt`, or `sload` from a delegatecall context running
 ///   as the proxy.
 ///
+/// The slot is not the only place a proxy holds its beacon. OpenZeppelin
+/// v5 `BeaconProxy` also holds it in `address private immutable _beacon`,
+/// which solc inlines into the proxy's runtime bytecode, so `proxy.code`
+/// carries the 20 address bytes and any contract can read them.
+/// OpenZeppelin v4 `BeaconProxy` has no such immutable, so its runtime
+/// bytecode does not carry the address. This library extracts a beacon
+/// address from neither.
+///
 /// EIP-7702 delegated accounts:
 ///
 /// - An account whose code is a 23-byte delegation designator
