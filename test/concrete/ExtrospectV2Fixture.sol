@@ -37,7 +37,7 @@ contract ExtrospectV2Fixture is IExtrospectV2 {
 
     /// @inheritdoc IExtrospectV2
     function checkNotMetamorphic(address account) external view {
-        LibExtrospectMetamorphic.checkNotMetamorphic(account.code);
+        LibExtrospectMetamorphic.checkNotMetamorphic(account);
     }
 
     /// @inheritdoc IExtrospectV2
@@ -70,7 +70,7 @@ contract ExtrospectV2Fixture is IExtrospectV2 {
 
     /// @inheritdoc IExtrospectV2
     function scanEVMOpcodesPresentInBytecode(address account) external view returns (uint256) {
-        return LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(account.code);
+        return LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(account);
     }
 
     /// @inheritdoc IExtrospectV2
@@ -80,7 +80,7 @@ contract ExtrospectV2Fixture is IExtrospectV2 {
 
     /// @inheritdoc IExtrospectV2
     function scanEVMOpcodesReachableInBytecode(address account) external view returns (uint256) {
-        return LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(account.code);
+        return LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(account);
     }
 
     /// @inheritdoc IExtrospectV2
@@ -90,7 +90,7 @@ contract ExtrospectV2Fixture is IExtrospectV2 {
 
     /// @inheritdoc IExtrospectV2
     function scanMetamorphicRisk(address account) external view returns (uint256) {
-        return LibExtrospectMetamorphic.scanMetamorphicRisk(account.code);
+        return LibExtrospectMetamorphic.scanMetamorphicRisk(account);
     }
 
     /// @inheritdoc IExtrospectV2

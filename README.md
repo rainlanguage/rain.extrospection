@@ -15,13 +15,20 @@ Efforts have been made to implement the logic efficiently but it is expected
 that the primary execution environment will be offchain, so there are somewhat
 gas intensive algorithms in this repository.
 
-### `IExtrospectV1`
+### `IExtrospectV1` and `IExtrospectV2`
 
-`src/interface/IExtrospectV1.sol` is the external interface. Each of its
-functions forwards to the library function of the same name and does nothing
-else, so the interface is a call-and-return view of the libraries below. The
-concrete implementation (`Extrospect`) and its deterministic deployment live in
-the rain.extrospection.deploy repo.
+`src/interface/IExtrospectV1.sol` and `src/interface/IExtrospectV2.sol` are the
+external interfaces. Each of their functions forwards to the library function of
+the same name and does nothing else, so each interface is a call-and-return view
+of the libraries below. `IExtrospectV1` is frozen in practice: its concrete
+implementation (`Extrospect`) is deterministically deployed and can never gain
+functions. `IExtrospectV2`, for a new deploy, carries the whole V1 surface
+unchanged and adds the address-taking verdict entry points that since landed at
+the library level — `checkNotMetamorphic(address)`,
+`scanMetamorphicRisk(address)`, `scanEVMOpcodesPresentInBytecode(address)` and
+`scanEVMOpcodesReachableInBytecode(address)` — every one reverting
+`CodelessAccount` on an account with no code. The concretes, their deploy
+records and their releases live in the rain.extrospection.deploy repo.
 
 `src/interface/IBeacon.sol` and `src/interface/IOwnable.sol` are the minimal
 `implementation()` and `owner()` interfaces used to query beacons.
@@ -179,9 +186,9 @@ The derived bitmaps are:
   `DELEGATECALL` and `CALLCODE`.
 
 `NON_STATIC_OPS` and `INTERPRETER_DISALLOWED_OPS` are exported constants only.
-No library and no `IExtrospectV1` function in this repository reads either of
-them. A caller wanting an interpreter safety check masks a reachable scan
-against `INTERPRETER_DISALLOWED_OPS` itself.
+No library and no `IExtrospectV1` or `IExtrospectV2` function in this repository
+reads either of them. A caller wanting an interpreter safety check masks a
+reachable scan against `INTERPRETER_DISALLOWED_OPS` itself.
 
 The opcode constants, and the bitmaps derived from them, are subject to change
 if/when new opcodes are supported by the EVM due to future hard forks.
