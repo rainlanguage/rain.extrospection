@@ -19,6 +19,56 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
         LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(target, expectedCodeHash);
     }
 
+    /// Builds a canonical 53 byte Solidity CBOR metadata trailer from the two
+    /// parts the trim does not constrain: the 34 byte IPFS hash and the 3 byte
+    /// solc version.
+    function trailer(bytes32 ipfsHashHigh, bytes2 ipfsHashLow, bytes3 solcVersion)
+        internal
+        pure
+        returns (bytes memory)
+    {
+        return bytes.concat(hex"a264697066735822", ipfsHashHigh, ipfsHashLow, hex"64736f6c6343", solcVersion, hex"0033");
+    }
+
+    /// An account whose code is exactly the 53 byte metadata trailer trims to
+    /// an empty remainder, so it matches an expected hash of `keccak256("")`
+    /// and reverts against anything else with `keccak256("")` as the actual.
+    function testCheckCBORTrimmedBytecodeHashTrailerOnlyTrimsToEmpty() external {
+        bytes memory code =
+            hex"a26469706673582212200726074213b9ef2f5b41bf0bdd5bbd03a64652de62f1dfcda59625e106c52e8a64736f6c63430008190033";
+        assertEq(code.length, 53);
+
+        address target = address(0xC1);
+        vm.etch(target, code);
+
+        LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(target, keccak256(""));
+
+        bytes32 wrong = bytes32(uint256(0xdead));
+        vm.expectRevert(
+            abi.encodeWithSelector(LibExtrospectBytecode.BytecodeHashMismatch.selector, wrong, keccak256(""))
+        );
+        this.externalCheckCBORTrimmedBytecodeHash(target, wrong);
+    }
+
+    /// Two trailer only accounts that differ in IPFS hash and solc version have
+    /// different code hashes, yet both match the same expected hash of
+    /// `keccak256("")`.
+    function testCheckCBORTrimmedBytecodeHashTrailerOnlyNotIdentifiedByHash() external {
+        bytes memory codeA = trailer(bytes32(0), bytes2(0), bytes3(hex"000819"));
+        bytes memory codeB = trailer(bytes32(uint256(0xEE) << 248), bytes2(hex"ABCD"), bytes3(hex"010203"));
+        assertEq(codeA.length, 53);
+        assertEq(codeB.length, 53);
+        assertTrue(keccak256(codeA) != keccak256(codeB));
+
+        address targetA = address(0xC1);
+        address targetB = address(0xC2);
+        vm.etch(targetA, codeA);
+        vm.etch(targetB, codeB);
+
+        LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(targetA, keccak256(""));
+        LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(targetB, keccak256(""));
+    }
+
     /// Test that an empty account (no deployed code) reverts with
     /// MetadataNotTrimmed since there is no metadata to trim.
     function testCheckCBORTrimmedBytecodeHashEmptyAccount() external {

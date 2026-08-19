@@ -18,6 +18,13 @@ import {
     RevertingWithAddressBeacon,
     REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
 } from "test/concrete/RevertingWithAddressBeacon.sol";
+import {ReturndataBombBeacon, RETURNDATA_BOMB_GAS_BUDGET} from "test/concrete/ReturndataBombBeacon.sol";
+import {ExpensiveBeacon} from "test/concrete/ExpensiveBeacon.sol";
+import {
+    StrictCalldataBeacon,
+    STRICT_CALLDATA_BEACON_IMPLEMENTATION,
+    STRICT_CALLDATA_BEACON_OWNER
+} from "test/concrete/StrictCalldataBeacon.sol";
 import {
     LibEIP7702Designator,
     EIP7702_DELEGATION_PREFIX,
@@ -279,5 +286,51 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
                 address(beacon), keccak256(SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED)
             )
         );
+    }
+
+    /// The predicate sends the bare 4 selector bytes with nothing after
+    /// them, so a beacon that rejects any other calldata length still
+    /// resolves.
+    function testMatchesStrictCalldataBeacon() external {
+        StrictCalldataBeacon beacon = new StrictCalldataBeacon();
+        assertEq(keccak256(STRICT_CALLDATA_BEACON_IMPLEMENTATION.code), keccak256(""));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+    }
+
+    /// The staticcall forwards all the gas the predicate has, so a
+    /// beacon whose `implementation()` costs far more than a minimal
+    /// getter still resolves.
+    function testMatchesExpensiveBeacon() external {
+        EmptyContract impl = new EmptyContract();
+        ExpensiveBeacon beacon = new ExpensiveBeacon(address(impl), address(this));
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(address(impl).code)
+            )
+        );
+    }
+
+    /// A hostile beacon returning a blob sized to the caller's own gas
+    /// budget still resolves to false through an external call boundary
+    /// that caps the gas. Only `returndatasize()` is read to reject the
+    /// wrong length; the blob itself is never copied into the caller's
+    /// memory, so the caller never pays its memory expansion.
+    function testReturnsFalseOnReturndataBomb() external {
+        ReturndataBombBeacon beacon = new ReturndataBombBeacon();
+        (bool success, bytes memory returnData) = address(this).staticcall{gas: RETURNDATA_BOMB_GAS_BUDGET}(
+            abi.encodeCall(this.externalIsBeaconImplementationBytecode, (address(beacon), keccak256("")))
+        );
+        assertTrue(success, "hostile beacon reverted the caller");
+        assertFalse(abi.decode(returnData, (bool)));
+    }
+
+    /// External call boundary for `testReturnsFalseOnReturndataBomb`, so
+    /// the predicate runs under a capped gas budget.
+    function externalIsBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash)
+        external
+        view
+        returns (bool)
+    {
+        return LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(beacon, expectedRuntimeHash);
     }
 }

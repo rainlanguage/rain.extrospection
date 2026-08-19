@@ -14,6 +14,13 @@ import {
     RevertingWithAddressBeacon,
     REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
 } from "test/concrete/RevertingWithAddressBeacon.sol";
+import {ReturndataBombBeacon, RETURNDATA_BOMB_GAS_BUDGET} from "test/concrete/ReturndataBombBeacon.sol";
+import {ExpensiveBeacon} from "test/concrete/ExpensiveBeacon.sol";
+import {
+    StrictCalldataBeacon,
+    STRICT_CALLDATA_BEACON_IMPLEMENTATION,
+    STRICT_CALLDATA_BEACON_OWNER
+} from "test/concrete/StrictCalldataBeacon.sol";
 import {
     LibEIP7702Designator,
     EIP7702_DELEGATION_PREFIX,
@@ -162,5 +169,41 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
         vm.etch(delegating, LibEIP7702Designator.designator(address(otherDelegate)));
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(delegating, own));
         assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(delegating, otherOwn));
+    }
+
+    /// The predicate sends the bare 4 selector bytes with nothing after
+    /// them, so a beacon that rejects any other calldata length still
+    /// resolves.
+    function testMatchesStrictCalldataBeacon() external {
+        StrictCalldataBeacon beacon = new StrictCalldataBeacon();
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), STRICT_CALLDATA_BEACON_OWNER));
+    }
+
+    /// The staticcall forwards all the gas the predicate has, so a
+    /// beacon whose `owner()` costs far more than a minimal getter
+    /// still resolves.
+    function testMatchesExpensiveBeacon() external {
+        ExpensiveBeacon beacon = new ExpensiveBeacon(address(this), address(this));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), address(this)));
+    }
+
+    /// A hostile beacon returning a blob sized to the caller's own gas
+    /// budget still resolves to false through an external call boundary
+    /// that caps the gas. Only `returndatasize()` is read to reject the
+    /// wrong length; the blob itself is never copied into the caller's
+    /// memory, so the caller never pays its memory expansion.
+    function testReturnsFalseOnReturndataBomb() external {
+        ReturndataBombBeacon beacon = new ReturndataBombBeacon();
+        (bool success, bytes memory returnData) = address(this).staticcall{gas: RETURNDATA_BOMB_GAS_BUDGET}(
+            abi.encodeCall(this.externalIsBeaconOwner, (address(beacon), address(this)))
+        );
+        assertTrue(success, "hostile beacon reverted the caller");
+        assertFalse(abi.decode(returnData, (bool)));
+    }
+
+    /// External call boundary for `testReturnsFalseOnReturndataBomb`, so
+    /// the predicate runs under a capped gas budget.
+    function externalIsBeaconOwner(address beacon, address expectedOwner) external view returns (bool) {
+        return LibExtrospectERC1967BeaconProxy.isBeaconOwner(beacon, expectedOwner);
     }
 }

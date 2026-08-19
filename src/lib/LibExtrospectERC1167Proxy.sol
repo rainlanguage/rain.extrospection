@@ -19,12 +19,14 @@ uint256 constant ERC1167_PROXY_LENGTH =
     ERC1167_PREFIX_LENGTH + ERC1167_IMPLEMENTATION_ADDRESS_LENGTH + ERC1167_SUFFIX_LENGTH;
 /// @dev We can more efficiently compare equality of hashes of regions of memory
 /// than the regions themselves.
-/// This is the hash of the ERC1167 proxy prefix.
-bytes32 constant ERC1167_PREFIX_HASH = keccak256(ERC1167_PREFIX);
+/// This is `keccak256(ERC1167_PREFIX)`, spelled as a literal so that using it
+/// allocates no memory.
+bytes32 constant ERC1167_PREFIX_HASH = 0x63d391efc3119310b9796819854d0555ea77fb380e9ef5190c2359a8094c1f3c;
 /// @dev We can more efficiently compare equality of hashes of regions of memory
 /// than the regions themselves.
-/// This is the hash of the ERC1167 proxy suffix.
-bytes32 constant ERC1167_SUFFIX_HASH = keccak256(ERC1167_SUFFIX);
+/// This is `keccak256(ERC1167_SUFFIX)`, spelled as a literal so that using it
+/// allocates no memory.
+bytes32 constant ERC1167_SUFFIX_HASH = 0x11a195f66c9175f46895bae2006d40848a680c7068b9fc4af248ff9a54a47e45;
 /// @dev The bounds of the ERC1167 proxy prefix are constant.
 /// This is the start offset of the ERC1167 proxy prefix, measured from the
 /// pointer to the bytecode. The first `0x20` bytes at the pointer are the

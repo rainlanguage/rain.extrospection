@@ -186,6 +186,13 @@ library LibExtrospectBytecode {
     /// if a jump lands in them, and 37 of them are unconstrained by
     /// `tryTrimSolidityCBORMetadata`. Two accounts whose code differs only in
     /// those 37 bytes both satisfy the same `expectedTrimmedHash`.
+    ///
+    /// NOTE an account whose code is exactly the 53 byte metadata trailer and
+    /// nothing else trims to an empty remainder, so the trimmed hash is
+    /// `keccak256("")` for every such account. As the trailer's 34 byte IPFS
+    /// hash and 3 byte solc version are not constrained by the trim, an
+    /// `expectedTrimmedHash` of `keccak256("")` matches all of them and does
+    /// not identify any one of them.
     /// @param account The account whose bytecode to check.
     /// @param expectedTrimmedHash The expected hash of the trimmed bytecode.
     /// Not the same value as
