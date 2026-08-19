@@ -122,10 +122,31 @@ contract LibExtrospectMetamorphicCheckNotMetamorphicTest is Test {
         this.checkNotMetamorphicExternal(code);
     }
 
-    /// EOF bytecode reverts with EOFBytecodeNotSupported.
-    function testCheckNotMetamorphicRevertsOnEOF() external {
-        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
+    /// EOF bytecode reverts with `Metamorphic` carrying the EIP-3541
+    /// reserved `0xEF` lead byte's bit, not `EOFBytecodeNotSupported`.
+    function testCheckNotMetamorphicRevertsOnEOFReservedPrefix() external {
+        //forge-lint: disable-next-line(incorrect-shift)
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectMetamorphic.Metamorphic.selector, uint256(1) << 0xEF));
         this.checkNotMetamorphicExternal(hex"EF00010203");
+    }
+
+    /// The EIP-7702 delegation designator `0xEF0100 || address` reverts with
+    /// `Metamorphic` carrying the EIP-3541 reserved `0xEF` lead byte's bit.
+    /// Inverts the repro on #54, which pinned a clean pass.
+    function testCheckNotMetamorphicRevertsOnEIP7702DelegationDesignator() external {
+        bytes memory designator = abi.encodePacked(hex"ef0100", address(0x1234567890123456789012345678901234567890));
+        //forge-lint: disable-next-line(incorrect-shift)
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectMetamorphic.Metamorphic.selector, uint256(1) << 0xEF));
+        this.checkNotMetamorphicExternal(designator);
+    }
+
+    /// Fuzz: ANY bytecode whose first byte is `0xEF` reverts with
+    /// `Metamorphic(1 << 0xEF)`, whatever follows the first byte.
+    function testCheckNotMetamorphicReservedPrefixFuzz(bytes memory tail) external {
+        bytes memory bytecode = abi.encodePacked(hex"ef", tail);
+        //forge-lint: disable-next-line(incorrect-shift)
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectMetamorphic.Metamorphic.selector, uint256(1) << 0xEF));
+        this.checkNotMetamorphicExternal(bytecode);
     }
 
     /// Address entry point: a codeless account reverts with `CodelessAccount`
@@ -155,20 +176,34 @@ contract LibExtrospectMetamorphicCheckNotMetamorphicTest is Test {
     }
 
     /// Address entry point: EOF code etched onto an account reverts with
-    /// `EOFBytecodeNotSupported` via delegation to the bytes entry point.
-    function testCheckNotMetamorphicAddressRevertsOnEOF() external {
+    /// `Metamorphic` carrying the EIP-3541 reserved `0xEF` lead byte's bit,
+    /// via delegation to the bytes entry point.
+    function testCheckNotMetamorphicAddressRevertsOnEOFReservedPrefix() external {
         address target = address(0xBEEF);
         vm.etch(target, hex"EF00010203");
-        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
+        //forge-lint: disable-next-line(incorrect-shift)
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectMetamorphic.Metamorphic.selector, uint256(1) << 0xEF));
         this.checkNotMetamorphicAddressExternal(target);
     }
 
-    /// Fuzz: for an account with nonempty non-EOF code, the address entry
+    /// Address entry point: an account whose code is an EIP-7702 delegation
+    /// designator reverts with `Metamorphic` carrying the EIP-3541 reserved
+    /// `0xEF` lead byte's bit, via delegation to the bytes entry point.
+    function testCheckNotMetamorphicAddressRevertsOnEIP7702DelegationDesignator() external {
+        address target = address(0xBEEF);
+        vm.etch(target, abi.encodePacked(hex"ef0100", address(0x1234567890123456789012345678901234567890)));
+        //forge-lint: disable-next-line(incorrect-shift)
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectMetamorphic.Metamorphic.selector, uint256(1) << 0xEF));
+        this.checkNotMetamorphicAddressExternal(target);
+    }
+
+    /// Fuzz: for an account with nonempty etchable code, the address entry
     /// point and the bytes entry point agree: both revert with the same
-    /// `Metamorphic` bitmap or both pass.
+    /// `Metamorphic` bitmap or both pass. EOF code and EIP-7702 delegation
+    /// designators are included: both entry points revert `Metamorphic` with
+    /// `1 << 0xEF` for them.
     function testCheckNotMetamorphicAddressEquivalenceFuzz(bytes memory code) external {
         vm.assume(code.length > 0);
-        vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
         address target = address(0xBEEF);
         LibExtrospectTestEtch.assumeEtch(vm, target, code);
 
@@ -179,11 +214,10 @@ contract LibExtrospectMetamorphicCheckNotMetamorphicTest is Test {
         this.checkNotMetamorphicAddressExternal(target);
     }
 
-    /// Fuzz: checkNotMetamorphic reverts iff scanMetamorphicRisk is non-zero.
+    /// Fuzz: checkNotMetamorphic reverts iff scanMetamorphicRisk is
+    /// non-zero, over ALL bytes: the scan is total and the check adds only
+    /// the revert.
     function testCheckNotMetamorphicFuzz(bytes memory data) external {
-        // Skip EOF bytecode — both functions revert with a different error.
-        vm.assume(data.length < 2 || data[0] != 0xEF || data[1] != 0x00);
-
         uint256 risk = LibExtrospectMetamorphic.scanMetamorphicRisk(data);
         if (risk != 0) {
             vm.expectRevert(abi.encodeWithSelector(LibExtrospectMetamorphic.Metamorphic.selector, risk));
