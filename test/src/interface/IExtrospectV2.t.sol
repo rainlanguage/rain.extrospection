@@ -46,47 +46,42 @@ contract IExtrospectV2Test is Test {
         assertEq(
             IExtrospectV2.checkCBORTrimmedBytecodeHash.selector, IExtrospectV1.checkCBORTrimmedBytecodeHash.selector
         );
-        assertEq(
-            IExtrospectV2.checkNoSolidityCBORMetadata.selector, IExtrospectV1.checkNoSolidityCBORMetadata.selector
-        );
+        assertEq(IExtrospectV2.checkNoSolidityCBORMetadata.selector, IExtrospectV1.checkNoSolidityCBORMetadata.selector);
         assertEq(IExtrospectV2.checkNotEOFBytecode.selector, IExtrospectV1.checkNotEOFBytecode.selector);
         assertEq(
-            IExtrospectV2.isBeaconImplementationBytecode.selector,
-            IExtrospectV1.isBeaconImplementationBytecode.selector
+            IExtrospectV2.isBeaconImplementationBytecode.selector, IExtrospectV1.isBeaconImplementationBytecode.selector
         );
         assertEq(IExtrospectV2.isBeaconOwner.selector, IExtrospectV1.isBeaconOwner.selector);
         assertEq(IExtrospectV2.isEOFBytecode.selector, IExtrospectV1.isEOFBytecode.selector);
         assertEq(IExtrospectV2.isERC1167Proxy.selector, IExtrospectV1.isERC1167Proxy.selector);
-        assertEq(
-            IExtrospectV2.tryTrimSolidityCBORMetadata.selector, IExtrospectV1.tryTrimSolidityCBORMetadata.selector
-        );
+        assertEq(IExtrospectV2.tryTrimSolidityCBORMetadata.selector, IExtrospectV1.tryTrimSolidityCBORMetadata.selector);
     }
 
     /// The four names V2 overloads answer their V1 (bytes-taking) selectors
     /// with the library's verdicts: raw calls encoded from the V1 ABI land on
     /// the V2 fixture and return what the libraries return.
     function testIExtrospectV2AnswersIExtrospectV1OverloadedSelectors() external view {
-        (bool ok, bytes memory ret) = address(iExtrospect).staticcall(
-            abi.encodeWithSelector(IExtrospectV1.scanMetamorphicRisk.selector, bytes(hex"ff"))
-        );
+        (bool ok, bytes memory ret) = address(iExtrospect)
+            .staticcall(abi.encodeWithSelector(IExtrospectV1.scanMetamorphicRisk.selector, bytes(hex"ff")));
         assertTrue(ok);
         assertEq(abi.decode(ret, (uint256)), 1 << EVM_OP_SELFDESTRUCT);
 
-        (ok, ret) = address(iExtrospect).staticcall(
-            abi.encodeWithSelector(IExtrospectV1.checkNotMetamorphic.selector, bytes(hex"0001"))
-        );
+        (ok, ret) = address(iExtrospect)
+            .staticcall(abi.encodeWithSelector(IExtrospectV1.checkNotMetamorphic.selector, bytes(hex"0001")));
         assertTrue(ok);
         assertEq(ret.length, 0);
 
-        (ok, ret) = address(iExtrospect).staticcall(
-            abi.encodeWithSelector(IExtrospectV1.scanEVMOpcodesPresentInBytecode.selector, bytes(hex"0001"))
-        );
+        (ok, ret) = address(iExtrospect)
+            .staticcall(
+                abi.encodeWithSelector(IExtrospectV1.scanEVMOpcodesPresentInBytecode.selector, bytes(hex"0001"))
+            );
         assertTrue(ok);
         assertEq(abi.decode(ret, (uint256)), (1 << EVM_OP_STOP) | (1 << EVM_OP_ADD));
 
-        (ok, ret) = address(iExtrospect).staticcall(
-            abi.encodeWithSelector(IExtrospectV1.scanEVMOpcodesReachableInBytecode.selector, bytes(hex"0001"))
-        );
+        (ok, ret) = address(iExtrospect)
+            .staticcall(
+                abi.encodeWithSelector(IExtrospectV1.scanEVMOpcodesReachableInBytecode.selector, bytes(hex"0001"))
+            );
         assertTrue(ok);
         assertEq(abi.decode(ret, (uint256)), 1 << EVM_OP_STOP);
     }
@@ -179,9 +174,8 @@ contract IExtrospectV2Test is Test {
     /// and extracts its implementation address.
     function testIExtrospectV2IsERC1167Proxy() external view {
         address implementation = address(0x1234567890123456789012345678901234567890);
-        bytes memory proxy = abi.encodePacked(
-            hex"363d3d373d3d3d363d73", implementation, hex"5af43d82803e903d91602b57fd5bf3"
-        );
+        bytes memory proxy =
+            abi.encodePacked(hex"363d3d373d3d3d363d73", implementation, hex"5af43d82803e903d91602b57fd5bf3");
         (bool result, address extracted) = iExtrospect.isERC1167Proxy(proxy);
         assertTrue(result);
         assertEq(extracted, implementation);
