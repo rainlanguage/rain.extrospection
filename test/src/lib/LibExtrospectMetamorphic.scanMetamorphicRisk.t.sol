@@ -114,6 +114,22 @@ contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
         assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(hex"00FF"), 0);
     }
 
+    /// A SELFDESTRUCT byte inside the inline data of a trailing truncated
+    /// PUSH32 is not reachable, so the bytecode carries no metamorphic risk.
+    function testScanMetamorphicRiskTruncatedPush32Selfdestruct() external pure {
+        // PUSH32 with 29 of its 32 data bytes present, the last one 0xFF.
+        bytes memory bytecode = hex"7f00000000000000000000000000000000000000000000000000000000ff";
+        assertEq(bytecode.length, 30);
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(bytecode), 0);
+    }
+
+    /// A DELEGATECALL byte inside the inline data of a trailing truncated
+    /// PUSH2 is not reachable, so the bytecode carries no metamorphic risk.
+    function testScanMetamorphicRiskTruncatedPush2Delegatecall() external pure {
+        // PUSH2 with 1 of its 2 data bytes present, that byte 0xF4.
+        assertEq(LibExtrospectMetamorphic.scanMetamorphicRisk(hex"61F4"), 0);
+    }
+
     /// Fuzz test against slow reference.
     function testScanMetamorphicRiskReference(bytes memory data) external pure {
         vm.assume(!LibExtrospectBytecode.isEOFBytecode(data));
