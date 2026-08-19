@@ -42,6 +42,22 @@ bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.
 /// The slot constants are exported so callers that have storage access
 /// elsewhere use a single canonical source for the slot addresses.
 library LibExtrospectERC1967BeaconProxy {
+    /// @notice Read a beacon's current implementation address via
+    /// `IBeacon.implementation()`. Yields `(false, address(0))` rather
+    /// than reverting for a target that doesn't expose
+    /// `implementation()`, whose call reverts, or whose return data is
+    /// not exactly 32 bytes holding a clean address. Callers that need
+    /// the implementation's bytecode properties feed the returned
+    /// address to `LibExtrospectMetamorphic` / `LibExtrospectBytecode`.
+    /// @param beacon The beacon address to query.
+    /// @return True if the call to `implementation()` returned a clean
+    /// address. False if it failed for any reason.
+    /// @return The implementation address the beacon reports.
+    /// `address(0)` whenever the first return value is false.
+    function beaconImplementation(address beacon) internal view returns (bool, address) {
+        return _tryGetAddress(beacon, IBeacon.implementation.selector);
+    }
+
     /// @notice Verify that a beacon's current implementation has runtime
     /// bytecode matching `expectedRuntimeHash`. Useful for asserting a
     /// known-good implementation is behind the beacon without trusting
