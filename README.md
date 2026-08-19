@@ -15,19 +15,29 @@ Efforts have been made to implement the logic efficiently but it is expected tha
 the primary execution environment will be offchain, so there are somewhat gas
 intensive algorithms in this repository.
 
-### `IExtrospectBytecodeV2`
+### `IExtrospectV1` and `Extrospect`
 
-Tools to read and get a basic understanding of what opcodes are used in the
-bytecode of some address.
+`src/interface/IExtrospectV1.sol` is the external interface and
+`src/concrete/Extrospect.sol` is its implementation. `Extrospect` has a
+parameterless constructor and holds no state, so a single deployment serves every
+caller. Each of its functions forwards to the library function of the same name
+and does nothing else, so the interface is a call-and-return view of the
+libraries below.
 
-The most basic functions `bytecode` and `bytecodeHash` simply expose the
-underlying native evm logic for each.
+`src/interface/IBeacon.sol` and `src/interface/IOwnable.sol` are the minimal
+`implementation()` and `owner()` interfaces used to query beacons.
 
-The more sophisticated `scanEVMOpcodesPresentInAccount` and
-`scanEVMOpcodesReachableInAccount` build a bitmap of all the opcodes that are
-present in the scanned contract. This bitmap is built as `1 << opcode` where
-opcode is a single byte, and the scan is a `uint256` so the space of all opcodes
-as a `uint8` maps perfectly to all the bits in an EVM word.
+### Opcode scanning
+
+`LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode` and
+`LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode` build a bitmap of the
+opcodes found in the bytecode passed to them. This bitmap is built as
+`1 << opcode` where opcode is a single byte, and the scan is a `uint256` so the
+space of all opcodes as a `uint8` maps perfectly to all the bits in an EVM word.
+
+Both scans take bytecode as `bytes memory` rather than an address, so the caller
+chooses what to feed them: `account.code`, a constructor argument, or bytecode
+already trimmed by `tryTrimSolidityCBORMetadata`.
 
 The "present in" scan simply loops over the entire bytecode, but is `PUSH*` aware
 so knows that the inline argument to any `PUSH` opcode is not itself an opcode.
@@ -46,9 +56,31 @@ if the EVM execution model ever changes. For example, if the set of halting ops
 ever changes, or a new `JUMPDEST` alternative is invented, the scanner will
 require an entirely new implementation and redeployment to support this.
 
-### `IExtrospectERC1167ProxyV1`
+Both scans revert with `EOFBytecodeNotSupported` on EOF bytecode.
 
-Check if a given account is an `ERC1167` minimal proxy contract.
+### Bytecode hashing and Solidity CBOR metadata
+
+`LibExtrospectBytecode.tryTrimSolidityCBORMetadata` recognises the default
+Solidity CBOR metadata trailer and shortens the bytecode in place past it,
+reporting whether it trimmed.
+
+`checkCBORTrimmedBytecodeHash(account, expected)` trims an account's code and
+reverts unless the hash of what remains equals `expected`, so the comparison is
+against bytecode with the compiler's embedded metadata hash removed. It reverts
+with `MetadataNotTrimmed` when there was no metadata trailer to trim at all,
+before any hash comparison happens.
+
+`checkNoSolidityCBORMetadata(account)` is the inverse: it reverts when metadata
+is detected at all, for bytecode that was compiled with metadata disabled.
+
+`isEOFBytecode` and `checkNotEOFBytecode` report and enforce that bytecode is not
+EOF formatted.
+
+### ERC-1167 minimal proxies
+
+`LibExtrospectERC1167Proxy.isERC1167Proxy` checks whether bytecode is an
+`ERC1167` minimal proxy contract and extracts the implementation address it
+proxies.
 
 https://eips.ethereum.org/EIPS/eip-1167
 
@@ -58,23 +90,62 @@ account is a proxy and extract the implementation address that is being proxied.
 Having a canonical onchain check for this simplifies downstream tooling and
 minimises the surface area for implementation bugs.
 
-### `IExtrospectInterpreterV1`
+The check is exact. Only the canonical 45 byte form matches: the 10 byte prefix,
+a `PUSH20` implementation address, and the 15 byte suffix whose jump target is
+`0x2b`. The vanity proxies of the EIP, which shorten the bytecode to `45 - Z`
+bytes when the implementation address has `Z` leading zero bytes, do not match.
+Neither do `PUSH0` based minimal proxies, nor EIP-7702 delegation designators. A
+`false` result says that the bytecode is not the canonical minimal proxy, not
+that the account runs its own code.
 
-Check if a candidate interpreter contract is fundamentally UNSAFE due to
-mutation.
+### ERC-1967 beacon proxies
+
+`LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode` calls
+`implementation()` on a beacon and compares the runtime bytecode hash of the
+answer against an expected hash. `isBeaconOwner` calls `owner()` on a beacon and
+compares the answer against an expected owner. Both return `false` rather than
+reverting when the call fails for any reason, including the target not being a
+beacon at all.
+
+The same file exports `ERC1967_IMPLEMENTATION_SLOT`, `ERC1967_ADMIN_SLOT` and
+`ERC1967_BEACON_SLOT`, derived in source from the EIP-1967 formula. ERC-1967
+specifies those slots but no getter for them, so reading a proxy's beacon slot
+needs storage access that a runtime contract context does not have.
+
+### Metamorphic risk
+
+`LibExtrospectMetamorphic.scanMetamorphicRisk` masks the reachable opcode scan
+against `METAMORPHIC_OPS` and returns the risky opcodes that are reachable.
+`checkNotMetamorphic` reverts with `Metamorphic(riskyOpcodes)` when that result
+is non-zero.
 
 One fundamental hard requirement of an interpreter is that it is NOT mutable.
 Most obviously this includes `SELFDESTRUCT` as that would allow for things like
 metamorphic languages, which would completely undermine the integrity of any
-expression that runs on the interpreter.
+expression that runs on the interpreter. `METAMORPHIC_OPS` covers `SELFDESTRUCT`,
+`DELEGATECALL`, `CALLCODE`, `CREATE` and `CREATE2`.
 
-Less obviously, every opcode that would fail a standard static call is also
-disallowed within interpreters. This gives interpreters a guaranteed familiar
-set of security guarantees without needing to consider their internal
-implementation.
+### `EVMOpcodes` constants
 
-Pragmatically this is a thin wrapper around the bytecode scanning tools that
-check for reachability of dangerous opcodes in the underlying.
+`src/lib/EVMOpcodes.sol` defines one `EVM_OP_*` constant per opcode defined
+through Cancun — 149 of them. The other 107 of the 256 byte values are not
+assigned opcodes and so have no constant, while the scan bitmaps still cover all
+256 bit positions.
 
-This interface and/or concrete implementations are subject to change if/when new
-opcodes are supported by the EVM due to future hard forks.
+The derived bitmaps are:
+
+- `HALTING_BITMAP` — opcodes that terminate the current execution path, used by
+  the reachable scan.
+- `METAMORPHIC_OPS` — opcodes that indicate metamorphic risk, used by
+  `LibExtrospectMetamorphic`.
+- `NON_STATIC_OPS` — opcodes disallowed in a static context per EIP-214.
+- `INTERPRETER_DISALLOWED_OPS` — `NON_STATIC_OPS` plus `SLOAD`, `TLOAD`,
+  `DELEGATECALL` and `CALLCODE`.
+
+`NON_STATIC_OPS` and `INTERPRETER_DISALLOWED_OPS` are exported constants only. No
+library, no `IExtrospectV1` function and no deployed contract in this repository
+reads either of them. A caller wanting an interpreter safety check masks a
+reachable scan against `INTERPRETER_DISALLOWED_OPS` itself.
+
+The opcode constants, and the bitmaps derived from them, are subject to change
+if/when new opcodes are supported by the EVM due to future hard forks.
