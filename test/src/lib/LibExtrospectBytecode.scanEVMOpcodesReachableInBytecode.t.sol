@@ -162,6 +162,16 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex""), 0);
     }
 
+    /// The empty code of a codeless account scans to a zero bitmap. Pins the
+    /// documented empty-input meaning at the account reading: zero here says
+    /// no opcodes were scanned as reachable, not that the account can never
+    /// gain any.
+    function testScanEVMOpcodesReachableCodelessAccount() public view {
+        address codeless = address(0xC2);
+        assertEq(codeless.code.length, 0);
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(codeless.code), 0);
+    }
+
     /// Test truncated PUSH1 at end of bytecode (no data byte following).
     function testScanEVMOpcodesReachableTruncatedPush1() public pure {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"60"), 1 << 0x60);

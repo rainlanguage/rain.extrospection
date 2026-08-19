@@ -50,9 +50,14 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
         offsets = [uint256(0), 1, 2, 3, 4, 5, 6, 7, 42, 43, 44, 45, 46, 47, 51, 52];
     }
 
-    /// Account with no code passes (no metadata to detect).
-    function testCheckNoMetadataEmptyAccount() external view {
-        LibExtrospectBytecode.checkNoSolidityCBORMetadata(address(0xdead));
+    /// Account with no code reverts with `CodelessAccount` carrying the
+    /// address. An account with no code can gain any code later, so the
+    /// absence check refuses to vouch for it instead of passing it.
+    function testCheckNoMetadataRevertsOnCodelessAccount() external {
+        address codeless = address(0xdead);
+        assertEq(codeless.code.length, 0);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.CodelessAccount.selector, codeless));
+        this.checkNoSolidityCBORMetadataExternal(codeless);
     }
 
     /// Contract compiled without metadata passes. This project compiles with
@@ -81,9 +86,12 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
         this.checkNoSolidityCBORMetadataExternal(target);
     }
 
-    /// Fuzz: bytecode shorter than Solidity CBOR metadata passes. The
-    /// leading `STOP` keeps the bytecode out of the EOF format.
+    /// Fuzz: nonempty bytecode shorter than Solidity CBOR metadata passes.
+    /// The leading `STOP` keeps the bytecode out of the EOF format. Empty
+    /// bytecode is excluded: an account etched with empty code is codeless
+    /// and reverts with `CodelessAccount`, pinned deterministically above.
     function testCheckNoMetadataPassesShortBytecode(bytes memory code) external {
+        vm.assume(code.length > 0);
         uint256 length = code.length;
         if (length >= SOLIDITY_CBOR_METADATA_LENGTH) {
             length = SOLIDITY_CBOR_METADATA_LENGTH - 1;

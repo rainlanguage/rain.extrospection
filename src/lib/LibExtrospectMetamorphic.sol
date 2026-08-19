@@ -37,4 +37,25 @@ library LibExtrospectMetamorphic {
             revert Metamorphic(riskyOpcodes);
         }
     }
+
+    /// Reads `account`'s code and scans it for reachable metamorphic risk
+    /// opcodes, delegating to `scanMetamorphicRisk(bytes)`.
+    /// @param account The account whose code to scan.
+    /// @return riskyOpcodes Bitmap of reachable metamorphic opcodes in the
+    /// account's code. Zero if none are reachable.
+    function scanMetamorphicRisk(address account) internal view returns (uint256 riskyOpcodes) {
+        bytes memory bytecode = account.code;
+        riskyOpcodes = scanMetamorphicRisk(bytecode);
+    }
+
+    /// Reads `account`'s code and reverts with `Metamorphic` if any
+    /// metamorphic risk opcodes are reachable in it, delegating to
+    /// `scanMetamorphicRisk(address)`.
+    /// @param account The account whose code to check.
+    function checkNotMetamorphic(address account) internal view {
+        uint256 riskyOpcodes = scanMetamorphicRisk(account);
+        if (riskyOpcodes != 0) {
+            revert Metamorphic(riskyOpcodes);
+        }
+    }
 }

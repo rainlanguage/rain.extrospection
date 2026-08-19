@@ -18,6 +18,15 @@ contract LibExtrospectBytecodeIsEOFBytecodeTest is Test {
         assertFalse(LibExtrospectBytecode.isEOFBytecode(hex""));
     }
 
+    /// The empty code of a codeless account is not EOF. Pins the documented
+    /// empty-input meaning at the account reading: `false` here says the
+    /// bytes are not an EOF container, not that the account has code.
+    function testIsEOFBytecodeCodelessAccount() external view {
+        address codeless = address(0xC2);
+        assertEq(codeless.code.length, 0);
+        assertFalse(LibExtrospectBytecode.isEOFBytecode(codeless.code));
+    }
+
     /// Test that a single bytecode is not EOF.
     function testIsEOFBytecodeSingleByte() external pure {
         assertFalse(LibExtrospectBytecode.isEOFBytecode(hex"EF"));

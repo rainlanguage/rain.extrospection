@@ -64,6 +64,15 @@ library LibExtrospectBytecode {
     /// `tryTrimSolidityCBORMetadata` matches.
     error UnexpectedMetadata();
 
+    /// Thrown when an address-taking absence check is asked about an account
+    /// that has no code. An account with no code can gain any code later — an
+    /// unoccupied `CREATE2` target, a self-destructed account between
+    /// incarnations, or an EOA that can gain code by EIP-7702 delegation — so
+    /// absence of code proves nothing and no absence check answers "no code"
+    /// as a pass.
+    /// @param account The account that has no code.
+    error CodelessAccount(address account);
+
     /// Returns whether the first two bytes of the bytecode are the EOF magic
     /// `0xEF00`. The version byte that follows the magic in an EIP-3540
     /// container is not read, so `0xEF00` alone and `0xEF00` followed by any
