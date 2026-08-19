@@ -9,10 +9,16 @@ import {EmptyContract} from "test/concrete/EmptyContract.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
 import {BogusBeacon} from "test/concrete/BogusBeacon.sol";
 import {WrongLengthBeacon} from "test/concrete/WrongLengthBeacon.sol";
+import {PermissiveFallbackContract} from "test/concrete/PermissiveFallbackContract.sol";
 import {
     RevertingWithAddressBeacon,
     REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
 } from "test/concrete/RevertingWithAddressBeacon.sol";
+import {
+    LibEIP7702Designator,
+    EIP7702_DELEGATION_PREFIX,
+    EIP7702_DESIGNATOR_LENGTH
+} from "test/lib/LibEIP7702Designator.sol";
 
 /// @title LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest
 /// @notice Tests `LibExtrospectERC1967BeaconProxy.isBeaconOwner`.
@@ -30,8 +36,8 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), wrong));
     }
 
-    /// A target that doesn't expose `owner()` is not a valid beacon
-    /// and trivially fails the predicate. Returns false rather than
+    /// A target with no `owner()` function and no fallback reverts the
+    /// staticcall, so it fails the predicate. Returns false rather than
     /// reverting so integrators can collapse the check to a single
     /// boolean assertion.
     function testReturnsFalseOnNonOwnable(address expected) external {
@@ -99,5 +105,62 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconOwnerTest is Test {
         assertFalse(
             LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), REVERTING_WITH_ADDRESS_BEACON_PAYLOAD)
         );
+    }
+
+    /// A target with no `owner()` function, but a fallback answering
+    /// every selector with 32 clean bytes, passes the predicate. The
+    /// fallback's return is byte-identical to a real `owner()` return,
+    /// so the staticcall cannot separate the two. A comparison against
+    /// any other address still fails, so the predicate is comparing
+    /// the fallback's answer rather than ignoring it.
+    function testAcceptsPermissiveFallbackAsOwner(address answer, address other) external {
+        vm.assume(other != answer);
+        PermissiveFallbackContract target = new PermissiveFallbackContract(answer);
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(target), answer));
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(target), other));
+    }
+
+    /// Non-fuzz pin at `answer = address(0)`: a fallback answering with
+    /// 32 zero bytes reports `address(0)` as the owner, which the
+    /// predicate accepts as a match for an `expectedOwner` of
+    /// `address(0)`. The result is the same one a beacon that reports
+    /// `address(0)` from a real `owner()` produces.
+    function testAcceptsZeroReturningFallbackAsOwner() external {
+        PermissiveFallbackContract target = new PermissiveFallbackContract(address(0));
+        MockBeacon beacon = new MockBeacon(address(this), address(0));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(target), address(0)));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(address(beacon), address(0)));
+    }
+
+    /// An account whose code is an EIP-7702 delegation designator runs
+    /// the delegate's code, so `owner()` is answered by the delegate
+    /// and the predicate returns true for the delegating account. The
+    /// predicate never reads the target's own code, so the designator
+    /// is not distinguished from beacon-contract code.
+    function testMatchesForDelegatedAccount(address own) external {
+        MockBeacon delegate = new MockBeacon(address(this), own);
+        address delegating = address(uint160(uint256(keccak256("delegating account"))));
+        vm.etch(delegating, LibEIP7702Designator.designator(address(delegate)));
+
+        assertEq(delegating.code.length, EIP7702_DESIGNATOR_LENGTH);
+        assertEq(bytes3(delegating.code), EIP7702_DELEGATION_PREFIX);
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(delegating, own));
+    }
+
+    /// Repointing an EIP-7702 delegation designator at a delegate that
+    /// reports a different owner flips the predicate for the same
+    /// address, with no change to the code of either delegate.
+    function testDelegatedAccountRepointChangesResult(address own, address otherOwn) external {
+        vm.assume(own != otherOwn);
+        MockBeacon delegate = new MockBeacon(address(this), own);
+        MockBeacon otherDelegate = new MockBeacon(address(this), otherOwn);
+        address delegating = address(uint160(uint256(keccak256("delegating account"))));
+
+        vm.etch(delegating, LibEIP7702Designator.designator(address(delegate)));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(delegating, own));
+
+        vm.etch(delegating, LibEIP7702Designator.designator(address(otherDelegate)));
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconOwner(delegating, own));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconOwner(delegating, otherOwn));
     }
 }
