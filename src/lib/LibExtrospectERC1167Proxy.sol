@@ -37,6 +37,9 @@ uint256 constant ERC1167_IMPLEMENTATION_ADDRESS_OFFSET = ERC1167_PREFIX_LENGTH +
 library LibExtrospectERC1167Proxy {
     /// @notice Checks if the given bytecode is an ERC1167 proxy. If so,
     /// returns the implementation address.
+    /// EOF bytecode does not revert. An EOF container begins with `0xEF00`,
+    /// which is not `ERC1167_PREFIX`, so EOF bytecode returns
+    /// `(false, address(0))`.
     /// @param bytecode The bytecode to check.
     /// @return result True if the bytecode is an ERC1167 proxy.
     /// @return implementationAddress The address of the implementation contract.
