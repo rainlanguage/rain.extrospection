@@ -4,7 +4,7 @@
 # ignores.
 [external.package]
 name = "rain-extrospection"
-version = "0.1.12"
+version = "0.1.13"
 
 [profile.default]
 
