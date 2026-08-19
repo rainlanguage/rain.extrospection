@@ -155,10 +155,48 @@ contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
         assertEq(code.length, 52);
     }
 
+    /// Trimming writes the shorter length over the array's own length word, so
+    /// a second reference to that array observes the trim.
+    function testTryTrimSolidityCBORMetadataAliasObservesTrim() external pure {
+        bytes memory bytecode = SOLIDITY_CBOR_RUNTIME_FIXTURE;
+        bytes memory aliased = bytecode;
+        uint256 lengthBefore = bytecode.length;
+
+        assertTrue(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(aliased));
+
+        assertEq(aliased.length, lengthBefore - 53);
+        assertEq(bytecode.length, lengthBefore - 53);
+        assertEq(bytecode, hex"6080604052600080fdfe");
+    }
+
     /// EOF bytecode is not supported.
     function testTryTrimSolidityCBORMetadataRevertsOnEOF() external {
         bytes memory eofBytecode = hex"EF00010203";
         vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
         this.tryTrimSolidityCBORMetadataExternal(eofBytecode);
+    }
+
+    /// Exactly 16 of the 53 trailer bytes are constrained: offsets 0-7, 42-47
+    /// and 51-52. Flipping any one of those stops the trailer being
+    /// recognised. Flipping any of the other 37 leaves it recognised and
+    /// trimmed.
+    function testTryTrimSolidityCBORMetadataConstrainedTrailerBytes() external pure {
+        bytes memory base = SOLIDITY_CBOR_RUNTIME_FIXTURE;
+        uint256 trailerStart = base.length - 53;
+        uint256 constrainedCount = 0;
+        for (uint256 i = 0; i < 53; i++) {
+            bool constrained = i < 8 || (i >= 42 && i < 48) || i >= 51;
+            if (constrained) {
+                constrainedCount++;
+            }
+
+            bytes memory candidate = bytes.concat(base);
+            candidate[trailerStart + i] = bytes1(uint8(candidate[trailerStart + i]) ^ 0xFF);
+            string memory offset = string.concat("trailer offset ", vm.toString(i));
+
+            assertEq(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(candidate), !constrained, offset);
+            assertEq(candidate.length, constrained ? base.length : trailerStart, offset);
+        }
+        assertEq(constrainedCount, 16, "constrained trailer bytes");
     }
 }
