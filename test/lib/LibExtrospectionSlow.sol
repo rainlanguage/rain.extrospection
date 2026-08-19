@@ -41,10 +41,12 @@ uint256 constant SLOW_HALTING_BITMAP =
     | (uint256(1) << 0xFF);
 
 /// @dev The lead byte EIP-3541 reserves: since the London hard fork no
-/// ordinary deployment can produce code whose first byte is `0xEF`, so any
-/// account code beginning with it was placed there by a protocol feature —
-/// an EOF container, an EIP-7702 delegation designator, or whatever the
-/// prefix is assigned next — that a legacy opcode scan cannot reason about.
+/// ordinary deployment can produce code whose first byte is `0xEF`. New
+/// post-London code beginning with it comes from a protocol feature — an
+/// EOF container, an EIP-7702 delegation designator, or whatever the
+/// prefix is assigned next — while pre-London deployments and chains
+/// without EIP-3541 can carry it as plain legacy code; the slow scan
+/// mirrors the first-byte-only fail-closed rule.
 uint8 constant SLOW_EIP3541_LEAD_BYTE = 0xEF;
 
 /// @dev Opcode bytes that indicate metamorphic risk: `SELFDESTRUCT`,

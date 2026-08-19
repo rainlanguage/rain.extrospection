@@ -6,12 +6,14 @@ import {LibExtrospectBytecode} from "./LibExtrospectBytecode.sol";
 import {METAMORPHIC_OPS} from "./EVMOpcodes.sol";
 
 /// @dev The lead byte EIP-3541 reserves: since the London hard fork no
-/// ordinary deployment can produce code whose first byte is `0xEF`. Account
-/// code beginning with it exists only via protocol features — an EOF
-/// container (`0xEF00`), an EIP-7702 delegation designator
-/// (`0xEF0100 || address`), or whatever the prefix is assigned next — none
-/// of which a legacy opcode scan can reason about, so the metamorphic scan
-/// fails closed on all of them.
+/// ordinary deployment can produce code whose first byte is `0xEF`. On a
+/// post-London chain new code beginning with it comes from protocol
+/// features — an EOF container (`0xEF00`), an EIP-7702 delegation
+/// designator (`0xEF0100 || address`), or whatever the prefix is assigned
+/// next — none of which a legacy opcode scan can reason about; pre-London
+/// deployments and chains without EIP-3541 can carry it as plain legacy
+/// code the scan cannot tell apart by inspection. The metamorphic scan
+/// fails closed on the first byte alone.
 uint8 constant EIP3541_RESERVED_LEAD_BYTE = 0xEF;
 
 /// @title LibExtrospectMetamorphic
@@ -36,12 +38,15 @@ library LibExtrospectMetamorphic {
     ///
     /// Bytecode whose first byte is the EIP-3541 reserved `0xEF` fails
     /// closed: the scan reports a bitmap of exactly `1 << 0xEF` before any
-    /// opcode scan, whatever the remaining bytes are. Such code exists only
-    /// via protocol features — an EOF container (`0xEF00`), an EIP-7702
-    /// delegation designator (`0xEF0100 || address`, which the account
-    /// holder repoints or revokes with one transaction), or whatever the
-    /// prefix is assigned next — that a legacy opcode scan cannot reason
-    /// about, so the scan refuses to vouch for any of them. The reported bit
+    /// opcode scan, whatever the remaining bytes are. EIP-3541 reserves the
+    /// prefix for protocol features — an EOF container (`0xEF00`), an
+    /// EIP-7702 delegation designator (`0xEF0100 || address`, which the
+    /// account holder repoints or revokes with one transaction), or
+    /// whatever it is assigned next — that a legacy opcode scan cannot
+    /// reason about; pre-London deployments and chains without EIP-3541
+    /// can hold `0xEF`-lead legacy code indistinguishable by inspection.
+    /// The verdict keys on the first byte alone and vouches for none of
+    /// it. The reported bit
     /// is the `0xEF` lead byte itself, not a reachable opcode, and is not a
     /// member of `METAMORPHIC_OPS`. The reserved prefix is the one first
     /// byte that never reaches `scanEVMOpcodesReachableInBytecode`, so
