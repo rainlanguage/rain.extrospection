@@ -160,6 +160,32 @@ contract LibExtrospectERC1167ProxyTest is Test {
         assertEq(implementationResult, implementation);
     }
 
+    /// A 45-byte clone encoding `address(0)` as the implementation is detected
+    /// as a proxy, so `(true, address(0))` is a reachable return value and the
+    /// returned address alone does not distinguish a proxy from a non-proxy.
+    function testIsERC1167ProxyZeroImplementation() external pure {
+        bytes memory bytecode = abi.encodePacked(ERC1167_PREFIX, address(0), ERC1167_SUFFIX);
+        assertEq(bytecode.length, ERC1167_PROXY_LENGTH);
+        (bool result, address implementationResult) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        assertTrue(result);
+        assertEq(implementationResult, address(0));
+
+        (bool emptyResult, address emptyImplementationResult) = LibExtrospectERC1167Proxy.isERC1167Proxy(hex"");
+        assertFalse(emptyResult);
+        assertEq(emptyImplementationResult, implementationResult);
+    }
+
+    /// A clone whose implementation account has no code is detected as a
+    /// proxy, and the codeless address is returned.
+    function testIsERC1167ProxyImplementationWithoutCode() external view {
+        address implementation = address(uint160(uint256(keccak256("no code at this address"))));
+        assertEq(implementation.code.length, 0);
+        bytes memory bytecode = abi.encodePacked(ERC1167_PREFIX, implementation, ERC1167_SUFFIX);
+        (bool result, address implementationResult) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        assertTrue(result);
+        assertEq(implementationResult, implementation);
+    }
+
     /// Compare the fail case of the slow implementation to the fast.
     function testIsERC1167ProxySlowFail(bytes memory bytecode) external pure {
         (bool result, address implementationResult) = LibExtrospectionSlow.isERC1167ProxySlow(bytecode);
@@ -176,6 +202,18 @@ contract LibExtrospectERC1167ProxyTest is Test {
         (bool resultFast, address implementationResultFast) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
         assertTrue(result);
         assertEq(result, resultFast);
+        assertEq(implementationResult, implementationResultFast);
+    }
+
+    /// The slow and fast implementations agree on a clone encoding
+    /// `address(0)` as the implementation.
+    function testIsERC1167ProxySlowZeroImplementation() external pure {
+        bytes memory bytecode = abi.encodePacked(ERC1167_PREFIX, address(0), ERC1167_SUFFIX);
+        (bool result, address implementationResult) = LibExtrospectionSlow.isERC1167ProxySlow(bytecode);
+        (bool resultFast, address implementationResultFast) = LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+        assertTrue(result);
+        assertEq(result, resultFast);
+        assertEq(implementationResult, address(0));
         assertEq(implementationResult, implementationResultFast);
     }
 
