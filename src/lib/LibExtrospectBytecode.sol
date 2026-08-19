@@ -118,7 +118,9 @@ library LibExtrospectBytecode {
     /// The length of the metadata must always be 51+2 bytes, as the dynamic
     /// parts still have constant length.
     ///
-    /// NOTE bytecode is mutated in place.
+    /// NOTE bytecode is mutated in place. Trimming writes the shorter length
+    /// over the array's own length word, so every reference to that same array
+    /// observes the trim, not just the one passed here.
     ///
     /// NOTE EOF bytecode is not supported by this function and will cause a
     /// revert.

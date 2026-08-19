@@ -138,8 +138,9 @@ interface IExtrospectV1 {
     /// `EOFBytecodeNotSupported` when `bytecode` is EOF.
     /// @dev See `LibExtrospectBytecode.tryTrimSolidityCBORMetadata`, which
     /// takes `bytes memory` and trims it in place. Across this external
-    /// interface the argument is a copy in the callee's memory, so the caller's
-    /// own `bytecode` is untouched and the trimmed bytes come back as
+    /// interface the argument arrives as a fresh copy decoded from calldata
+    /// into the callee's memory, so the caller's own `bytecode` is untouched:
+    /// the trim lands on that copy and the copy comes back as
     /// `trimmedBytecode`.
     /// @param bytecode The bytecode to trim.
     /// @return didTrim True when the last 53 bytes matched and were removed.
