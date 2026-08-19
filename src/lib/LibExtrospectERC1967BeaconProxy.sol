@@ -39,6 +39,21 @@ bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.
 ///   `eth_getStorageAt`, or `sload` from a delegatecall context running
 ///   as the proxy.
 ///
+/// EIP-7702 delegated accounts:
+///
+/// - An account whose code is a 23-byte delegation designator
+///   (`0xef0100` followed by a 20-byte delegate address) runs the
+///   delegate's code on every call, so it answers `implementation()`
+///   and `owner()` and both predicates below can return true for it.
+///   Neither predicate inspects the target's code, so a delegated
+///   account is indistinguishable from a beacon contract in what they
+///   return.
+/// - The account holder repoints or revokes the designator in a single
+///   transaction, so a true from either predicate about such an account
+///   changes without any contract's code changing.
+/// - `keccak256(addr.code)` on a delegated account hashes the 23-byte
+///   designator, not the delegate's runtime bytecode.
+///
 /// The slot constants are exported so callers that have storage access
 /// elsewhere use a single canonical source for the slot addresses.
 library LibExtrospectERC1967BeaconProxy {
@@ -75,6 +90,12 @@ library LibExtrospectERC1967BeaconProxy {
     /// implementation has any code at all is not checked. Deploying code
     /// to a codeless implementation turns that same call from true to
     /// false.
+    ///
+    /// An EIP-7702 delegated account answers `implementation()` from its
+    /// delegate and so satisfies this check; when `implementation()`
+    /// itself returns a delegated account, the hash compared is that of
+    /// its 23-byte delegation designator rather than of the delegate's
+    /// runtime bytecode.
     /// @param beacon The beacon address to query.
     /// @param expectedRuntimeHash The expected `keccak256` of the
     /// implementation's runtime bytecode.
@@ -90,7 +111,9 @@ library LibExtrospectERC1967BeaconProxy {
     /// `expectedOwner`. A target that doesn't expose `owner()` (or
     /// whose call reverts) is not a valid beacon and trivially fails
     /// the check — returns false rather than reverting, so integrators
-    /// can collapse the predicate into a single boolean assertion.
+    /// can collapse the predicate into a single boolean assertion. An
+    /// EIP-7702 delegated account answers `owner()` from its delegate
+    /// and so satisfies this check.
     /// @param beacon The beacon address to query.
     /// @param expectedOwner The owner address the beacon should report.
     /// @return True if the ownership matches. False if the call to

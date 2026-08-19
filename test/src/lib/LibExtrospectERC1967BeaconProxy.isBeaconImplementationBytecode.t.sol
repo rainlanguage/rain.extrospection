@@ -13,6 +13,11 @@ import {
     RevertingWithAddressBeacon,
     REVERTING_WITH_ADDRESS_BEACON_PAYLOAD
 } from "test/concrete/RevertingWithAddressBeacon.sol";
+import {
+    LibEIP7702Designator,
+    EIP7702_DELEGATION_PREFIX,
+    EIP7702_DESIGNATOR_LENGTH
+} from "test/lib/LibEIP7702Designator.sol";
 
 /// @title LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest
 /// @notice Tests `LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode`.
@@ -151,5 +156,68 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         RevertingWithAddressBeacon beacon = new RevertingWithAddressBeacon();
         assertEq(keccak256(REVERTING_WITH_ADDRESS_BEACON_PAYLOAD.code), keccak256(""));
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+    }
+
+    /// An account whose code is an EIP-7702 delegation designator runs
+    /// the delegate's code, so `implementation()` is answered by the
+    /// delegate and the predicate returns true for the delegating
+    /// account. The predicate never reads the target's own code, so the
+    /// designator is not distinguished from beacon-contract code.
+    function testMatchesForDelegatedAccountBeacon() external {
+        EmptyContract impl = new EmptyContract();
+        MockBeacon delegate = new MockBeacon(address(impl), address(this));
+        address delegating = address(uint160(uint256(keccak256("delegating beacon"))));
+        vm.etch(delegating, LibEIP7702Designator.designator(address(delegate)));
+
+        assertEq(delegating.code.length, EIP7702_DESIGNATOR_LENGTH);
+        assertEq(bytes3(delegating.code), EIP7702_DELEGATION_PREFIX);
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(delegating, keccak256(address(impl).code))
+        );
+    }
+
+    /// Repointing an EIP-7702 delegation designator at a delegate that
+    /// reports a different implementation flips the predicate for the
+    /// same address, with no change to the code of either delegate.
+    function testDelegatedAccountBeaconRepointChangesResult() external {
+        EmptyContract impl = new EmptyContract();
+        MockBeacon delegate = new MockBeacon(address(impl), address(this));
+        MockBeacon otherDelegate = new MockBeacon(address(delegate), address(this));
+        address delegating = address(uint160(uint256(keccak256("delegating beacon"))));
+
+        vm.etch(delegating, LibEIP7702Designator.designator(address(delegate)));
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(delegating, keccak256(address(impl).code))
+        );
+
+        vm.etch(delegating, LibEIP7702Designator.designator(address(otherDelegate)));
+        assertFalse(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(delegating, keccak256(address(impl).code))
+        );
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                delegating, keccak256(address(delegate).code)
+            )
+        );
+    }
+
+    /// When `implementation()` returns an account whose code is an
+    /// EIP-7702 delegation designator, the hash compared is that of the
+    /// 23-byte designator, not that of the delegate's runtime bytecode.
+    function testDelegatedAccountImplementationHashesDesignator() external {
+        MockBeacon delegate = new MockBeacon(address(this), address(this));
+        address delegating = address(uint160(uint256(keccak256("delegating implementation"))));
+        bytes memory designator = LibEIP7702Designator.designator(address(delegate));
+        vm.etch(delegating, designator);
+        MockBeacon beacon = new MockBeacon(delegating, address(this));
+
+        assertTrue(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256(designator))
+        );
+        assertFalse(
+            LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(
+                address(beacon), keccak256(address(delegate).code)
+            )
+        );
     }
 }
