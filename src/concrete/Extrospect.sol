@@ -36,8 +36,8 @@ bytes constant EXTROSPECT_CREATION_BYTECODE_V1 =
 /// contract directly.
 contract Extrospect is IExtrospectV1 {
     /// @inheritdoc IExtrospectV1
-    function checkCBORTrimmedBytecodeHash(address account, bytes32 expected) external view {
-        LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(account, expected);
+    function checkCBORTrimmedBytecodeHash(address account, bytes32 expectedTrimmedHash) external view {
+        LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(account, expectedTrimmedHash);
     }
 
     /// @inheritdoc IExtrospectV1
