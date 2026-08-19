@@ -31,7 +31,7 @@ no_match_contract = "ExtrospectConstantsTest"
 [dependencies]
 forge-std = "1.16.1"
 "rain-solmem" = "0.1.3"
-"rain-math-binary" = "0.1.3"
+"rain-math-binary" = "0.1.4"
 "rain-deploy" = "0.1.3"
 
 [soldeer]
