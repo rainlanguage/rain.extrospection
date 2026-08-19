@@ -51,18 +51,15 @@ library LibExtrospectERC1967BeaconProxy {
     /// than reverting, so integrators can collapse the predicate into
     /// a single boolean assertion.
     ///
-    /// True does not establish that `beacon` implements `IBeacon`. A
-    /// target with no `implementation()` function, but a fallback that
-    /// answers every selector with 32 clean bytes, passes: that answer
-    /// is byte-identical to a real one, so the staticcall cannot
-    /// separate the two. Callers that need `beacon` to be a beacon
-    /// establish that elsewhere.
+    /// The caller is responsible for only calling this on actual
+    /// beacons; for any other target the result is just what that
+    /// target's code chose to answer.
     /// @param beacon The beacon address to query.
     /// @param expectedRuntimeHash The expected `keccak256` of the
     /// implementation's runtime bytecode.
-    /// @return True if the address `beacon` answers `implementation()`
-    /// with has matching runtime bytecode. False if the call to
-    /// `implementation()` fails for any reason.
+    /// @return True if the beacon's current implementation has matching
+    /// runtime bytecode. False if the call to `implementation()` fails
+    /// for any reason.
     function isBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash) internal view returns (bool) {
         (bool ok, address impl) = _tryGetAddress(beacon, IBeacon.implementation.selector);
         return ok && keccak256(impl.code) == expectedRuntimeHash;
@@ -75,19 +72,13 @@ library LibExtrospectERC1967BeaconProxy {
     /// so integrators can collapse the predicate into a single boolean
     /// assertion.
     ///
-    /// True does not establish that `beacon` implements `IOwnable`. A
-    /// target with no `owner()` function, but a fallback that answers
-    /// every selector with 32 clean bytes, passes: that answer is
-    /// byte-identical to a real one, so the staticcall cannot separate
-    /// the two. A fallback answering with 32 zero bytes reports
-    /// `address(0)`, which matches an `expectedOwner` of `address(0)`.
-    /// Callers that need `beacon` to be a beacon establish that
-    /// elsewhere.
+    /// The caller is responsible for only calling this on actual
+    /// beacons; for any other target the result is just what that
+    /// target's code chose to answer.
     /// @param beacon The beacon address to query.
     /// @param expectedOwner The owner address the beacon should report.
-    /// @return True if the address `beacon` answers `owner()` with
-    /// equals `expectedOwner`. False if the call to `owner()` fails
-    /// for any reason.
+    /// @return True if the ownership matches. False if the call to
+    /// `owner()` fails for any reason.
     function isBeaconOwner(address beacon, address expectedOwner) internal view returns (bool) {
         (bool ok, address own) = _tryGetAddress(beacon, IOwnable.owner.selector);
         return ok && own == expectedOwner;
