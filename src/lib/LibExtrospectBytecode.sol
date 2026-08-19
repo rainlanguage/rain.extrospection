@@ -141,11 +141,15 @@ library LibExtrospectBytecode {
         checkNotEOFBytecode(bytecode);
         uint256 length = bytecode.length;
         if (length >= SOLIDITY_CBOR_METADATA_LENGTH) {
-            // Two overlapping 32-byte reads cover the last
-            // `SOLIDITY_CBOR_METADATA_LENGTH` bytes of bytecode (the metadata).
-            // The masks zero out the variable parts, so the surviving
-            // structural bytes hash to `SOLIDITY_CBOR_METADATA_MASKED_HASH`
-            // exactly when the metadata matches.
+            // Two adjacent 32-byte reads span the last
+            // `SOLIDITY_CBOR_METADATA_LENGTH` bytes of bytecode (the metadata)
+            // plus the 11 bytes of memory immediately before them. The masks
+            // zero those 11 bytes and the variable parts of the metadata
+            // (34-byte IPFS hash and 3-byte solc version), preserving only the
+            // fixed CBOR structure bytes: a2 64 "ipfs" 5822 ... 64 "solc" 43
+            // ... 0033. The masked result hashes to
+            // `SOLIDITY_CBOR_METADATA_MASKED_HASH` exactly when the metadata
+            // matches.
             //slither-disable-next-line too-many-digits
             uint256 maskA = SOLIDITY_CBOR_METADATA_HEAD_MASK;
             //slither-disable-next-line too-many-digits
