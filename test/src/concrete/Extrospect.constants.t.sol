@@ -16,6 +16,9 @@ import {LibRainDeploy} from "rain-deploy-0.1.3/src/lib/LibRainDeploy.sol";
 /// deterministic Zoltu address, runtime codehash — so the deploy script
 /// and downstream consumers can rely on them as source of truth. If any
 /// fails the constant must be updated to match the current source.
+/// @dev These pin compiler output, not behaviour: they fail for any edit to
+/// any source file reachable from `Extrospect`. The `mutation` foundry
+/// profile excludes this contract by name.
 contract ExtrospectConstantsTest is Test {
     /// `EXTROSPECT_CREATION_BYTECODE_V1` matches the current compiler
     /// output. Compiler/optimizer settings affect creation bytecode, so
@@ -54,5 +57,34 @@ contract ExtrospectConstantsTest is Test {
     function testExtrospectRuntimeCodehash() external pure {
         bytes32 actual = keccak256(type(Extrospect).runtimeCode);
         assertEq(actual, EXTROSPECT_RUNTIME_CODEHASH_V1, "EXTROSPECT_RUNTIME_CODEHASH_V1 drifted from runtime bytecode");
+    }
+
+    /// The three pinned constants describe one deployment, so they must agree
+    /// with each other when the pinned creation bytecode is actually executed.
+    /// Running it through the real Zoltu factory bytecode lands at
+    /// `EXTROSPECT_ZOLTU_ADDRESS_V1` and leaves code hashing to
+    /// `EXTROSPECT_RUNTIME_CODEHASH_V1`, and that runtime code is byte for byte
+    /// `type(Extrospect).runtimeCode`. Deterministic and offline: the factory is
+    /// etched from its own pinned bytecode, so no network is involved.
+    function testExtrospectDeployRecordReproduces() external {
+        LibRainDeploy.etchZoltuFactory(vm);
+
+        address deployed = LibRainDeploy.deployZoltu(EXTROSPECT_CREATION_BYTECODE_V1);
+
+        assertEq(
+            deployed,
+            EXTROSPECT_ZOLTU_ADDRESS_V1,
+            "pinned creation bytecode does not deploy to EXTROSPECT_ZOLTU_ADDRESS_V1"
+        );
+        assertEq(
+            deployed.codehash,
+            EXTROSPECT_RUNTIME_CODEHASH_V1,
+            "deployed runtime code does not hash to EXTROSPECT_RUNTIME_CODEHASH_V1"
+        );
+        assertEq(
+            deployed.code,
+            type(Extrospect).runtimeCode,
+            "deployed runtime code differs from type(Extrospect).runtimeCode"
+        );
     }
 }

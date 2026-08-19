@@ -16,6 +16,16 @@ contract ExtrospectCheckNotEOFBytecodeTest is ExtrospectEquivalence {
         LibExtrospectBytecode.checkNotEOFBytecode(clean);
     }
 
+    /// Bytecode whose only notable content is a reachable CREATE (a metamorphic
+    /// risk op) is NOT EOF, so this must return without reverting. Pins that
+    /// `checkNotEOFBytecode` delegates to the EOF check and not to the
+    /// metamorphic check, which would revert `Metamorphic(1 << 0xF0)` here.
+    function testCheckNotEOFBytecodeMetamorphicButNotEOF() external view {
+        bytes memory createOnly = hex"F0";
+        extrospect.checkNotEOFBytecode(createOnly);
+        LibExtrospectBytecode.checkNotEOFBytecode(createOnly);
+    }
+
     function testCheckNotEOFBytecodeEquivalenceRevert() external {
         bytes memory eof = hex"EF00010203";
         vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);

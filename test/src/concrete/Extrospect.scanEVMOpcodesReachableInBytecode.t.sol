@@ -37,4 +37,13 @@ contract ExtrospectScanEVMOpcodesReachableInBytecodeTest is ExtrospectEquivalenc
     function testScanEVMOpcodesReachableInBytecodeEquivalenceEOF() external {
         assertScanEquivalence(hex"EF0000");
     }
+
+    /// `hex"00F0"` is STOP followed by CREATE, so only STOP is reachable. The
+    /// concrete must report the REACHABLE bitmap, which a delegation to the
+    /// present scan would pollute with the CREATE bit.
+    function testScanEVMOpcodesReachableInBytecodeUnreachableCreateNotCounted() external view {
+        //forge-lint: disable-next-line(incorrect-shift)
+        uint256 expected = uint256(1);
+        assertEq(extrospect.scanEVMOpcodesReachableInBytecode(hex"00F0"), expected);
+    }
 }
