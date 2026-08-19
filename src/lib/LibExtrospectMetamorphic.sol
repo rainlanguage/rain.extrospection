@@ -58,12 +58,12 @@ library LibExtrospectMetamorphic {
     /// @param account The account whose code to scan.
     /// @return riskyOpcodes Bitmap of reachable metamorphic opcodes in the
     /// account's code. Zero if none are reachable.
-    function scanMetamorphicRisk(address account) internal view returns (uint256 riskyOpcodes) {
+    function scanMetamorphicRisk(address account) internal view returns (uint256) {
         bytes memory bytecode = account.code;
         if (bytecode.length == 0) {
             revert LibExtrospectBytecode.CodelessAccount(account);
         }
-        riskyOpcodes = scanMetamorphicRisk(bytecode);
+        return scanMetamorphicRisk(bytecode);
     }
 
     /// Reads `account`'s code and reverts with `Metamorphic` if any
