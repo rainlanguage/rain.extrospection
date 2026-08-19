@@ -229,6 +229,10 @@ library LibExtrospectBytecode {
     /// This is an over-approximation: not all JUMPDESTs are actually reachable
     /// at runtime, and the byte values Cancun leaves unassigned other than
     /// INVALID do not pause scanning even though the EVM halts on them.
+    /// A trailing PUSH* whose inline data runs past the end of the bytecode
+    /// ends the scan. The PUSH* opcode itself is recorded per the rules above,
+    /// and every byte after it is treated as that PUSH*'s inline data, so none
+    /// of those bytes are scanned as opcodes.
     /// Adapted from https://github.com/MrLuit/selfdestruct-detect/blob/master/src/index.ts
     /// NOTE: Reverts with `EOFBytecodeNotSupported` if the bytecode is EOF
     /// (EIP-7692).
@@ -282,6 +286,10 @@ library LibExtrospectBytecode {
     }
 
     /// Scans all opcodes present in bytecode, respecting PUSH* inline data.
+    /// A trailing PUSH* whose inline data runs past the end of the bytecode
+    /// ends the scan. The PUSH* opcode itself is recorded, and every byte after
+    /// it is treated as that PUSH*'s inline data, so none of those bytes are
+    /// scanned as opcodes.
     /// Adapted from
     /// https://github.com/a16z/metamorphic-contract-detector/blob/main/metamorphic_detect/opcodes.py#L52
     /// NOTE: Reverts with `EOFBytecodeNotSupported` if the bytecode is EOF

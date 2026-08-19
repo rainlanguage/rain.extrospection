@@ -182,6 +182,27 @@ contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"7fFF"), 1 << 0x7f);
     }
 
+    /// Test PUSH2 with only 1 byte of data following (1 byte short). The single
+    /// available data byte is inline data, not an opcode, so only PUSH2 is
+    /// present.
+    function testScanEVMOpcodesPresentTruncatedPush2Partial() public pure {
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"61FF"), 1 << 0x61);
+    }
+
+    /// Test PUSH32 with 29 of its 32 data bytes present, the last of which is
+    /// SELFDESTRUCT. All 29 bytes are inline data of the truncated PUSH32, so
+    /// SELFDESTRUCT is not present and only PUSH32 is recorded.
+    function testScanEVMOpcodesPresentTruncatedPush32HidesSelfdestruct() public pure {
+        bytes memory bytecode = hex"7f00000000000000000000000000000000000000000000000000000000ff";
+        assertEq(bytecode.length, 30);
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(bytecode);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(scan, 1 << 0x7f);
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertEq(scan & (1 << uint256(EVM_OP_SELFDESTRUCT)), 0);
+    }
+
     function testScanEVMOpcodesPresentSimple() public pure {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(hex"04050607"), 0xF0);
     }
