@@ -39,9 +39,40 @@ bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.
 ///   `eth_getStorageAt`, or `sload` from a delegatecall context running
 ///   as the proxy.
 ///
+/// EIP-7702 delegated accounts:
+///
+/// - An account whose code is a 23-byte delegation designator
+///   (`0xef0100` followed by a 20-byte delegate address) runs the
+///   delegate's code on every call, so it answers `implementation()`
+///   and `owner()` and both predicates below can return true for it.
+///   Neither predicate inspects the target's code, so a delegated
+///   account is indistinguishable from a beacon contract in what they
+///   return.
+/// - The account holder repoints or revokes the designator in a single
+///   transaction, so a true from either predicate about such an account
+///   changes without any contract's code changing.
+/// - `keccak256(addr.code)` on a delegated account hashes the 23-byte
+///   designator, not the delegate's runtime bytecode.
+///
 /// The slot constants are exported so callers that have storage access
 /// elsewhere use a single canonical source for the slot addresses.
 library LibExtrospectERC1967BeaconProxy {
+    /// @notice Read a beacon's current implementation address via
+    /// `IBeacon.implementation()`. Yields `(false, address(0))` rather
+    /// than reverting for a target that doesn't expose
+    /// `implementation()`, whose call reverts, or whose return data is
+    /// not exactly 32 bytes holding a clean address. Callers that need
+    /// the implementation's bytecode properties feed the returned
+    /// address to `LibExtrospectMetamorphic` / `LibExtrospectBytecode`.
+    /// @param beacon The beacon address to query.
+    /// @return True if the call to `implementation()` returned a clean
+    /// address. False if it failed for any reason.
+    /// @return The implementation address the beacon reports.
+    /// `address(0)` whenever the first return value is false.
+    function beaconImplementation(address beacon) internal view returns (bool, address) {
+        return _tryGetAddress(beacon, IBeacon.implementation.selector);
+    }
+
     /// @notice Verify that a beacon's current implementation has runtime
     /// bytecode matching `expectedRuntimeHash`. Useful for asserting a
     /// known-good implementation is behind the beacon without trusting
@@ -50,6 +81,21 @@ library LibExtrospectERC1967BeaconProxy {
     /// and trivially fails the check — returns false rather than
     /// reverting, so integrators can collapse the predicate into a
     /// single boolean assertion.
+    ///
+    /// An implementation address with no code — an externally owned
+    /// account, an unoccupied `CREATE2` target, a self-destructed
+    /// account, or `address(0)` — reads as empty bytecode and hashes to
+    /// `keccak256("")`, so `expectedRuntimeHash == keccak256("")` is
+    /// satisfied by every codeless implementation. Whether the
+    /// implementation has any code at all is not checked. Deploying code
+    /// to a codeless implementation turns that same call from true to
+    /// false.
+    ///
+    /// An EIP-7702 delegated account answers `implementation()` from its
+    /// delegate and so satisfies this check; when `implementation()`
+    /// itself returns a delegated account, the hash compared is that of
+    /// its 23-byte delegation designator rather than of the delegate's
+    /// runtime bytecode.
     /// @param beacon The beacon address to query.
     /// @param expectedRuntimeHash The expected `keccak256` of the
     /// implementation's whole runtime bytecode, including any Solidity CBOR
@@ -69,7 +115,9 @@ library LibExtrospectERC1967BeaconProxy {
     /// `expectedOwner`. A target that doesn't expose `owner()` (or
     /// whose call reverts) is not a valid beacon and trivially fails
     /// the check — returns false rather than reverting, so integrators
-    /// can collapse the predicate into a single boolean assertion.
+    /// can collapse the predicate into a single boolean assertion. An
+    /// EIP-7702 delegated account answers `owner()` from its delegate
+    /// and so satisfies this check.
     /// @param beacon The beacon address to query.
     /// @param expectedOwner The owner address the beacon should report.
     /// @return True if the ownership matches. False if the call to
