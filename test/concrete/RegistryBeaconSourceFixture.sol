@@ -10,6 +10,8 @@ import {IRegistryBeaconSourceV1} from "rain-factory-0.2.5/src/lib/LibICloneableF
 contract RegistryBeaconSourceFixture is IRegistryBeaconSourceV1 {
     address internal immutable iBeacon;
 
+    // A zero beacon is a binding the tests may resolve.
+    //forge-lint: disable-next-line(missing-zero-check)
     constructor(address beacon) {
         iBeacon = beacon;
     }

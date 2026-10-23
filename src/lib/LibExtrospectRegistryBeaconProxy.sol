@@ -63,29 +63,29 @@ library LibExtrospectRegistryBeaconProxy {
     /// @return The beacon the bytecode holds when the first return is true,
     /// else `address(0)`.
     function isRegistryBeaconProxy(bytes memory bytecode) internal pure returns (bool, address) {
-        if (bytecode.length != REGISTRY_BEACON_PROXY_LENGTH) {
-            return (false, address(0));
-        }
-        uint256 prefixStart = REGISTRY_BEACON_PROXY_PREFIX_START;
-        uint256 prefixLength = REGISTRY_BEACON_PROXY_PREFIX_LENGTH;
-        bytes32 prefixHash = REGISTRY_BEACON_PROXY_PREFIX_HASH;
-        uint256 suffixStart = REGISTRY_BEACON_PROXY_SUFFIX_START;
-        uint256 suffixLength = REGISTRY_BEACON_PROXY_SUFFIX_LENGTH;
-        bytes32 suffixHash = REGISTRY_BEACON_PROXY_SUFFIX_HASH;
-        uint256 beaconWordStart = REGISTRY_BEACON_PROXY_BEACON_WORD_START;
-        bool result;
+        bool result = bytecode.length == REGISTRY_BEACON_PROXY_LENGTH;
         uint256 beaconWord;
-        assembly ("memory-safe") {
-            beaconWord := mload(add(bytecode, beaconWordStart))
-            result := and(
-                eq(keccak256(add(bytecode, prefixStart), prefixLength), prefixHash),
-                eq(keccak256(add(bytecode, suffixStart), suffixLength), suffixHash)
-            )
+        if (result) {
+            uint256 prefixStart = REGISTRY_BEACON_PROXY_PREFIX_START;
+            uint256 prefixLength = REGISTRY_BEACON_PROXY_PREFIX_LENGTH;
+            bytes32 prefixHash = REGISTRY_BEACON_PROXY_PREFIX_HASH;
+            uint256 suffixStart = REGISTRY_BEACON_PROXY_SUFFIX_START;
+            uint256 suffixLength = REGISTRY_BEACON_PROXY_SUFFIX_LENGTH;
+            bytes32 suffixHash = REGISTRY_BEACON_PROXY_SUFFIX_HASH;
+            uint256 beaconWordStart = REGISTRY_BEACON_PROXY_BEACON_WORD_START;
+            assembly ("memory-safe") {
+                beaconWord := mload(add(bytecode, beaconWordStart))
+                result := and(
+                    eq(keccak256(add(bytecode, prefixStart), prefixLength), prefixHash),
+                    eq(keccak256(add(bytecode, suffixStart), suffixLength), suffixHash)
+                )
+            }
+            result = result && beaconWord != 0 && beaconWord <= type(uint160).max;
         }
-        if (!result || beaconWord == 0 || beaconWord > type(uint160).max) {
-            return (false, address(0));
+        if (!result) {
+            beaconWord = 0;
         }
         //forge-lint: disable-next-line(unsafe-typecast)
-        return (true, address(uint160(beaconWord)));
+        return (result, address(uint160(beaconWord)));
     }
 }
