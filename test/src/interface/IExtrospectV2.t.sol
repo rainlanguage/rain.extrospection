@@ -189,7 +189,9 @@ contract IExtrospectV2Test is Test {
     function testIExtrospectV2IsRegistryBeaconProxy(address beacon) external view {
         vm.assume(beacon != address(0));
         (bool result, address extracted) = iExtrospect.isRegistryBeaconProxy(
-            abi.encodePacked(REGISTRY_BEACON_PROXY_PREFIX, bytes32(uint256(uint160(beacon))), REGISTRY_BEACON_PROXY_SUFFIX)
+            abi.encodePacked(
+                REGISTRY_BEACON_PROXY_PREFIX, bytes32(uint256(uint160(beacon))), REGISTRY_BEACON_PROXY_SUFFIX
+            )
         );
         assertTrue(result);
         assertEq(extracted, beacon);
