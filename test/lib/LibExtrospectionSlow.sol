@@ -161,27 +161,23 @@ library LibExtrospectionSlow {
         bytes memory prefix = SLOW_ERC1167_PREFIX;
         bytes memory suffix = SLOW_ERC1167_SUFFIX;
 
-        if (bytecode.length != prefix.length + SLOW_ERC1167_ADDRESS_LENGTH + suffix.length) {
-            return (false, address(0));
+        result = bytecode.length == prefix.length + SLOW_ERC1167_ADDRESS_LENGTH + suffix.length;
+
+        for (uint256 i = 0; result && i < prefix.length; i++) {
+            result = bytecode[i] == prefix[i];
         }
 
-        for (uint256 i = 0; i < prefix.length; i++) {
-            if (bytecode[i] != prefix[i]) {
-                return (false, address(0));
+        for (uint256 i = 0; result && i < suffix.length; i++) {
+            result = bytecode[prefix.length + SLOW_ERC1167_ADDRESS_LENGTH + i] == suffix[i];
+        }
+
+        if (result) {
+            uint160 accumulator = 0;
+            for (uint256 i = 0; i < SLOW_ERC1167_ADDRESS_LENGTH; i++) {
+                accumulator = (accumulator << 8) | uint160(uint8(bytecode[prefix.length + i]));
             }
+            implementationAddress = address(accumulator);
         }
-
-        for (uint256 i = 0; i < suffix.length; i++) {
-            if (bytecode[prefix.length + SLOW_ERC1167_ADDRESS_LENGTH + i] != suffix[i]) {
-                return (false, address(0));
-            }
-        }
-
-        uint160 accumulator = 0;
-        for (uint256 i = 0; i < SLOW_ERC1167_ADDRESS_LENGTH; i++) {
-            accumulator = (accumulator << 8) | uint160(uint8(bytecode[prefix.length + i]));
-        }
-        return (true, address(accumulator));
     }
 
     /// The bit representing `op` in an opcode bitmap.

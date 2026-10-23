@@ -6,7 +6,6 @@ pragma solidity =0.8.25;
 contract HasDelegatecall {
     //slither-disable-next-line controlled-delegatecall
     function forward(address target, bytes calldata data) external {
-        //forge-lint: disable-next-line(assembly-usage)
         assembly ("memory-safe") {
             calldatacopy(0, data.offset, data.length)
             let success := delegatecall(gas(), target, 0, data.length, 0, 0)

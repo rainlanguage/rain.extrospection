@@ -316,15 +316,13 @@ contract LibExtrospectERC1167ProxyTest is Test {
     /// 45 bytes with a wrong prefix allocates nothing.
     function testIsERC1167ProxyAllocatesNoMemoryWrongPrefix() external pure {
         checkIsERC1167ProxyAllocatesNoMemory(
-            abi.encodePacked(bytes10(0), address(0), bytes15(hex"5af43d82803e903d91602b57fd5bf3"))
+            abi.encodePacked(bytes10(0), address(0), hex"5af43d82803e903d91602b57fd5bf3")
         );
     }
 
     /// 45 bytes with a wrong suffix allocates nothing.
     function testIsERC1167ProxyAllocatesNoMemoryWrongSuffix() external pure {
-        checkIsERC1167ProxyAllocatesNoMemory(
-            abi.encodePacked(bytes10(hex"363d3d373d3d3d363d73"), address(0), bytes15(0))
-        );
+        checkIsERC1167ProxyAllocatesNoMemory(abi.encodePacked(hex"363d3d373d3d3d363d73", address(0), bytes15(0)));
     }
 
     /// A real 45 byte proxy allocates nothing.

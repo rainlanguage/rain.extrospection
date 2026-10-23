@@ -13,6 +13,8 @@ pragma solidity =0.8.25;
 contract PermissiveFallbackContract {
     address private immutable answer;
 
+    // fixture accepts address(0) as a test input
+    //forge-lint: disable-next-line(missing-zero-check)
     constructor(address initialAnswer) {
         answer = initialAnswer;
     }

@@ -19,6 +19,8 @@ contract ExpensiveBeacon is IBeacon, IOwnable {
     address private immutable I_IMPLEMENTATION;
     address private immutable I_OWNER;
 
+    // fixture accepts address(0) as a test input
+    //forge-lint: disable-next-line(missing-zero-check)
     constructor(address impl, address own) {
         I_IMPLEMENTATION = impl;
         I_OWNER = own;
@@ -38,7 +40,6 @@ contract ExpensiveBeacon is IBeacon, IOwnable {
     /// gas has been spent.
     function _burnGas() internal view {
         uint256 gasFloor = gasleft() - EXPENSIVE_BEACON_GAS_BURN;
-        //forge-lint: disable-next-line(assembly-usage)
         assembly ("memory-safe") {
             for {} gt(gas(), gasFloor) {} { mstore(0, keccak256(0, 0x20)) }
         }

@@ -308,6 +308,8 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
             undefinedCount++;
             assertEq(
                 LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(
+                    // casting to 'uint8' is safe because op < 0x100
+                    //forge-lint: disable-next-line(unsafe-typecast)
                     abi.encodePacked(uint8(op), EVM_OP_SELFDESTRUCT)
                 ),
                 (uint256(1) << op) | (uint256(1) << uint256(EVM_OP_SELFDESTRUCT)),

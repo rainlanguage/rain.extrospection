@@ -5,7 +5,6 @@ pragma solidity =0.8.25;
 /// @dev Contract that uses the SIGNEXTEND opcode.
 contract HasSignextend {
     function doSignextend(uint256 b, uint256 x) external pure returns (uint256 result) {
-        //forge-lint: disable-next-line(assembly-usage)
         assembly ("memory-safe") {
             result := signextend(b, x)
         }

@@ -11,6 +11,9 @@ bytecode_hash = "none"
 cbor_metadata = false
 libs = ["dependencies"]
 
+# The fixture exists to put SELFDESTRUCT in compiled bytecode.
+ignored_warnings_from = ["test/concrete/HasSelfdestruct.sol"]
+
 [fuzz]
 runs = 2048
 

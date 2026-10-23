@@ -55,8 +55,8 @@ deploy pins (creation bytecode, deterministic Zoltu address, runtime codehash)
 and the deploy tooling live in the rain.extrospection.deploy repo.
 
 **Orphaned bitmaps:** `NON_STATIC_OPS` and `INTERPRETER_DISALLOWED_OPS` have no
-consumer in `src/`. Only `test/src/lib/EVMOpcodes.t.sol` reads them, so a
-search for consumers finds a hit and deleting them would break only that test.
+consumer in `src/`. Only `test/src/lib/EVMOpcodes.t.sol` reads them, so a search
+for consumers finds a hit and deleting them would break only that test.
 
 **Test layout:** `test/src/` mirrors `src/` by subject path. Test files named
 `Subject.functionName.t.sol`. `test/lib/` and `test/concrete/` are test-only
@@ -70,7 +70,7 @@ for property-based fuzz verification.
 - Assembly blocks marked `memory-safe`
 - Every file starts with SPDX license identifier and copyright header
 - `forge-lint` annotations suppress expected warnings: `incorrect-shift`,
-  `mixed-case-function`, `assembly-usage`
+  `mixed-case-function`, `unsafe-typecast`, `missing-zero-check`
 - Slither annotations suppress known false positives: `incorrect-shift`,
   `too-many-digits`
 - Foundry config: optimizer on (100k runs), Cancun EVM, no CBOR metadata in

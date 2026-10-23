@@ -54,8 +54,8 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
     /// different code hashes, yet both match the same expected hash of
     /// `keccak256("")`.
     function testCheckCBORTrimmedBytecodeHashTrailerOnlyNotIdentifiedByHash() external {
-        bytes memory codeA = trailer(bytes32(0), bytes2(0), bytes3(hex"000819"));
-        bytes memory codeB = trailer(bytes32(uint256(0xEE) << 248), bytes2(hex"ABCD"), bytes3(hex"010203"));
+        bytes memory codeA = trailer(bytes32(0), bytes2(0), hex"000819");
+        bytes memory codeB = trailer(bytes32(uint256(0xEE) << 248), hex"ABCD", hex"010203");
         assertEq(codeA.length, 53);
         assertEq(codeB.length, 53);
         assertTrue(keccak256(codeA) != keccak256(codeB));

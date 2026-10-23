@@ -184,7 +184,10 @@ library LibExtrospectERC1967BeaconProxy {
                 raw := mload(0)
             }
         }
-        if (ok == 0 || raw > type(uint160).max) return (false, address(0));
-        return (true, address(uint160(raw)));
+        bool success = ok != 0 && raw <= type(uint160).max;
+        if (!success) raw = 0;
+        // casting to 'uint160' is safe because success requires raw <= type(uint160).max
+        //forge-lint: disable-next-line(unsafe-typecast)
+        return (success, address(uint160(raw)));
     }
 }

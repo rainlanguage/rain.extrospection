@@ -133,7 +133,7 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
     /// success with empty returndata — distinct from a contract that
     /// reverts (success=false). Pins the length=0 path through the
     /// length check.
-    function testReturnsFalseOnNoCodeTarget() external {
+    function testReturnsFalseOnNoCodeTarget() external view {
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(0), keccak256("")));
     }
 
