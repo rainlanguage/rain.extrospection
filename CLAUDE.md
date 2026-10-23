@@ -7,10 +7,10 @@ code in this repository.
 
 rain.extrospection is a Solidity library for analyzing EVM contract bytecode
 onchain. It provides opcode scanning (present vs. reachable), ERC1167 minimal
-proxy detection, ERC1967 beacon extrospection, Solidity CBOR metadata trimming,
-and metamorphic risk detection. The library exposes onchain logic to offchain
-tooling — the algorithms are gas-intensive and primarily intended for offchain
-use.
+proxy detection, ERC1967 beacon extrospection, rain-factory beacon proxy beacon
+extraction, Solidity CBOR metadata trimming, and metamorphic risk detection. The
+library exposes onchain logic to offchain tooling — the algorithms are
+gas-intensive and primarily intended for offchain use.
 
 License: LicenseRef-DCL-1.0 (DecentraLicense)
 
@@ -86,3 +86,5 @@ the path, e.g. `rain-solmem-0.1.3/src/lib/LibBytes.sol`.
 - `forge-std` 1.16.1 — Foundry test framework
 - `rain-math-binary` 0.1.3 — Binary math utilities (`LibCtPop`)
 - `rain-solmem` 0.1.3 — Memory utilities (`LibBytes`, `Pointer`)
+- `rain-factory` 0.2.5 — tests only: the real `RegistryBeaconProxy` and
+  `BeaconProxy` creation code

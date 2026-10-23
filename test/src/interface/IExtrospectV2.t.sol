@@ -9,6 +9,7 @@ import {IExtrospectV2} from "src/interface/IExtrospectV2.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {LibExtrospectMetamorphic, EIP3541_RESERVED_LEAD_BYTE} from "src/lib/LibExtrospectMetamorphic.sol";
 import {EVM_OP_STOP, EVM_OP_ADD, EVM_OP_SELFDESTRUCT} from "src/lib/EVMOpcodes.sol";
+import {REGISTRY_BEACON_PROXY_PREFIX, REGISTRY_BEACON_PROXY_SUFFIX} from "src/lib/LibExtrospectRegistryBeaconProxy.sol";
 
 import {ExtrospectV2Fixture} from "test/concrete/ExtrospectV2Fixture.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
@@ -181,6 +182,21 @@ contract IExtrospectV2Test is Test {
         assertEq(extracted, implementation);
 
         (result, extracted) = iExtrospect.isERC1167Proxy(hex"00");
+        assertFalse(result);
+        assertEq(extracted, address(0));
+    }
+
+    function testIExtrospectV2IsRegistryBeaconProxy(address beacon) external view {
+        vm.assume(beacon != address(0));
+        (bool result, address extracted) = iExtrospect.isRegistryBeaconProxy(
+            abi.encodePacked(
+                REGISTRY_BEACON_PROXY_PREFIX, bytes32(uint256(uint160(beacon))), REGISTRY_BEACON_PROXY_SUFFIX
+            )
+        );
+        assertTrue(result);
+        assertEq(extracted, beacon);
+
+        (result, extracted) = iExtrospect.isRegistryBeaconProxy(hex"00");
         assertFalse(result);
         assertEq(extracted, address(0));
     }

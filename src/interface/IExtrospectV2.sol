@@ -37,6 +37,9 @@ interface IExtrospectV2 {
     /// @dev `LibExtrospectERC1167Proxy.isERC1167Proxy`.
     function isERC1167Proxy(bytes memory bytecode) external pure returns (bool, address);
 
+    /// @dev `LibExtrospectRegistryBeaconProxy.isRegistryBeaconProxy`.
+    function isRegistryBeaconProxy(bytes memory bytecode) external pure returns (bool, address);
+
     /// @dev `LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(bytes)`.
     function scanEVMOpcodesPresentInBytecode(bytes memory bytecode) external pure returns (uint256);
 

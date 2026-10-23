@@ -45,7 +45,8 @@ bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.
 /// carries the 20 address bytes and any contract can read them.
 /// OpenZeppelin v4 `BeaconProxy` has no such immutable, so its runtime
 /// bytecode does not carry the address. This library extracts a beacon
-/// address from neither.
+/// address from neither. `LibExtrospectRegistryBeaconProxy` extracts it
+/// from the runtime bytecode of rain-factory 0.2.5 beacon proxies.
 ///
 /// EIP-7702 delegated accounts:
 ///
