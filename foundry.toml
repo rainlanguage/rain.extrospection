@@ -18,6 +18,7 @@ runs = 2048
 forge-std = "1.16.1"
 "rain-solmem" = "0.1.28"
 "rain-math-binary" = "0.1.4"
+rain-factory = "0.2.5"
 
 [soldeer]
 recursive_deps = false

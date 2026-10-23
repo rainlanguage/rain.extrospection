@@ -6,6 +6,13 @@ checksum = "839b61832925c7152c7b6dffbfa4998d9e606211179bd8f604733124e8a7cb57"
 integrity = "60e55d10150354ca4a1e2985c5456c834b92b82ef85ab0e1d92a7786cddbd219"
 
 [[dependencies]]
+name = "rain-factory"
+version = "0.2.5"
+url = "https://soldeer-revisions.s3.amazonaws.com/rain-factory/0_2_5_22-10-2026_16:07:01_rain.zip"
+checksum = "6ab4a3ae642358b2068314070c28a0f28a7d58913ff199cb46ea1d0b744c71fe"
+integrity = "d1a5e360ef066a175c267a83f906f442572957bc99f625747408fa827b3ab87f"
+
+[[dependencies]]
 name = "rain-math-binary"
 version = "0.1.4"
 url = "https://soldeer-revisions.s3.amazonaws.com/rain-math-binary/0_1_4_17-08-2026_05:22:01_rain.math.zip"

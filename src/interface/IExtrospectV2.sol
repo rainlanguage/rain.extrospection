@@ -15,7 +15,8 @@ pragma solidity ^0.8.25;
 /// verdict entry points that exist at the library level:
 /// `checkNotMetamorphic(address)`, `scanMetamorphicRisk(address)`,
 /// `scanEVMOpcodesPresentInBytecode(address)` and
-/// `scanEVMOpcodesReachableInBytecode(address)`. The bytes-taking entry
+/// `scanEVMOpcodesReachableInBytecode(address)`, plus `isRegistryBeaconProxy`,
+/// which has no V1 counterpart. The bytes-taking entry
 /// points are total over bytes and answer only about the bytes given; the
 /// address-taking entry points bind the verdict to an account and revert
 /// `CodelessAccount(account)` rather than vouch for an account that has no
@@ -135,6 +136,19 @@ interface IExtrospectV2 {
     /// @return The 20 bytes at offset 10 of `bytecode` read as an address, or
     /// the zero address when the first return is false.
     function isERC1167Proxy(bytes memory bytecode) external pure returns (bool, address);
+
+    /// @notice Whether `bytecode` is rain-factory 0.2.5 `RegistryBeaconProxy` runtime
+    /// bytecode, and the beacon embedded in it when it is. rain-factory 0.2.5
+    /// OpenZeppelin `BeaconProxy` runtime bytecode is identical, so it matches
+    /// too. Never reverts.
+    /// @dev See `LibExtrospectRegistryBeaconProxy.isRegistryBeaconProxy`.
+    /// @param bytecode The bytecode to check.
+    /// @return True when `bytecode` is exactly 267 bytes, matches the template
+    /// outside the 32 byte word at offset 35, and that word is a non-zero
+    /// address with its upper 12 bytes zero.
+    /// @return The address in that word, or the zero address when the first
+    /// return is false.
+    function isRegistryBeaconProxy(bytes memory bytecode) external pure returns (bool, address);
 
     /// @notice Bitmap of every opcode byte a linear scan of `bytecode` reads,
     /// skipping the inline data of `PUSH*` opcodes. Regions that never execute,
