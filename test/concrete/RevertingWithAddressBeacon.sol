@@ -29,7 +29,6 @@ contract RevertingWithAddressBeacon {
     /// return.
     function _revertWithAddress() internal pure {
         address payload = REVERTING_WITH_ADDRESS_BEACON_PAYLOAD;
-        //forge-lint: disable-next-line(assembly-usage)
         assembly ("memory-safe") {
             mstore(0, payload)
             revert(0, 0x20)

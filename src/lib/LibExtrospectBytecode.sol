@@ -104,30 +104,9 @@ library LibExtrospectBytecode {
         }
     }
 
-    /// https://docs.soliditylang.org/en/latest/metadata.html#encoding-of-the-metadata-hash-in-the-bytecode
-    ///
-    /// The encoding is not super complex, but requires having a CBOR decoder to
-    /// do anything properly at all. At the time of writing, the existing CBOR
-    /// decoding options in Solidity are 3+ years old and not maintained, nor is
-    /// it clear what quality or maturity they have.
-    ///
-    /// MOST OF THE TIME, the metadata is either not present or will follow the
-    /// default structure. This is:
-    /// - First byte `0xa2` is cbor map header (map with 2 entries)
-    /// - Next byte `0x64` is cbor text string prefix (4-byte string follows)
-    /// - Next 4 bytes `0x69706673` as `ipfs` ascii/utf8
-    /// - Next 2 bytes `0x5822` as cbor byte string prefix (34-byte hash follows)
-    /// - Next 34 bytes are the IPFS hash (yes 34, not 32)
-    /// - Next byte `0x64` is cbor text string prefix (4-byte string follows)
-    /// - Next 4 bytes `0x736f6c63` as `solc` ascii/utf8
-    /// - Next byte `0x43` is cbor byte string prefix (3-byte version follows)
-    /// - Next 3 bytes as solc version (e.g. `0x000804`)
-    /// - Final 2 bytes specify length of metadata which is always 51 bytes
-    ///
-    /// For the sake of trimming metadata in an 80/20 way we check that all the
-    /// static parts are present and correct, and ignore the parts that change.
-    /// The length of the metadata must always be 51+2 bytes, as the dynamic
-    /// parts still have constant length.
+    /// Trims the default 53 byte Solidity CBOR metadata trailer
+    /// (https://docs.soliditylang.org/en/latest/metadata.html#encoding-of-the-metadata-hash-in-the-bytecode)
+    /// by matching its static bytes and ignoring its variable ones.
     ///
     /// NOTE bytecode is mutated in place. Trimming writes the shorter length
     /// over the array's own length word, so every reference to that same array

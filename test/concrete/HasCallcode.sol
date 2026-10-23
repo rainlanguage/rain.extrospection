@@ -6,7 +6,6 @@ pragma solidity =0.8.25;
 /// Solidity-level equivalent).
 contract HasCallcode {
     function forward(address target) external {
-        //forge-lint: disable-next-line(assembly-usage)
         assembly ("memory-safe") {
             let success := callcode(gas(), target, 0, 0, 0, 0, 0)
             if iszero(success) { revert(0, 0) }
