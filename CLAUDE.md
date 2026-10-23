@@ -70,7 +70,7 @@ for property-based fuzz verification.
 - Assembly blocks marked `memory-safe`
 - Every file starts with SPDX license identifier and copyright header
 - `forge-lint` annotations suppress expected warnings: `incorrect-shift`,
-  `mixed-case-function`, `assembly-usage`
+  `mixed-case-function`, `unsafe-typecast`, `missing-zero-check`
 - Slither annotations suppress known false positives: `incorrect-shift`,
   `too-many-digits`
 - Foundry config: optimizer on (100k runs), Cancun EVM, no CBOR metadata in

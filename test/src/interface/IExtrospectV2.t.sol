@@ -65,7 +65,7 @@ contract IExtrospectV2Test is Test {
         (bool ok, bytes memory ret) = address(iExtrospect)
             .staticcall(abi.encodeWithSelector(IExtrospectV1.scanMetamorphicRisk.selector, bytes(hex"ff")));
         assertTrue(ok);
-        assertEq(abi.decode(ret, (uint256)), 1 << EVM_OP_SELFDESTRUCT);
+        assertEq(abi.decode(ret, (uint256)), uint256(1) << EVM_OP_SELFDESTRUCT);
 
         (ok, ret) = address(iExtrospect)
             .staticcall(abi.encodeWithSelector(IExtrospectV1.checkNotMetamorphic.selector, bytes(hex"0001")));
@@ -77,14 +77,14 @@ contract IExtrospectV2Test is Test {
                 abi.encodeWithSelector(IExtrospectV1.scanEVMOpcodesPresentInBytecode.selector, bytes(hex"0001"))
             );
         assertTrue(ok);
-        assertEq(abi.decode(ret, (uint256)), (1 << EVM_OP_STOP) | (1 << EVM_OP_ADD));
+        assertEq(abi.decode(ret, (uint256)), (uint256(1) << EVM_OP_STOP) | (uint256(1) << EVM_OP_ADD));
 
         (ok, ret) = address(iExtrospect)
             .staticcall(
                 abi.encodeWithSelector(IExtrospectV1.scanEVMOpcodesReachableInBytecode.selector, bytes(hex"0001"))
             );
         assertTrue(ok);
-        assertEq(abi.decode(ret, (uint256)), 1 << EVM_OP_STOP);
+        assertEq(abi.decode(ret, (uint256)), uint256(1) << EVM_OP_STOP);
     }
 
     /// Carried surface: `checkCBORTrimmedBytecodeHash` passes on the trimmed

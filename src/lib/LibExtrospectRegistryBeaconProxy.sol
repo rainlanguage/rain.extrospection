@@ -6,33 +6,22 @@ pragma solidity ^0.8.25;
 /// beacon word, ending in the `PUSH32` that pushes it.
 bytes constant REGISTRY_BEACON_PROXY_PREFIX =
     hex"608060405261000c61000e565b005b61001e610019610020565b6100b3565b565b5f7f";
-/// @dev The 200 bytes of `RegistryBeaconProxy` runtime bytecode after its
-/// beacon word.
 bytes constant REGISTRY_BEACON_PROXY_SUFFIX =
     hex"73ffffffffffffffffffffffffffffffffffffffff16635c60da1b6040518163ffffffff1660e01b8152600401602060405180830381865afa15801561008a573d5f803e3d5ffd5b505050506040513d601f19601f820116820180604052508101906100ae91906100d1565b905090565b365f80375f80365f845af43d5f803e8080156100cd573d5ff35b3d5ffd5b5f602082840312156100e1575f80fd5b815173ffffffffffffffffffffffffffffffffffffffff81168114610104575f80fd5b939250505056";
-/// @dev The length in bytes of `REGISTRY_BEACON_PROXY_PREFIX`.
 uint256 constant REGISTRY_BEACON_PROXY_PREFIX_LENGTH = 35;
-/// @dev The length in bytes of `REGISTRY_BEACON_PROXY_SUFFIX`.
 uint256 constant REGISTRY_BEACON_PROXY_SUFFIX_LENGTH = 200;
 /// @dev The beacon is an immutable, inlined as the full 32 byte word `PUSH32`
 /// pushes.
 uint256 constant REGISTRY_BEACON_PROXY_BEACON_WORD_LENGTH = 32;
-/// @dev The length in bytes of `RegistryBeaconProxy` runtime bytecode.
 uint256 constant REGISTRY_BEACON_PROXY_LENGTH = REGISTRY_BEACON_PROXY_PREFIX_LENGTH
     + REGISTRY_BEACON_PROXY_BEACON_WORD_LENGTH + REGISTRY_BEACON_PROXY_SUFFIX_LENGTH;
-/// @dev `keccak256(REGISTRY_BEACON_PROXY_PREFIX)`, spelled as a literal so that
-/// using it allocates no memory.
+/// @dev A literal so that using it allocates no memory.
 bytes32 constant REGISTRY_BEACON_PROXY_PREFIX_HASH = 0xa319dcc95a63ad682fd5b379045489cf8f10c90de5829046d659fb7e484b312c;
-/// @dev `keccak256(REGISTRY_BEACON_PROXY_SUFFIX)`, spelled as a literal so that
-/// using it allocates no memory.
+/// @dev A literal so that using it allocates no memory.
 bytes32 constant REGISTRY_BEACON_PROXY_SUFFIX_HASH = 0x5bd46268865ed5cbd699e89c572d3e7022a35e56db67f66d53738f364963732c;
-/// @dev Offset of the prefix from a `bytes memory` pointer, past its length
-/// word.
 uint256 constant REGISTRY_BEACON_PROXY_PREFIX_START = 0x20;
-/// @dev Offset of the beacon word from a `bytes memory` pointer.
 uint256 constant REGISTRY_BEACON_PROXY_BEACON_WORD_START =
     REGISTRY_BEACON_PROXY_PREFIX_START + REGISTRY_BEACON_PROXY_PREFIX_LENGTH;
-/// @dev Offset of the suffix from a `bytes memory` pointer.
 uint256 constant REGISTRY_BEACON_PROXY_SUFFIX_START =
     REGISTRY_BEACON_PROXY_BEACON_WORD_START + REGISTRY_BEACON_PROXY_BEACON_WORD_LENGTH;
 

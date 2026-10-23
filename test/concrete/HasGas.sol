@@ -5,7 +5,6 @@ pragma solidity =0.8.25;
 /// @dev Contract that uses the GAS opcode.
 contract HasGas {
     function getGas() external view returns (uint256 g) {
-        //forge-lint: disable-next-line(assembly-usage)
         assembly ("memory-safe") {
             g := gas()
         }

@@ -18,7 +18,6 @@ contract ERC1967ProxyFixture {
         bytes32 implementationSlot = ERC1967_IMPLEMENTATION_SLOT;
         bytes32 adminSlot = ERC1967_ADMIN_SLOT;
         bytes32 beaconSlot = ERC1967_BEACON_SLOT;
-        //forge-lint: disable-next-line(assembly-usage)
         assembly ("memory-safe") {
             sstore(implementationSlot, implementation)
             sstore(adminSlot, admin)

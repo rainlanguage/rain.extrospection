@@ -6,7 +6,6 @@ pragma solidity =0.8.25;
 contract HasCreate {
     function deploy(bytes memory code) external returns (address) {
         address deployed;
-        //forge-lint: disable-next-line(assembly-usage)
         assembly ("memory-safe") {
             deployed := create(0, add(code, 0x20), mload(code))
         }
