@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std-1.16.1/src/Test.sol";
+import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {LibExtrospectERC1967ProxySlots} from "test/lib/LibExtrospectERC1967ProxySlots.sol";
 import {ERC1967ProxyFixture} from "test/concrete/ERC1967ProxyFixture.sol";
 import {EmptyContract} from "test/concrete/EmptyContract.sol";

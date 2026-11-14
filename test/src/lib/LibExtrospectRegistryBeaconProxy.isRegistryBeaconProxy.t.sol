@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std-1.16.1/src/Test.sol";
-import {LibICloneableFactoryV5} from "rain-factory-0.2.5/src/lib/LibICloneableFactoryV5.sol";
-import {LibICloneableFactoryV6} from "rain-factory-0.2.5/src/lib/LibICloneableFactoryV6.sol";
+import {Test} from "forge-std-1.17.0/src/Test.sol";
+import {LibICloneableFactoryV5} from "rain-factory-0.2.12/src/lib/LibICloneableFactoryV5.sol";
+import {LibICloneableFactoryV6} from "rain-factory-0.2.12/src/lib/LibICloneableFactoryV6.sol";
 
 import {
     LibExtrospectRegistryBeaconProxy,

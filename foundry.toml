@@ -18,10 +18,11 @@ ignored_warnings_from = ["test/concrete/HasSelfdestruct.sol"]
 runs = 2048
 
 [dependencies]
-forge-std = "1.16.1"
+forge-std = "1.17.0"
 "rain-solmem" = "0.1.28"
 "rain-math-binary" = "0.1.4"
-rain-factory = "0.2.5"
+rain-factory = "0.2.12"
+"rain-deploy" = "0.1.32"
 
 [soldeer]
 recursive_deps = false
