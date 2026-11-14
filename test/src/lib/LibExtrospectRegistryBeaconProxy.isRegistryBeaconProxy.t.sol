@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {LibICloneableFactoryV5} from "rain-factory-0.2.12/src/lib/LibICloneableFactoryV5.sol";
-import {LibICloneableFactoryV6} from "rain-factory-0.2.12/src/lib/LibICloneableFactoryV6.sol";
+import {LibICloneableFactoryV7} from "rain-factory-0.2.12/src/lib/LibICloneableFactoryV7.sol";
 
 import {
     LibExtrospectRegistryBeaconProxy,
@@ -34,7 +34,7 @@ contract LibExtrospectRegistryBeaconProxyIsRegistryBeaconProxyTest is Test {
     function deployRegistryBeaconProxy(address beacon) internal returns (address) {
         RegistryBeaconSourceFixture registry = new RegistryBeaconSourceFixture(beacon);
         bytes memory creationCode =
-            LibICloneableFactoryV6.registryBeaconProxyCreationCode(address(registry), address(1), bytes32(0));
+            LibICloneableFactoryV7.registryBeaconProxyCreationCode(address(registry), address(1), bytes32(0));
         address proxy;
         assembly ("memory-safe") {
             proxy := create(0, add(creationCode, 0x20), mload(creationCode))
