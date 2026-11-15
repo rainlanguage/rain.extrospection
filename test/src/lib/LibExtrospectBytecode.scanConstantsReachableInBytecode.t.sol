@@ -136,16 +136,66 @@ contract LibExtrospectBytecodeScanConstantsReachableInBytecodeTest is Test {
         assertEq(LibExtrospectBytecode.scanConstantsReachableInBytecode(hex"00615b5b6001").length, 0);
     }
 
-    function testScanConstantsReachableSkipsAfterEachHaltUntilJumpdest() external pure {
-        bytes1[6] memory halts = [bytes1(0x00), 0x56, 0xF3, 0xFD, 0xFE, 0xFF];
+    function testScanConstantsReachableJumpFreeEndsAtEachHalt() external pure {
+        bytes1[5] memory halts = [bytes1(0x00), 0xF3, 0xFD, 0xFE, 0xFF];
         for (uint256 i = 0; i < halts.length; i++) {
             uint256[] memory constants = LibExtrospectBytecode.scanConstantsReachableInBytecode(
                 abi.encodePacked(hex"6001", halts[i], hex"6002736B175474E89094C44Da98b954EedeAC495271d0F5b6004")
             );
-            assertEq(constants.length, 2);
+            assertEq(constants.length, 1);
             assertEq(constants[0], 1);
-            assertEq(constants[1], 4);
         }
+    }
+
+    function testScanConstantsReachableJumpResumesAtJumpdest() external pure {
+        uint256[] memory constants = LibExtrospectBytecode.scanConstantsReachableInBytecode(
+            hex"600156" hex"6002736B175474E89094C44Da98b954EedeAC495271d0F5b6004"
+        );
+        assertEq(constants.length, 2);
+        assertEq(constants[0], 1);
+        assertEq(constants[1], 4);
+    }
+
+    function testScanConstantsReachableJumpBeforeHaltSkipsUntilJumpdest() external pure {
+        bytes1[6] memory halts = [bytes1(0x00), 0x56, 0xF3, 0xFD, 0xFE, 0xFF];
+        bytes[2] memory jumps = [bytes(hex"600157"), hex"6001565b"];
+        for (uint256 j = 0; j < jumps.length; j++) {
+            for (uint256 i = 0; i < halts.length; i++) {
+                uint256[] memory constants = LibExtrospectBytecode.scanConstantsReachableInBytecode(
+                    abi.encodePacked(jumps[j], halts[i], hex"6002736B175474E89094C44Da98b954EedeAC495271d0F5b6004")
+                );
+                assertEq(constants.length, 2);
+                assertEq(constants[0], 1);
+                assertEq(constants[1], 4);
+            }
+        }
+    }
+
+    function testScanConstantsReachableJumpAfterFirstHaltDoesNotResume() external pure {
+        uint256[] memory constants = LibExtrospectBytecode.scanConstantsReachableInBytecode(hex"6001005b6002575b6003");
+        assertEq(constants.length, 1);
+        assertEq(constants[0], 1);
+    }
+
+    function testScanConstantsReachableJumpInPushDataDoesNotResume() external pure {
+        uint256[] memory constants = LibExtrospectBytecode.scanConstantsReachableInBytecode(hex"6056005b6001");
+        assertEq(constants.length, 1);
+        assertEq(constants[0], 0x56);
+        constants = LibExtrospectBytecode.scanConstantsReachableInBytecode(hex"6057005b6001");
+        assertEq(constants.length, 1);
+        assertEq(constants[0], 0x57);
+    }
+
+    function testScanConstantsReachableJumpdestBeforeHaltDoesNotResume() external pure {
+        uint256[] memory constants = LibExtrospectBytecode.scanConstantsReachableInBytecode(hex"5b6001005b6002");
+        assertEq(constants.length, 1);
+        assertEq(constants[0], 1);
+    }
+
+    function testScanConstantsReachableStopJumpdestPush20(address account) external pure {
+        assertEq(
+            LibExtrospectBytecode.scanConstantsReachableInBytecode(abi.encodePacked(hex"005b73", account)).length, 0
+        );
     }
 
     function testScanConstantsReachableJumpiDoesNotHalt() external pure {
@@ -165,6 +215,14 @@ contract LibExtrospectBytecodeScanConstantsReachableInBytecodeTest is Test {
         assertEq(
             LibExtrospectBytecode.scanConstantsReachableInBytecode(data),
             LibExtrospectionSlow.scanConstantsReachableInBytecodeSlow(data)
+        );
+    }
+
+    function testScanConstantsReachableReferenceAfterJumpi(bytes memory data) external pure {
+        bytes memory code = abi.encodePacked(hex"57", data);
+        assertEq(
+            LibExtrospectBytecode.scanConstantsReachableInBytecode(code),
+            LibExtrospectionSlow.scanConstantsReachableInBytecodeSlow(code)
         );
     }
 
@@ -245,34 +303,44 @@ contract LibExtrospectBytecodeScanConstantsReachableInBytecodeTest is Test {
         assertEq(LibExtrospectBytecode.scanConstantsReachableInBytecode(pointer.code).length, 0);
     }
 
-    /// Rows that are each one whole PUSH instruction, whatever their operand
-    /// bytes, including 0x5b.
-    function testScanConstantsReachableDataContractPushRowsNotReturned(bytes32[] memory operands, uint8[] memory widths)
-        external
-    {
-        bytes memory rows;
-        for (uint256 i = 0; i < operands.length && i < widths.length; i++) {
-            uint256 width = uint256(widths[i]) % 32 + 1;
-            bytes memory operand = abi.encodePacked(operands[i]);
-            assembly ("memory-safe") {
-                mstore(operand, width)
-            }
-            //forge-lint: disable-next-line(unsafe-typecast)
-            rows = abi.encodePacked(rows, bytes1(uint8(0x5f + width)), operand);
+    /// `data` with each byte below 0x80 replaced by JUMPDEST, JUMP, JUMPI or
+    /// PUSH20, picked by its low two bits.
+    function withJumpAndPushBytes(bytes memory data) internal pure returns (bytes memory) {
+        bytes4 picks = 0x5b565773;
+        bytes memory dense = new bytes(data.length);
+        for (uint256 i = 0; i < data.length; i++) {
+            dense[i] = uint8(data[i]) < 0x80 ? picks[uint8(data[i]) % 4] : data[i];
         }
-        vm.assume(rows.length > 0);
-        address pointer = deployDataContract(rows);
+        return dense;
+    }
+
+    function checkDataContractRuntime(bytes memory data) internal {
+        address pointer = deployDataContract(data);
+        assertEq(pointer.code, abi.encodePacked(hex"00", data));
         assertEq(LibExtrospectBytecode.scanConstantsReachableInBytecode(pointer.code).length, 0);
     }
 
-    function testScanConstantsReachableDataContractCreationCode() external pure {
-        bytes memory rows = abi.encodePacked(hex"73", CONSTANT_ADDRESS, hex"6001");
+    function testScanConstantsReachableDataContractRuntime(bytes memory data) external {
+        vm.assume(data.length < 0x6000);
+        checkDataContractRuntime(data);
+        checkDataContractRuntime(withJumpAndPushBytes(data));
+    }
+
+    /// Only the creation code's own prefix constants: the data's length plus
+    /// one, the data's offset 0x0c, and the two zero offsets.
+    function checkDataContractCreationCode(bytes memory data) internal pure {
         uint256[] memory constants =
-            LibExtrospectBytecode.scanConstantsReachableInBytecode(LibDataContract.contractCreationCode(rows));
+            LibExtrospectBytecode.scanConstantsReachableInBytecode(LibDataContract.contractCreationCode(data));
         assertEq(constants.length, 4);
-        assertEq(constants[0], rows.length + 1);
+        assertEq(constants[0], data.length + 1);
         assertEq(constants[1], 0x0c);
         assertEq(constants[2], 0);
         assertEq(constants[3], 0);
+    }
+
+    function testScanConstantsReachableDataContractCreationCode(bytes memory data) external pure {
+        vm.assume(data.length < type(uint16).max);
+        checkDataContractCreationCode(data);
+        checkDataContractCreationCode(withJumpAndPushBytes(data));
     }
 }
