@@ -286,7 +286,11 @@ library LibExtrospectBytecode {
         assembly ("memory-safe") {
             constants := mload(0x40)
         }
-        uint256 write = walkReachableBytecode(bytecode, recordConstant, Pointer.unwrap(constants.dataPointer()));
+        uint256 write;
+        assembly ("memory-safe") {
+            write := add(constants, 0x20)
+        }
+        write = walkReachableBytecode(bytecode, recordConstant, write);
         assembly ("memory-safe") {
             mstore(constants, shr(5, sub(write, add(constants, 0x20))))
             mstore(0x40, write)
