@@ -133,7 +133,7 @@ contract LibExtrospectBytecodeScanConstantsReachableInBytecodeTest is Test {
     }
 
     function testScanConstantsReachablePushDataLikeJumpdestWhileHaltedNotWalked() external pure {
-        assertEq(LibExtrospectBytecode.scanConstantsReachableInBytecode(hex"00615b5b6001").length, 0);
+        assertEq(LibExtrospectBytecode.scanConstantsReachableInBytecode(hex"5700615b5b6001").length, 0);
     }
 
     function testScanConstantsReachableJumpFreeEndsAtEachHalt() external pure {

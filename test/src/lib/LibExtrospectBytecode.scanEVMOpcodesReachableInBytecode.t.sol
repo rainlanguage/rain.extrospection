@@ -223,9 +223,12 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
     /// scan is halted. The JUMPDEST is inline data of the truncated PUSH32, so
     /// the scan stays halted and nothing after the halt is recorded.
     function testScanEVMOpcodesReachableTruncatedPush32HidesJumpdest() public pure {
-        // STOP then PUSH32 with 2 data bytes present, the last a JUMPDEST.
-        //forge-lint: disable-next-line(incorrect-shift)
-        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"007f015b"), 1 << EVM_OP_STOP);
+        // JUMPI, STOP, then PUSH32 with 2 data bytes present, the last a
+        // JUMPDEST.
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"57007f015b"),
+            (uint256(1) << EVM_OP_JUMPI) | (uint256(1) << EVM_OP_STOP)
+        );
     }
 
     /// Test that the simple case of a few standard opcodes works.
@@ -463,10 +466,13 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
 
     /// Test that push opcodes are skipped while halted.
     function testScanEVMOpcodesReachablePushWhileHalted() public pure {
-        // hex"00605b6001"
-        // Scanner halts at 00. It sees 60 (PUSH1), skips 5B (data). No JUMPDEST
-        // found. Code remains unreachable.
-        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"00605b6001"), 1);
+        // hex"5700605b6001"
+        // Scanner passes JUMPI and halts at 00. It sees 60 (PUSH1), skips 5B
+        // (data). No JUMPDEST found. Code remains unreachable.
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"5700605b6001"),
+            (uint256(1) << EVM_OP_JUMPI) | (uint256(1) << EVM_OP_STOP)
+        );
     }
 
     /// Test that push opcode arguments are skipped.
