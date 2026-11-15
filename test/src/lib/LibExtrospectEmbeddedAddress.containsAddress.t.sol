@@ -45,9 +45,7 @@ contract LibExtrospectEmbeddedAddressContainsAddressTest is Test {
             for (uint256 offset = 0; offset <= 96; offset++) {
                 bytes memory atEnd = bytes.concat(filler(offset), stripped);
                 assertTrue(LibExtrospectEmbeddedAddress.containsAddress(atEnd, needle));
-                assertTrue(
-                    LibExtrospectEmbeddedAddress.containsAddress(bytes.concat(atEnd, filler(33)), needle)
-                );
+                assertTrue(LibExtrospectEmbeddedAddress.containsAddress(bytes.concat(atEnd, filler(33)), needle));
                 assertFalse(
                     LibExtrospectEmbeddedAddress.containsAddress(
                         bytes.concat(filler(offset), changed, filler(33)), needle

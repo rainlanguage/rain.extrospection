@@ -25,7 +25,10 @@ contract LibExtrospectEmbeddedAddressIsDataContractTest is Test {
         payload = new bytes(length);
         assembly ("memory-safe") {
             for { let i := 0 } lt(i, length) { i := add(i, 0x20) } {
-                mstore(add(add(payload, 0x20), i), xor(i, 0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef))
+                mstore(
+                    add(add(payload, 0x20), i),
+                    xor(i, 0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef)
+                )
             }
         }
     }
@@ -41,8 +44,7 @@ contract LibExtrospectEmbeddedAddressIsDataContractTest is Test {
     }
 
     function testLargestDataContractIsDataContract() external pure {
-        bytes memory creationCode =
-            LibDataContract.contractCreationCode(payloadOfLength(uint256(type(uint16).max) - 1));
+        bytes memory creationCode = LibDataContract.contractCreationCode(payloadOfLength(uint256(type(uint16).max) - 1));
         assertEq(uint8(creationCode[1]), 0xff);
         assertEq(uint8(creationCode[2]), 0xff);
         assertTrue(LibExtrospectEmbeddedAddress.isDataContract(creationCode));
