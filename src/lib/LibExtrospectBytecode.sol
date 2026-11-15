@@ -268,16 +268,43 @@ library LibExtrospectBytecode {
     /// later gain. Use `scanEVMOpcodesReachableInBytecode(address)` to bind
     /// the scan to an account and reject a codeless one.
     /// @param bytecode The bytecode to scan.
-    /// @return bytesReachable A `uint256` where each bit represents the presence
-    /// of a reachable opcode in the source bytecode.
+    /// @return A `uint256` where each bit represents the presence of a reachable
+    /// opcode in the source bytecode.
     //forge-lint: disable-next-line(mixed-case-function)
-    function scanEVMOpcodesReachableInBytecode(bytes memory bytecode) internal pure returns (uint256 bytesReachable) {
+    function scanEVMOpcodesReachableInBytecode(bytes memory bytecode) internal pure returns (uint256) {
+        (uint256 bytesReachable,) = walkReachableBytecode(bytecode, false);
+        return bytesReachable;
+    }
+
+    /// Every PUSH1-PUSH32 operand, in order, of the code that
+    /// `scanEVMOpcodesReachableInBytecode` treats as reachable. An operand cut
+    /// short by the end of the bytecode is zero padded on the right, as the EVM
+    /// pushes it.
+    /// @param bytecode The bytecode to scan.
+    /// @return The reachable pushed constants.
+    function scanConstantsReachableInBytecode(bytes memory bytecode) internal pure returns (uint256[] memory) {
+        (, uint256[] memory constants) = walkReachableBytecode(bytecode, true);
+        return constants;
+    }
+
+    function walkReachableBytecode(bytes memory bytecode, bool collectConstants)
+        private
+        pure
+        returns (uint256, uint256[] memory)
+    {
         checkNotEOFBytecode(bytecode);
+        uint256 bytesReachable;
+        uint256[] memory constants;
         Pointer cursor = bytecode.dataPointer();
         uint256 length = bytecode.length;
         uint256 opJumpDest = EVM_OP_JUMPDEST;
         uint256 haltingMask = HALTING_BITMAP;
         assembly ("memory-safe") {
+            let write := 0
+            if collectConstants {
+                constants := mload(0x40)
+                write := add(constants, 0x20)
+            }
             cursor := sub(cursor, 0x20)
             let end := add(cursor, length)
             let halted := 0
@@ -288,13 +315,25 @@ library LibExtrospectBytecode {
                 // following bytes MUST be skipped as they are inline stack
                 // data and NOT opcodes.
                 let push := sub(op, 0x60)
-                if lt(push, 0x20) {
+                let isPush := lt(push, 0x20)
+                if isPush {
                     cursor := add(cursor, add(push, 1))
                 }
                 switch halted
                 case 0 {
                     //slither-disable-next-line incorrect-shift
                     bytesReachable := or(bytesReachable, shl(op, 1))
+
+                    if and(isPush, collectConstants) {
+                        //slither-disable-next-line incorrect-shift
+                        let value := and(mload(cursor), sub(shl(shl(3, add(push, 1)), 1), 1))
+                        if gt(cursor, end) {
+                            let overrun := shl(3, sub(cursor, end))
+                            value := shl(overrun, shr(overrun, value))
+                        }
+                        mstore(write, value)
+                        write := add(write, 0x20)
+                    }
 
                     //slither-disable-next-line incorrect-shift
                     if and(shl(op, 1), haltingMask) {
@@ -313,7 +352,12 @@ library LibExtrospectBytecode {
                 // Can't happen, but the compiler doesn't know that.
                 default { revert(0, 0) }
             }
+            if collectConstants {
+                mstore(constants, shr(5, sub(write, add(constants, 0x20))))
+                mstore(0x40, write)
+            }
         }
+        return (bytesReachable, constants);
     }
 
     /// Reads `account`'s code and scans it for reachable opcodes, delegating
