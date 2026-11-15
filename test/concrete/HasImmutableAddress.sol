@@ -8,8 +8,8 @@ contract HasImmutableAddress {
     address internal immutable I_TARGET;
 
     //forge-lint: disable-next-line(missing-zero-check)
-    constructor(address target) {
-        I_TARGET = target;
+    constructor(address initialTarget) {
+        I_TARGET = initialTarget;
     }
 
     function target() external view returns (address) {
