@@ -66,9 +66,11 @@ contract LibExtrospectBytecodeScanConstantsReachableInBytecodeTest is Test {
         for (uint256 width = 1; width <= 32; width++) {
             bytes memory code = new bytes(width + 2);
             code[0] = 0x01;
+            //forge-lint: disable-next-line(unsafe-typecast)
             code[1] = bytes1(uint8(0x5f + width));
             uint256 expected = 0;
             for (uint256 i = 0; i < width; i++) {
+                //forge-lint: disable-next-line(unsafe-typecast)
                 code[i + 2] = bytes1(uint8(0xA0 + i));
                 expected = (expected << 8) | (0xA0 + i);
             }
@@ -255,6 +257,7 @@ contract LibExtrospectBytecodeScanConstantsReachableInBytecodeTest is Test {
             assembly ("memory-safe") {
                 mstore(operand, width)
             }
+            //forge-lint: disable-next-line(unsafe-typecast)
             rows = abi.encodePacked(rows, bytes1(uint8(0x5f + width)), operand);
         }
         vm.assume(rows.length > 0);
