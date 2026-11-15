@@ -90,4 +90,5 @@ the path, e.g. `rain-solmem-0.1.3/src/lib/LibBytes.sol`.
   `LibExtrospectEmbeddedAddress.isDataContract` rebuilds
 
 rain-deploy depends on this repo, so nothing here may depend on rain-deploy or
-anything that does (e.g. rain-factory). Their bytecode is pinned in `test/lib/`.
+anything that does (e.g. rain-factory). Tests use rain-factory proxy creation
+code pinned in `test/lib/`.
