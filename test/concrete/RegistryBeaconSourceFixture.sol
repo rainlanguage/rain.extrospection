@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {BEACON_BINDING_VALUE_TYPE_HASH} from "rain-factory-0.2.12/src/lib/LibICloneableFactoryV7.sol";
+import {BEACON_BINDING_VALUE_TYPE_HASH} from "test/lib/LibExtrospectRegistryBeaconProxy.testConstants.sol";
 
 /// @dev Config registry stand-in that binds every name under every authority
 /// to `beacon`, so a `RegistryBeaconProxy` constructed against it resolves

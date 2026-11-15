@@ -3,8 +3,6 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
-import {LibICloneableFactoryV5} from "rain-factory-0.2.12/src/lib/LibICloneableFactoryV5.sol";
-import {LibICloneableFactoryV7} from "rain-factory-0.2.12/src/lib/LibICloneableFactoryV7.sol";
 
 import {
     LibExtrospectRegistryBeaconProxy,
@@ -21,10 +19,14 @@ import {ERC1167_PREFIX, ERC1167_SUFFIX} from "src/lib/LibExtrospectERC1167Proxy.
 import {MockBeacon} from "test/concrete/MockBeacon.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 import {RegistryBeaconSourceFixture} from "test/concrete/RegistryBeaconSourceFixture.sol";
+import {
+    REGISTRY_BEACON_PROXY_CREATION_CODE,
+    BEACON_PROXY_CREATION_CODE
+} from "test/lib/LibExtrospectRegistryBeaconProxy.testConstants.sol";
 
 /// @title LibExtrospectRegistryBeaconProxyIsRegistryBeaconProxyTest
 /// @notice The oracle is the runtime bytecode of a `RegistryBeaconProxy`
-/// deployed from rain-factory 0.2.5's creation code.
+/// deployed from rain-factory 0.2.12's creation code.
 contract LibExtrospectRegistryBeaconProxyIsRegistryBeaconProxyTest is Test {
     function deployBeaconAt(address beacon) internal {
         MockBeacon mock = new MockBeacon(address(new NonMetamorphic()), address(0));
@@ -34,7 +36,7 @@ contract LibExtrospectRegistryBeaconProxyIsRegistryBeaconProxyTest is Test {
     function deployRegistryBeaconProxy(address beacon) internal returns (address) {
         RegistryBeaconSourceFixture registry = new RegistryBeaconSourceFixture(beacon);
         bytes memory creationCode =
-            LibICloneableFactoryV7.registryBeaconProxyCreationCode(address(registry), address(1), bytes32(0));
+            bytes.concat(REGISTRY_BEACON_PROXY_CREATION_CODE, abi.encode(address(registry), address(1), bytes32(0)));
         address proxy;
         assembly ("memory-safe") {
             proxy := create(0, add(creationCode, 0x20), mload(creationCode))
@@ -158,12 +160,12 @@ contract LibExtrospectRegistryBeaconProxyIsRegistryBeaconProxyTest is Test {
         assertNotProxy(abi.encodePacked(ERC1167_PREFIX, implementation, ERC1167_SUFFIX));
     }
 
-    /// rain-factory 0.2.5 compiles OpenZeppelin `BeaconProxy` to the same runtime
-    /// bytecode as `RegistryBeaconProxy`.
+    /// rain-factory 0.2.12 compiles OpenZeppelin `BeaconProxy` to the same
+    /// runtime bytecode as `RegistryBeaconProxy`.
     function testRainFactoryOpenZeppelinBeaconProxyYieldsItsBeacon() external {
         address beacon = makeAddr("beacon");
         deployBeaconAt(beacon);
-        bytes memory creationCode = LibICloneableFactoryV5.beaconProxyCreationCode(beacon);
+        bytes memory creationCode = bytes.concat(BEACON_PROXY_CREATION_CODE, abi.encode(beacon, bytes("")));
         address proxy;
         assembly ("memory-safe") {
             proxy := create(0, add(creationCode, 0x20), mload(creationCode))
