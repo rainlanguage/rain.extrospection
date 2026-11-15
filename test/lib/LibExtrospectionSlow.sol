@@ -140,6 +140,48 @@ library LibExtrospectionSlow {
         return scan;
     }
 
+    /// KISS implementation of the reachable `PUSH1`-`PUSH32` operands, each
+    /// zero padded on the right where it runs past the end of `data`.
+    //forge-lint: disable-next-line(mixed-case-function)
+    function scanConstantsReachableInBytecodeSlow(bytes memory data) internal pure returns (uint256[] memory) {
+        uint256[] memory buffer = new uint256[](data.length);
+        uint256 count = 0;
+        bool reachable = true;
+        uint256 i = 0;
+        while (i < data.length) {
+            uint8 op = uint8(data[i]);
+            if (!reachable && op == SLOW_OP_JUMPDEST) {
+                reachable = true;
+            }
+            uint256 operandLength = 0;
+            if (SLOW_OP_PUSH1 <= op && op <= SLOW_OP_PUSH32) {
+                operandLength = uint256(op) - uint256(SLOW_OP_PUSH1) + 1;
+            }
+            if (reachable) {
+                if (operandLength > 0) {
+                    uint256 value = 0;
+                    for (uint256 j = 1; j <= operandLength; j++) {
+                        value = value << 8;
+                        if (i + j < data.length) {
+                            value = value | uint256(uint8(data[i + j]));
+                        }
+                    }
+                    buffer[count] = value;
+                    count++;
+                }
+                if ((SLOW_HALTING_BITMAP & opcodeBit(op)) != 0) {
+                    reachable = false;
+                }
+            }
+            i += operandLength + 1;
+        }
+        uint256[] memory constants = new uint256[](count);
+        for (uint256 j = 0; j < count; j++) {
+            constants[j] = buffer[j];
+        }
+        return constants;
+    }
+
     /// KISS implementation of metamorphic risk scan. Fails closed on the
     /// EIP-3541 reserved prefix: bytecode whose first byte is `0xEF` reports
     /// that byte's bit alone, before any opcode scan.
