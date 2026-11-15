@@ -86,5 +86,8 @@ the path, e.g. `rain-solmem-0.1.3/src/lib/LibBytes.sol`.
 - `forge-std` 1.16.1 — Foundry test framework
 - `rain-math-binary` 0.1.3 — Binary math utilities (`LibCtPop`)
 - `rain-solmem` 0.1.3 — Memory utilities (`LibBytes`, `Pointer`)
-- `rain-factory` 0.2.5 — tests only: the real `RegistryBeaconProxy` and
-  `BeaconProxy` creation code
+- `rain-datacontract` 0.2.1 — `LibDataContract` creation code, which
+  `LibExtrospectEmbeddedAddress.isDataContract` rebuilds
+- `rain-factory` 0.2.12 (with `rain-deploy`, `rain-metadata`) — tests only: the
+  real `RegistryBeaconProxy` and `BeaconProxy` creation code. `src/` never
+  imports them, so rain-deploy can depend on this repo without a cycle.
