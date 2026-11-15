@@ -88,6 +88,6 @@ the path, e.g. `rain-solmem-0.1.3/src/lib/LibBytes.sol`.
 - `rain-solmem` 0.1.3 — Memory utilities (`LibBytes`, `Pointer`)
 - `rain-datacontract` 0.2.1 — `LibDataContract` creation code, which
   `LibExtrospectEmbeddedAddress.isDataContract` rebuilds
-- `rain-factory` 0.2.12 (with `rain-deploy`, `rain-metadata`) — tests only: the
-  real `RegistryBeaconProxy` and `BeaconProxy` creation code. `src/` never
-  imports them, so rain-deploy can depend on this repo without a cycle.
+
+rain-deploy depends on this repo, so nothing here may depend on rain-deploy or
+anything that does (e.g. rain-factory). Their bytecode is pinned in `test/lib/`.
