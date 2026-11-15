@@ -360,7 +360,6 @@ library LibExtrospectBytecode {
                 if (op != EVM_OP_JUMPDEST) {
                     continue;
                 }
-                halted = false;
             }
             accumulator = visit(accumulator, op, cursor, end);
             //slither-disable-next-line incorrect-shift
