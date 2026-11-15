@@ -86,5 +86,7 @@ the path, e.g. `rain-solmem-0.1.3/src/lib/LibBytes.sol`.
 - `forge-std` 1.16.1 — Foundry test framework
 - `rain-math-binary` 0.1.3 — Binary math utilities (`LibCtPop`)
 - `rain-solmem` 0.1.3 — Memory utilities (`LibBytes`, `Pointer`)
-- `rain-factory` 0.2.5 — tests only: the real `RegistryBeaconProxy` and
-  `BeaconProxy` creation code
+
+rain-deploy depends on this repo, so nothing here may depend on rain-deploy or
+anything that does (e.g. rain-factory). Tests use rain-factory proxy creation
+code pinned in `test/lib/`.
