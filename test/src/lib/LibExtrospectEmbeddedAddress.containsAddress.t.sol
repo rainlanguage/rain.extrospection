@@ -34,8 +34,8 @@ contract LibExtrospectEmbeddedAddressContainsAddressTest is Test {
         for (uint256 width = 1; width <= 20; width++) {
             bytes memory stripped = new bytes(width);
             uint160 value = 0;
-            for (uint256 k = 0; k < width; k++) {
-                stripped[k] = bytes1(uint8(k + 1));
+            for (uint8 k = 0; k < width; k++) {
+                stripped[k] = bytes1(k + 1);
                 value = (value << 8) | uint160(k + 1);
             }
             address needle = address(value);
