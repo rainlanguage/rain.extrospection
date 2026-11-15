@@ -300,6 +300,7 @@ library LibExtrospectBytecode {
 
     function recordOpcode(uint256 bytesReachable, uint256 op, Pointer, Pointer) private pure returns (uint256) {
         //slither-disable-next-line incorrect-shift
+        //forge-lint: disable-next-line(incorrect-shift)
         return bytesReachable | (1 << op);
     }
 
@@ -320,8 +321,8 @@ library LibExtrospectBytecode {
         return write;
     }
 
-    /// `visit` gets each reachable instruction's opcode, its last byte's
-    /// pointer less 0x20, and the bytecode's last byte's pointer less 0x20.
+    /// `visit` gets each reachable instruction's opcode, then the pointers one
+    /// past its last byte and one past the bytecode's last byte, each less 0x20.
     function walkReachableBytecode(
         bytes memory bytecode,
         function(uint256, uint256, Pointer, Pointer) pure returns (uint256) visit,
@@ -356,6 +357,7 @@ library LibExtrospectBytecode {
             }
             accumulator = visit(accumulator, op, cursor, end);
             //slither-disable-next-line incorrect-shift
+            //forge-lint: disable-next-line(incorrect-shift)
             halted = (1 << op) & haltingMask != 0;
         }
         return accumulator;
