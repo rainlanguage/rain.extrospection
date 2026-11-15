@@ -86,8 +86,6 @@ the path, e.g. `rain-solmem-0.1.3/src/lib/LibBytes.sol`.
 - `forge-std` 1.16.1 — Foundry test framework
 - `rain-math-binary` 0.1.3 — Binary math utilities (`LibCtPop`)
 - `rain-solmem` 0.1.3 — Memory utilities (`LibBytes`, `Pointer`)
-- `rain-datacontract` 0.2.1 — `LibDataContract` creation code, which
-  `LibExtrospectEmbeddedAddress.isDataContract` rebuilds
 
 rain-deploy depends on this repo, so nothing here may depend on rain-deploy or
 anything that does (e.g. rain-factory). Tests use rain-factory proxy creation

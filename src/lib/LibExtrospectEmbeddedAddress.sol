@@ -2,34 +2,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {LibDataContract, PREFIX_BYTES_LENGTH} from "rain-datacontract-0.2.1/src/lib/LibDataContract.sol";
-
 /// @title LibExtrospectEmbeddedAddress
-/// @notice Addresses embedded in bytecode, and whether that bytecode is a data
-/// contract whose bytes are rows rather than code.
+/// @notice Addresses embedded in bytecode.
 library LibExtrospectEmbeddedAddress {
-    /// @param creationCode The creation code.
-    /// @return Whether it is `LibDataContract.contractCreationCode` of the bytes
-    /// after its prefix.
-    function isDataContract(bytes memory creationCode) internal pure returns (bool) {
-        if (
-            creationCode.length < PREFIX_BYTES_LENGTH
-                || creationCode.length - PREFIX_BYTES_LENGTH >= uint256(type(uint16).max)
-        ) {
-            return false;
-        }
-        uint256 prefixBytesLength = PREFIX_BYTES_LENGTH;
-        uint256 length = creationCode.length - prefixBytesLength;
-        bytes memory data;
-        assembly ("memory-safe") {
-            data := mload(0x40)
-            mstore(data, length)
-            mcopy(add(data, 0x20), add(add(creationCode, 0x20), prefixBytesLength), length)
-            mstore(0x40, add(add(data, 0x20), length))
-        }
-        return keccak256(LibDataContract.contractCreationCode(data)) == keccak256(creationCode);
-    }
-
     /// Searches for the address with its leading zero bytes stripped, as solc
     /// pushes a constant address.
     /// @param haystack The bytes to search.
