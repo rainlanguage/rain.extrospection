@@ -272,8 +272,7 @@ library LibExtrospectBytecode {
     /// opcode in the source bytecode.
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesReachableInBytecode(bytes memory bytecode) internal pure returns (uint256) {
-        (uint256 bytesReachable,) = walkReachableBytecode(bytecode, false);
-        return bytesReachable;
+        return walkReachableBytecode(bytecode, recordOpcode, 0);
     }
 
     /// Every PUSH1-PUSH32 operand, in order, of the code that
@@ -283,81 +282,79 @@ library LibExtrospectBytecode {
     /// @param bytecode The bytecode to scan.
     /// @return The reachable pushed constants.
     function scanConstantsReachableInBytecode(bytes memory bytecode) internal pure returns (uint256[] memory) {
-        (, uint256[] memory constants) = walkReachableBytecode(bytecode, true);
+        uint256[] memory constants;
+        assembly ("memory-safe") {
+            constants := mload(0x40)
+        }
+        uint256 write = walkReachableBytecode(bytecode, recordConstant, Pointer.unwrap(constants.dataPointer()));
+        assembly ("memory-safe") {
+            mstore(constants, shr(5, sub(write, add(constants, 0x20))))
+            mstore(0x40, write)
+        }
         return constants;
     }
 
-    function walkReachableBytecode(bytes memory bytecode, bool collectConstants)
-        private
-        pure
-        returns (uint256, uint256[] memory)
-    {
+    function recordOpcode(uint256 bytesReachable, uint256 op, Pointer, Pointer) private pure returns (uint256) {
+        //slither-disable-next-line incorrect-shift
+        return bytesReachable | (1 << op);
+    }
+
+    function recordConstant(uint256 write, uint256 op, Pointer cursor, Pointer end) private pure returns (uint256) {
+        assembly ("memory-safe") {
+            let push := sub(op, 0x60)
+            if lt(push, 0x20) {
+                //slither-disable-next-line incorrect-shift
+                let value := and(mload(cursor), sub(shl(shl(3, add(push, 1)), 1), 1))
+                if gt(cursor, end) {
+                    let overrun := shl(3, sub(cursor, end))
+                    value := shl(overrun, shr(overrun, value))
+                }
+                mstore(write, value)
+                write := add(write, 0x20)
+            }
+        }
+        return write;
+    }
+
+    /// `visit` gets each reachable instruction's opcode, its last byte's
+    /// pointer less 0x20, and the bytecode's last byte's pointer less 0x20.
+    function walkReachableBytecode(
+        bytes memory bytecode,
+        function(uint256, uint256, Pointer, Pointer) pure returns (uint256) visit,
+        uint256 accumulator
+    ) private pure returns (uint256) {
         checkNotEOFBytecode(bytecode);
-        uint256 bytesReachable;
-        uint256[] memory constants;
         Pointer cursor = bytecode.dataPointer();
         uint256 length = bytecode.length;
-        uint256 opJumpDest = EVM_OP_JUMPDEST;
         uint256 haltingMask = HALTING_BITMAP;
+        Pointer end;
+        bool halted;
         assembly ("memory-safe") {
-            let write := 0
-            if collectConstants {
-                constants := mload(0x40)
-                write := add(constants, 0x20)
-            }
             cursor := sub(cursor, 0x20)
-            let end := add(cursor, length)
-            let halted := 0
-            for {} lt(cursor, end) {} {
+            end := add(cursor, length)
+        }
+        while (Pointer.unwrap(cursor) < Pointer.unwrap(end)) {
+            uint256 op;
+            assembly ("memory-safe") {
                 cursor := add(cursor, 1)
-                let op := and(mload(cursor), 0xFF)
+                op := and(mload(cursor), 0xFF)
                 // The 32 `PUSH*` opcodes starting at 0x60 indicate that the
                 // following bytes MUST be skipped as they are inline stack
                 // data and NOT opcodes.
                 let push := sub(op, 0x60)
-                let isPush := lt(push, 0x20)
-                if isPush {
-                    cursor := add(cursor, add(push, 1))
-                }
-                switch halted
-                case 0 {
-                    //slither-disable-next-line incorrect-shift
-                    bytesReachable := or(bytesReachable, shl(op, 1))
-
-                    if and(isPush, collectConstants) {
-                        //slither-disable-next-line incorrect-shift
-                        let value := and(mload(cursor), sub(shl(shl(3, add(push, 1)), 1), 1))
-                        if gt(cursor, end) {
-                            let overrun := shl(3, sub(cursor, end))
-                            value := shl(overrun, shr(overrun, value))
-                        }
-                        mstore(write, value)
-                        write := add(write, 0x20)
-                    }
-
-                    //slither-disable-next-line incorrect-shift
-                    if and(shl(op, 1), haltingMask) {
-                        halted := 1
-                    }
-                    continue
-                }
-                case 1 {
-                    if eq(op, opJumpDest) {
-                        halted := 0
-                        //slither-disable-next-line incorrect-shift
-                        bytesReachable := or(bytesReachable, shl(op, 1))
-                    }
-                    continue
-                }
-                // Can't happen, but the compiler doesn't know that.
-                default { revert(0, 0) }
+                if lt(push, 0x20) { cursor := add(cursor, add(push, 1)) }
             }
-            if collectConstants {
-                mstore(constants, shr(5, sub(write, add(constants, 0x20))))
-                mstore(0x40, write)
+            if (halted) {
+                if (op != EVM_OP_JUMPDEST) {
+                    continue;
+                }
+                halted = false;
             }
+            accumulator = visit(accumulator, op, cursor, end);
+            //slither-disable-next-line incorrect-shift
+            halted = (1 << op) & haltingMask != 0;
         }
-        return (bytesReachable, constants);
+        return accumulator;
     }
 
     /// Reads `account`'s code and scans it for reachable opcodes, delegating
