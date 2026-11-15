@@ -3,7 +3,7 @@
 pragma solidity ^0.8.25;
 
 import {LibBytes, Pointer} from "rain-solmem-0.1.28/src/lib/LibBytes.sol";
-import {EVM_OP_JUMPDEST, HALTING_BITMAP} from "./EVMOpcodes.sol";
+import {EVM_OP_JUMP, EVM_OP_JUMPI, EVM_OP_JUMPDEST, HALTING_BITMAP} from "./EVMOpcodes.sol";
 
 /// @dev Byte length of the standard Solidity CBOR metadata trailer that
 /// `LibExtrospectBytecode.tryTrimSolidityCBORMetadata` matches and trims. The
@@ -248,6 +248,10 @@ library LibExtrospectBytecode {
     /// INVALID, SELFDESTRUCT, or unconditional JUMP per `HALTING_BITMAP`),
     /// scanning pauses. Scanning resumes at the next JUMPDEST. Opcodes between
     /// a halt and the next JUMPDEST are treated as unreachable and excluded.
+    /// A JUMPDEST after a halt is reachable only if something reachable can
+    /// jump: when no JUMP or JUMPI occurs from byte 0 up to and including the
+    /// first halting opcode, nothing after that halt is reachable and scanning
+    /// ends there, so data after straight-line code is never scanned.
     /// The sweep does not distinguish code from data, so a JUMPDEST byte that it
     /// lands on inside a data region such as Solidity CBOR metadata resumes
     /// scanning, and the opcodes after it in that region are reported as
@@ -323,6 +327,8 @@ library LibExtrospectBytecode {
 
     /// `visit` gets each reachable instruction's opcode, then the pointers one
     /// past its last byte and one past the bytecode's last byte, each less 0x20.
+    /// The first halt ends the walk unless a JUMP or JUMPI precedes or is that
+    /// halt; every other halt skips to the next JUMPDEST.
     function walkReachableBytecode(
         bytes memory bytecode,
         function(uint256, uint256, Pointer, Pointer) pure returns (uint256) visit,
@@ -332,6 +338,7 @@ library LibExtrospectBytecode {
         Pointer cursor = bytecode.dataPointer();
         uint256 length = bytecode.length;
         uint256 haltingMask = HALTING_BITMAP;
+        uint256 endingMask = HALTING_BITMAP;
         Pointer end;
         bool halted;
         assembly ("memory-safe") {
@@ -358,7 +365,13 @@ library LibExtrospectBytecode {
             accumulator = visit(accumulator, op, cursor, end);
             //slither-disable-next-line incorrect-shift
             //forge-lint: disable-next-line(incorrect-shift)
-            halted = (1 << op) & haltingMask != 0;
+            uint256 opBit = 1 << op;
+            if (op == EVM_OP_JUMP || op == EVM_OP_JUMPI) {
+                endingMask = 0;
+            } else if (opBit & endingMask != 0) {
+                break;
+            }
+            halted = opBit & haltingMask != 0;
         }
         return accumulator;
     }
