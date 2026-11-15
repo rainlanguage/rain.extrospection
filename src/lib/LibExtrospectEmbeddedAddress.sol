@@ -18,9 +18,14 @@ library LibExtrospectEmbeddedAddress {
         ) {
             return false;
         }
-        bytes memory data = new bytes(creationCode.length - PREFIX_BYTES_LENGTH);
-        for (uint256 i = 0; i < data.length; i++) {
-            data[i] = creationCode[PREFIX_BYTES_LENGTH + i];
+        uint256 prefixBytesLength = PREFIX_BYTES_LENGTH;
+        uint256 length = creationCode.length - prefixBytesLength;
+        bytes memory data;
+        assembly ("memory-safe") {
+            data := mload(0x40)
+            mstore(data, length)
+            mcopy(add(data, 0x20), add(add(creationCode, 0x20), prefixBytesLength), length)
+            mstore(0x40, add(add(data, 0x20), length))
         }
         return keccak256(LibDataContract.contractCreationCode(data)) == keccak256(creationCode);
     }
