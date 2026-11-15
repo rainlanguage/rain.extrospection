@@ -4,6 +4,7 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {LibBytes} from "rain-solmem-0.1.28/src/lib/LibBytes.sol";
+import {LibDataContract} from "rain-datacontract-0.2.1/src/lib/LibDataContract.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {
     EVM_OP_STOP,
@@ -37,6 +38,7 @@ import {
     EVM_OP_CALLER,
     EVM_OP_CALLVALUE,
     EVM_OP_CALLDATACOPY,
+    EVM_OP_CODECOPY,
     EVM_OP_CODESIZE,
     EVM_OP_GASPRICE,
     EVM_OP_EXTCODESIZE,
@@ -56,8 +58,12 @@ import {
     EVM_OP_MSTORE8,
     EVM_OP_GAS,
     EVM_OP_JUMP,
+    EVM_OP_JUMPI,
     EVM_OP_JUMPDEST,
     EVM_OP_MCOPY,
+    EVM_OP_PUSH1,
+    EVM_OP_PUSH2,
+    EVM_OP_DUP1,
     EVM_OP_LOG0,
     EVM_OP_LOG1,
     EVM_OP_LOG2,
@@ -217,9 +223,12 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
     /// scan is halted. The JUMPDEST is inline data of the truncated PUSH32, so
     /// the scan stays halted and nothing after the halt is recorded.
     function testScanEVMOpcodesReachableTruncatedPush32HidesJumpdest() public pure {
-        // STOP then PUSH32 with 2 data bytes present, the last a JUMPDEST.
-        //forge-lint: disable-next-line(incorrect-shift)
-        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"007f015b"), 1 << EVM_OP_STOP);
+        // JUMPI, STOP, then PUSH32 with 2 data bytes present, the last a
+        // JUMPDEST.
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"57007f015b"),
+            (uint256(1) << EVM_OP_JUMPI) | (uint256(1) << EVM_OP_STOP)
+        );
     }
 
     /// Test that the simple case of a few standard opcodes works.
@@ -263,14 +272,136 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"5600010203"), 1 << EVM_OP_JUMP);
     }
 
-    // Test that jumpdest opcode resumes scanning.
-    function testScanEVMOpcodesReachableJumpdest() public pure {
-        // eq + revert + ignore 4 bytes + jumpdest + mulmod + exp + signextend
+    function bit(uint8 op) internal pure returns (uint256) {
+        return uint256(1) << op;
+    }
+
+    function testScanEVMOpcodesReachableJumpFreeEndsAtFirstHalt() public pure {
         assertEq(
             LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"14fdff0102035b090a0b"),
+            bit(EVM_OP_EQ) | bit(EVM_OP_REVERT)
+        );
+    }
+
+    function testScanEVMOpcodesReachableJumpFreeEndsAtEachHalt() public pure {
+        uint8[5] memory halts = [EVM_OP_STOP, EVM_OP_RETURN, EVM_OP_REVERT, EVM_OP_INVALID, EVM_OP_SELFDESTRUCT];
+        for (uint256 i = 0; i < halts.length; i++) {
+            assertEq(
+                LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(
+                    abi.encodePacked(EVM_OP_ADD, halts[i], EVM_OP_JUMPDEST, EVM_OP_DELEGATECALL)
+                ),
+                bit(EVM_OP_ADD) | bit(halts[i])
+            );
+        }
+    }
+
+    function testScanEVMOpcodesReachableJumpBeforeHaltSkipsUntilJumpdest() public pure {
+        uint8[6] memory halts =
+            [EVM_OP_STOP, EVM_OP_JUMP, EVM_OP_RETURN, EVM_OP_REVERT, EVM_OP_INVALID, EVM_OP_SELFDESTRUCT];
+        for (uint256 i = 0; i < halts.length; i++) {
+            uint256 resumed = bit(halts[i]) | bit(EVM_OP_JUMPDEST) | bit(EVM_OP_DELEGATECALL);
+            assertEq(
+                LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(
+                    abi.encodePacked(EVM_OP_JUMPI, halts[i], EVM_OP_ADD, EVM_OP_JUMPDEST, EVM_OP_DELEGATECALL)
+                ),
+                bit(EVM_OP_JUMPI) | resumed
+            );
+            assertEq(
+                LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(
+                    abi.encodePacked(
+                        EVM_OP_JUMP, EVM_OP_JUMPDEST, halts[i], EVM_OP_ADD, EVM_OP_JUMPDEST, EVM_OP_DELEGATECALL
+                    )
+                ),
+                bit(EVM_OP_JUMP) | resumed
+            );
+        }
+    }
+
+    function testScanEVMOpcodesReachableJumpResumesAtJumpdest() public pure {
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(
+                abi.encodePacked(EVM_OP_JUMP, EVM_OP_ADD, EVM_OP_JUMPDEST, EVM_OP_DELEGATECALL)
+            ),
+            bit(EVM_OP_JUMP) | bit(EVM_OP_JUMPDEST) | bit(EVM_OP_DELEGATECALL)
+        );
+    }
+
+    function testScanEVMOpcodesReachableJumpInPushDataDoesNotResume() public pure {
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"6056005bf4"),
+            bit(EVM_OP_PUSH1) | bit(EVM_OP_STOP)
+        );
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"6057005bf4"),
+            bit(EVM_OP_PUSH1) | bit(EVM_OP_STOP)
+        );
+    }
+
+    function testScanEVMOpcodesReachableJumpdestBeforeHaltDoesNotResume() public pure {
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"5b005bf4"),
+            bit(EVM_OP_JUMPDEST) | bit(EVM_OP_STOP)
+        );
+    }
+
+    function testScanEVMOpcodesReachableStopJumpdestPush20(address account) public pure {
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(abi.encodePacked(hex"005b73", account)),
+            bit(EVM_OP_STOP)
+        );
+    }
+
+    /// `data` with each byte below 0x80 replaced by JUMPDEST, JUMP, JUMPI or
+    /// PUSH20, picked by its low two bits.
+    function withJumpAndPushBytes(bytes memory data) internal pure returns (bytes memory) {
+        bytes4 picks = 0x5b565773;
+        bytes memory dense = new bytes(data.length);
+        for (uint256 i = 0; i < data.length; i++) {
+            dense[i] = uint8(data[i]) < 0x80 ? picks[uint8(data[i]) % 4] : data[i];
+        }
+        return dense;
+    }
+
+    function checkDataContractRuntime(bytes memory data) internal {
+        bytes memory creationCode = LibDataContract.contractCreationCode(data);
+        address pointer;
+        assembly ("memory-safe") {
+            pointer := create(0, add(creationCode, 0x20), mload(creationCode))
+        }
+        assertEq(pointer.code, abi.encodePacked(hex"00", data));
+        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(pointer.code), bit(EVM_OP_STOP));
+    }
+
+    function testScanEVMOpcodesReachableDataContractRuntime(bytes memory data) public {
+        vm.assume(data.length < 0x6000);
+        checkDataContractRuntime(data);
+        checkDataContractRuntime(withJumpAndPushBytes(data));
+    }
+
+    function checkDataContractCreationCode(bytes memory data) internal pure {
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(LibDataContract.contractCreationCode(data)),
+            bit(EVM_OP_PUSH2) | bit(EVM_OP_DUP1) | bit(EVM_OP_PUSH1) | bit(EVM_OP_CODECOPY) | bit(EVM_OP_RETURN)
+        );
+    }
+
+    function testScanEVMOpcodesReachableDataContractCreationCode(bytes memory data) public pure {
+        vm.assume(data.length < type(uint16).max);
+        checkDataContractCreationCode(data);
+        checkDataContractCreationCode(withJumpAndPushBytes(data));
+    }
+
+    // Test that jumpdest opcode resumes scanning.
+    function testScanEVMOpcodesReachableJumpdest() public pure {
+        // eq + jumpi + revert + ignore 4 bytes + jumpdest + mulmod + exp + signextend
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"1457fdff0102035b090a0b"),
             // 0x14
             //forge-lint: disable-next-line(incorrect-shift)
             (1 << EVM_OP_EQ)
+                // 0x57
+                //forge-lint: disable-next-line(incorrect-shift)
+                | (1 << EVM_OP_JUMPI)
                 // 0xfd
                 //forge-lint: disable-next-line(incorrect-shift)
                 | (1 << EVM_OP_REVERT)
@@ -335,10 +466,13 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
 
     /// Test that push opcodes are skipped while halted.
     function testScanEVMOpcodesReachablePushWhileHalted() public pure {
-        // hex"00605b6001"
-        // Scanner halts at 00. It sees 60 (PUSH1), skips 5B (data). No JUMPDEST
-        // found. Code remains unreachable.
-        assertEq(LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"00605b6001"), 1);
+        // hex"5700605b6001"
+        // Scanner passes JUMPI and halts at 00. It sees 60 (PUSH1), skips 5B
+        // (data). No JUMPDEST found. Code remains unreachable.
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(hex"5700605b6001"),
+            (uint256(1) << EVM_OP_JUMPI) | (uint256(1) << EVM_OP_STOP)
+        );
     }
 
     /// Test that push opcode arguments are skipped.
@@ -355,6 +489,14 @@ contract LibExtrospectScanEVMOpcodesReachableInBytecodeTest is Test {
         assertEq(
             LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(data),
             LibExtrospectionSlow.scanEVMOpcodesReachableInBytecodeSlow(data)
+        );
+    }
+
+    function testScanEVMOpcodesReachableReferenceAfterJumpi(bytes memory data) public pure {
+        bytes memory code = abi.encodePacked(EVM_OP_JUMPI, data);
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode(code),
+            LibExtrospectionSlow.scanEVMOpcodesReachableInBytecodeSlow(code)
         );
     }
 

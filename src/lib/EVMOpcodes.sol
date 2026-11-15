@@ -184,9 +184,11 @@ uint8 constant EVM_OP_SELFDESTRUCT = 0xFF;
 /// @dev Bitmap of exactly six opcodes at which
 /// `LibExtrospectBytecode.scanEVMOpcodesReachableInBytecode` pauses scanning
 /// until the next JUMPDEST: STOP, RETURN, REVERT, INVALID, SELFDESTRUCT, and
-/// unconditional JUMP (which cannot fall through). The byte values Cancun
-/// leaves unassigned (0x0C-0x0F, 0x1E-0x1F, 0x21-0x2F, 0x4B-0x4F, 0xA5-0xEF,
-/// 0xF6-0xF9, 0xFB, 0xFC) are not members, so the scan does not pause at them.
+/// unconditional JUMP (which cannot fall through). The first of them ends the
+/// scan instead when no JUMP or JUMPI occurs up to and including it. The byte
+/// values Cancun leaves unassigned (0x0C-0x0F, 0x1E-0x1F, 0x21-0x2F,
+/// 0x4B-0x4F, 0xA5-0xEF, 0xF6-0xF9, 0xFB, 0xFC) are not members, so the scan
+/// does not pause at them.
 //forge-lint: disable-next-line(incorrect-shift)
 uint256 constant HALTING_BITMAP = (1 << EVM_OP_STOP) | (1 << EVM_OP_RETURN) | (1 << EVM_OP_REVERT)
     //forge-lint: disable-next-line(incorrect-shift)

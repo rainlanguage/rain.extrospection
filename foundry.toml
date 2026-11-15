@@ -21,6 +21,7 @@ runs = 2048
 forge-std = "1.17.0"
 "rain-solmem" = "0.1.28"
 "rain-math-binary" = "0.1.4"
+rain-datacontract = "0.2.1"
 
 [soldeer]
 recursive_deps = false

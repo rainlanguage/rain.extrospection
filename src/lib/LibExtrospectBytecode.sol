@@ -3,7 +3,7 @@
 pragma solidity ^0.8.25;
 
 import {LibBytes, Pointer} from "rain-solmem-0.1.28/src/lib/LibBytes.sol";
-import {EVM_OP_JUMPDEST, HALTING_BITMAP} from "./EVMOpcodes.sol";
+import {EVM_OP_JUMP, EVM_OP_JUMPI, EVM_OP_JUMPDEST, HALTING_BITMAP} from "./EVMOpcodes.sol";
 
 /// @dev Byte length of the standard Solidity CBOR metadata trailer that
 /// `LibExtrospectBytecode.tryTrimSolidityCBORMetadata` matches and trims. The
@@ -248,6 +248,10 @@ library LibExtrospectBytecode {
     /// INVALID, SELFDESTRUCT, or unconditional JUMP per `HALTING_BITMAP`),
     /// scanning pauses. Scanning resumes at the next JUMPDEST. Opcodes between
     /// a halt and the next JUMPDEST are treated as unreachable and excluded.
+    /// A JUMPDEST after a halt is reachable only if something reachable can
+    /// jump: when no JUMP or JUMPI occurs from byte 0 up to and including the
+    /// first halting opcode, nothing after that halt is reachable and scanning
+    /// ends there, so data after straight-line code is never scanned.
     /// The sweep does not distinguish code from data, so a JUMPDEST byte that it
     /// lands on inside a data region such as Solidity CBOR metadata resumes
     /// scanning, and the opcodes after it in that region are reported as
@@ -268,52 +272,107 @@ library LibExtrospectBytecode {
     /// later gain. Use `scanEVMOpcodesReachableInBytecode(address)` to bind
     /// the scan to an account and reject a codeless one.
     /// @param bytecode The bytecode to scan.
-    /// @return bytesReachable A `uint256` where each bit represents the presence
-    /// of a reachable opcode in the source bytecode.
+    /// @return A `uint256` where each bit represents the presence of a reachable
+    /// opcode in the source bytecode.
     //forge-lint: disable-next-line(mixed-case-function)
-    function scanEVMOpcodesReachableInBytecode(bytes memory bytecode) internal pure returns (uint256 bytesReachable) {
+    function scanEVMOpcodesReachableInBytecode(bytes memory bytecode) internal pure returns (uint256) {
+        return walkReachableBytecode(bytecode, recordOpcode, 0);
+    }
+
+    /// Every PUSH1-PUSH32 operand, in order, of the code that
+    /// `scanEVMOpcodesReachableInBytecode` treats as reachable. An operand cut
+    /// short by the end of the bytecode is zero padded on the right, as the EVM
+    /// pushes it.
+    /// @param bytecode The bytecode to scan.
+    /// @return The reachable pushed constants.
+    function scanConstantsReachableInBytecode(bytes memory bytecode) internal pure returns (uint256[] memory) {
+        uint256[] memory constants;
+        assembly ("memory-safe") {
+            constants := mload(0x40)
+        }
+        uint256 write;
+        assembly ("memory-safe") {
+            write := add(constants, 0x20)
+        }
+        write = walkReachableBytecode(bytecode, recordConstant, write);
+        assembly ("memory-safe") {
+            mstore(constants, shr(5, sub(write, add(constants, 0x20))))
+            mstore(0x40, write)
+        }
+        return constants;
+    }
+
+    function recordOpcode(uint256 bytesReachable, uint256 op, Pointer, Pointer) private pure returns (uint256) {
+        //slither-disable-next-line incorrect-shift
+        //forge-lint: disable-next-line(incorrect-shift)
+        return bytesReachable | (1 << op);
+    }
+
+    function recordConstant(uint256 write, uint256 op, Pointer cursor, Pointer end) private pure returns (uint256) {
+        assembly ("memory-safe") {
+            let push := sub(op, 0x60)
+            if lt(push, 0x20) {
+                //slither-disable-next-line incorrect-shift
+                let value := and(mload(cursor), sub(shl(shl(3, add(push, 1)), 1), 1))
+                if gt(cursor, end) {
+                    let overrun := shl(3, sub(cursor, end))
+                    value := shl(overrun, shr(overrun, value))
+                }
+                mstore(write, value)
+                write := add(write, 0x20)
+            }
+        }
+        return write;
+    }
+
+    /// `visit` gets each reachable instruction's opcode, then the pointers one
+    /// past its last byte and one past the bytecode's last byte, each less 0x20.
+    /// The first halt ends the walk unless a JUMP or JUMPI precedes or is that
+    /// halt; every other halt skips to the next JUMPDEST.
+    function walkReachableBytecode(
+        bytes memory bytecode,
+        function(uint256, uint256, Pointer, Pointer) pure returns (uint256) visit,
+        uint256 accumulator
+    ) private pure returns (uint256) {
         checkNotEOFBytecode(bytecode);
         Pointer cursor = bytecode.dataPointer();
         uint256 length = bytecode.length;
-        uint256 opJumpDest = EVM_OP_JUMPDEST;
         uint256 haltingMask = HALTING_BITMAP;
+        uint256 endingMask = HALTING_BITMAP;
+        Pointer end;
+        bool halted;
         assembly ("memory-safe") {
             cursor := sub(cursor, 0x20)
-            let end := add(cursor, length)
-            let halted := 0
-            for {} lt(cursor, end) {} {
+            end := add(cursor, length)
+        }
+        while (Pointer.unwrap(cursor) < Pointer.unwrap(end)) {
+            uint256 op;
+            assembly ("memory-safe") {
                 cursor := add(cursor, 1)
-                let op := and(mload(cursor), 0xFF)
+                op := and(mload(cursor), 0xFF)
                 // The 32 `PUSH*` opcodes starting at 0x60 indicate that the
                 // following bytes MUST be skipped as they are inline stack
                 // data and NOT opcodes.
                 let push := sub(op, 0x60)
-                if lt(push, 0x20) {
-                    cursor := add(cursor, add(push, 1))
-                }
-                switch halted
-                case 0 {
-                    //slither-disable-next-line incorrect-shift
-                    bytesReachable := or(bytesReachable, shl(op, 1))
-
-                    //slither-disable-next-line incorrect-shift
-                    if and(shl(op, 1), haltingMask) {
-                        halted := 1
-                    }
-                    continue
-                }
-                case 1 {
-                    if eq(op, opJumpDest) {
-                        halted := 0
-                        //slither-disable-next-line incorrect-shift
-                        bytesReachable := or(bytesReachable, shl(op, 1))
-                    }
-                    continue
-                }
-                // Can't happen, but the compiler doesn't know that.
-                default { revert(0, 0) }
+                if lt(push, 0x20) { cursor := add(cursor, add(push, 1)) }
             }
+            if (halted) {
+                if (op != EVM_OP_JUMPDEST) {
+                    continue;
+                }
+            }
+            accumulator = visit(accumulator, op, cursor, end);
+            //slither-disable-next-line incorrect-shift
+            //forge-lint: disable-next-line(incorrect-shift)
+            uint256 opBit = 1 << op;
+            if (op == EVM_OP_JUMP || op == EVM_OP_JUMPI) {
+                endingMask = 0;
+            } else if (opBit & endingMask != 0) {
+                break;
+            }
+            halted = opBit & haltingMask != 0;
         }
+        return accumulator;
     }
 
     /// Reads `account`'s code and scans it for reachable opcodes, delegating

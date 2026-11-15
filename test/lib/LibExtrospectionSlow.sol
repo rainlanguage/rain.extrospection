@@ -15,6 +15,12 @@ bytes constant SLOW_ERC1167_SUFFIX = hex"5af43d82803e903d91602b57fd5bf3";
 /// @dev The implementation address in an ERC1167 minimal proxy is 20 bytes.
 uint256 constant SLOW_ERC1167_ADDRESS_LENGTH = 20;
 
+/// @dev `JUMP` opcode byte.
+uint8 constant SLOW_OP_JUMP = 0x56;
+
+/// @dev `JUMPI` opcode byte.
+uint8 constant SLOW_OP_JUMPI = 0x57;
+
 /// @dev `JUMPDEST` opcode byte.
 uint8 constant SLOW_OP_JUMPDEST = 0x5B;
 
@@ -119,17 +125,23 @@ library LibExtrospectionSlow {
 
     /// KISS implementation of a reachability scan. Decoded opcodes are
     /// reachable until a halting opcode, and reachable again from the next
-    /// `JUMPDEST`.
+    /// `JUMPDEST`. If no `JUMP` or `JUMPI` is reachable up to and including the
+    /// first halting opcode, nothing after it is reachable.
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesReachableInBytecodeSlow(bytes memory data) internal pure returns (uint256) {
         bytes memory ops = decodeOpcodesSlow(data);
         uint256 scan = 0;
         bool reachable = true;
+        bool canJump = false;
         for (uint256 i = 0; i < ops.length; i++) {
             uint8 op = uint8(ops[i]);
             if (reachable) {
                 scan = scan | opcodeBit(op);
+                canJump = canJump || op == SLOW_OP_JUMP || op == SLOW_OP_JUMPI;
                 if ((SLOW_HALTING_BITMAP & opcodeBit(op)) != 0) {
+                    if (!canJump) {
+                        break;
+                    }
                     reachable = false;
                 }
             } else if (op == SLOW_OP_JUMPDEST) {
@@ -138,6 +150,54 @@ library LibExtrospectionSlow {
             }
         }
         return scan;
+    }
+
+    /// KISS implementation of the reachable `PUSH1`-`PUSH32` operands, each
+    /// zero padded on the right where it runs past the end of `data`, with
+    /// reachability as in `scanEVMOpcodesReachableInBytecodeSlow`.
+    //forge-lint: disable-next-line(mixed-case-function)
+    function scanConstantsReachableInBytecodeSlow(bytes memory data) internal pure returns (uint256[] memory) {
+        uint256[] memory buffer = new uint256[](data.length);
+        uint256 count = 0;
+        bool reachable = true;
+        bool canJump = false;
+        uint256 i = 0;
+        while (i < data.length) {
+            uint8 op = uint8(data[i]);
+            if (!reachable && op == SLOW_OP_JUMPDEST) {
+                reachable = true;
+            }
+            uint256 operandLength = 0;
+            if (SLOW_OP_PUSH1 <= op && op <= SLOW_OP_PUSH32) {
+                operandLength = uint256(op) - uint256(SLOW_OP_PUSH1) + 1;
+            }
+            if (reachable) {
+                if (operandLength > 0) {
+                    uint256 value = 0;
+                    for (uint256 j = 1; j <= operandLength; j++) {
+                        value = value << 8;
+                        if (i + j < data.length) {
+                            value = value | uint256(uint8(data[i + j]));
+                        }
+                    }
+                    buffer[count] = value;
+                    count++;
+                }
+                canJump = canJump || op == SLOW_OP_JUMP || op == SLOW_OP_JUMPI;
+                if ((SLOW_HALTING_BITMAP & opcodeBit(op)) != 0) {
+                    if (!canJump) {
+                        break;
+                    }
+                    reachable = false;
+                }
+            }
+            i += operandLength + 1;
+        }
+        uint256[] memory constants = new uint256[](count);
+        for (uint256 j = 0; j < count; j++) {
+            constants[j] = buffer[j];
+        }
+        return constants;
     }
 
     /// KISS implementation of metamorphic risk scan. Fails closed on the
