@@ -180,6 +180,37 @@ library LibExtrospectionSlow {
         }
     }
 
+    /// The big-endian bytes of `needle` with its leading zero bytes dropped.
+    function strippedAddressSlow(address needle) internal pure returns (bytes memory stripped) {
+        bytes20 raw = bytes20(needle);
+        uint256 start = 0;
+        while (start < 20 && raw[start] == 0) {
+            start++;
+        }
+        stripped = new bytes(20 - start);
+        for (uint256 i = 0; i < stripped.length; i++) {
+            stripped[i] = raw[start + i];
+        }
+    }
+
+    /// KISS byte-by-byte search for the stripped bytes of a nonzero `needle`.
+    function containsAddressSlow(bytes memory haystack, address needle) internal pure returns (bool) {
+        bytes memory stripped = strippedAddressSlow(needle);
+        if (stripped.length == 0) {
+            return false;
+        }
+        for (uint256 i = 0; i + stripped.length <= haystack.length; i++) {
+            bool found = true;
+            for (uint256 j = 0; found && j < stripped.length; j++) {
+                found = haystack[i + j] == stripped[j];
+            }
+            if (found) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// The bit representing `op` in an opcode bitmap.
     /// @param op The opcode byte.
     /// @return The bitmap with only the bit for `op` set.
