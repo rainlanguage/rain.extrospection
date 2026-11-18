@@ -48,6 +48,11 @@ contract ExtrospectV2Fixture is IExtrospectV2 {
     }
 
     /// @inheritdoc IExtrospectV2
+    function codehash(address beacon) external pure returns (bytes32) {
+        return LibExtrospectRegistryBeaconProxy.codehash(beacon);
+    }
+
+    /// @inheritdoc IExtrospectV2
     function isBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash) external view returns (bool) {
         return LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(beacon, expectedRuntimeHash);
     }
