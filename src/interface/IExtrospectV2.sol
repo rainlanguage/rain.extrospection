@@ -43,6 +43,9 @@ interface IExtrospectV2 {
     /// @dev `LibExtrospectRegistryBeaconProxy.isRegistryBeaconProxy`.
     function isRegistryBeaconProxy(bytes memory bytecode) external pure returns (bool, address);
 
+    /// @dev `LibExtrospectBytecode.scanConstantsReachableInBytecode`.
+    function scanConstantsReachableInBytecode(bytes memory bytecode) external pure returns (uint256[] memory);
+
     /// @dev `LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(bytes)`.
     function scanEVMOpcodesPresentInBytecode(bytes memory bytecode) external pure returns (uint256);
 

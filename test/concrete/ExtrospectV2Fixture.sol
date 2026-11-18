@@ -77,6 +77,11 @@ contract ExtrospectV2Fixture is IExtrospectV2 {
     }
 
     /// @inheritdoc IExtrospectV2
+    function scanConstantsReachableInBytecode(bytes memory bytecode) external pure returns (uint256[] memory) {
+        return LibExtrospectBytecode.scanConstantsReachableInBytecode(bytecode);
+    }
+
+    /// @inheritdoc IExtrospectV2
     function scanEVMOpcodesPresentInBytecode(bytes memory bytecode) external pure returns (uint256) {
         return LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(bytecode);
     }
