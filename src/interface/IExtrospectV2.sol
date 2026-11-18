@@ -28,6 +28,9 @@ interface IExtrospectV2 {
     /// @dev `LibExtrospectMetamorphic.checkNotMetamorphic(address)`.
     function checkNotMetamorphic(address account) external view;
 
+    /// @dev `LibExtrospectRegistryBeaconProxy.codehash`.
+    function codehash(address beacon) external pure returns (bytes32);
+
     /// @dev `LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode`.
     function isBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash) external view returns (bool);
 
