@@ -3,6 +3,7 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
+import {LibBytes} from "rain-solmem-0.1.28/src/lib/LibBytes.sol";
 
 import {
     REGISTRY_BEACON_PROXY_PREFIX,
@@ -40,11 +41,8 @@ contract LibExtrospectRegistryBeaconProxyConstantsTest is Test {
     }
 
     function truncate(bytes memory words, uint256 length) internal pure returns (bytes memory) {
-        bytes memory truncated = new bytes(length);
-        for (uint256 i = 0; i < length; i++) {
-            truncated[i] = words[i];
-        }
-        return truncated;
+        LibBytes.truncate(words, length);
+        return words;
     }
 
     function assertPaddingIsZero(bytes memory words, uint256 length) internal pure {
