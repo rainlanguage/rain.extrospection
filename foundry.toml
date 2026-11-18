@@ -11,13 +11,17 @@ bytecode_hash = "none"
 cbor_metadata = false
 libs = ["dependencies"]
 
+# The fixture exists to put SELFDESTRUCT in compiled bytecode.
+ignored_warnings_from = ["test/concrete/HasSelfdestruct.sol"]
+
 [fuzz]
 runs = 2048
 
 [dependencies]
-forge-std = "1.16.1"
+forge-std = "1.17.0"
 "rain-solmem" = "0.1.28"
 "rain-math-binary" = "0.1.4"
+rain-datacontract = "0.2.1"
 
 [soldeer]
 recursive_deps = false

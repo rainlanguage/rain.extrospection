@@ -19,7 +19,6 @@ uint256 constant RETURNDATA_BOMB_GAS_BUDGET = 3_000_000;
 /// rather than an `address`. That mismatch is the test condition.
 contract ReturndataBombBeacon {
     fallback() external {
-        //forge-lint: disable-next-line(assembly-usage)
         assembly {
             let floor_ := div(gas(), 12)
             let end := 0x20

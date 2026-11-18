@@ -5,7 +5,6 @@ pragma solidity =0.8.25;
 /// @dev Contract that uses the INVALID opcode.
 contract HasInvalid {
     function doInvalid() external pure {
-        //forge-lint: disable-next-line(assembly-usage)
         assembly ("memory-safe") {
             invalid()
         }

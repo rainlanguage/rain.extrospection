@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std-1.16.1/src/Test.sol";
+import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {
     SOLIDITY_CBOR_RUNTIME_FIXTURE,
@@ -54,8 +54,8 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
     /// different code hashes, yet both match the same expected hash of
     /// `keccak256("")`.
     function testCheckCBORTrimmedBytecodeHashTrailerOnlyNotIdentifiedByHash() external {
-        bytes memory codeA = trailer(bytes32(0), bytes2(0), bytes3(hex"000819"));
-        bytes memory codeB = trailer(bytes32(uint256(0xEE) << 248), bytes2(hex"ABCD"), bytes3(hex"010203"));
+        bytes memory codeA = trailer(bytes32(0), bytes2(0), hex"000819");
+        bytes memory codeB = trailer(bytes32(uint256(0xEE) << 248), hex"ABCD", hex"010203");
         assertEq(codeA.length, 53);
         assertEq(codeB.length, 53);
         assertTrue(keccak256(codeA) != keccak256(codeB));

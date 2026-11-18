@@ -12,6 +12,8 @@ contract MockBeacon is IBeacon, IOwnable {
     address public immutable implementation;
     address public immutable owner;
 
+    // fixture accepts address(0) as a test input
+    //forge-lint: disable-next-line(missing-zero-check)
     constructor(address impl, address own) {
         implementation = impl;
         owner = own;

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std-1.16.1/src/Test.sol";
+import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {
     SOLIDITY_CBOR_RUNTIME_FIXTURE,
     SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED
@@ -133,7 +133,7 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
     /// success with empty returndata — distinct from a contract that
     /// reverts (success=false). Pins the length=0 path through the
     /// length check.
-    function testReturnsFalseOnNoCodeTarget() external {
+    function testReturnsFalseOnNoCodeTarget() external view {
         assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(0), keccak256("")));
     }
 

@@ -45,7 +45,8 @@ bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.
 /// carries the 20 address bytes and any contract can read them.
 /// OpenZeppelin v4 `BeaconProxy` has no such immutable, so its runtime
 /// bytecode does not carry the address. This library extracts a beacon
-/// address from neither.
+/// address from neither. `LibExtrospectRegistryBeaconProxy` extracts it
+/// from the runtime bytecode of rain-factory 0.2.5 beacon proxies.
 ///
 /// EIP-7702 delegated accounts:
 ///
@@ -184,7 +185,10 @@ library LibExtrospectERC1967BeaconProxy {
                 raw := mload(0)
             }
         }
-        if (ok == 0 || raw > type(uint160).max) return (false, address(0));
-        return (true, address(uint160(raw)));
+        bool success = ok != 0 && raw <= type(uint160).max;
+        if (!success) raw = 0;
+        // casting to 'uint160' is safe because success requires raw <= type(uint160).max
+        //forge-lint: disable-next-line(unsafe-typecast)
+        return (success, address(uint160(raw)));
     }
 }

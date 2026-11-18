@@ -7,6 +7,7 @@ import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {LibExtrospectERC1167Proxy} from "src/lib/LibExtrospectERC1167Proxy.sol";
 import {LibExtrospectERC1967BeaconProxy} from "src/lib/LibExtrospectERC1967BeaconProxy.sol";
 import {LibExtrospectMetamorphic} from "src/lib/LibExtrospectMetamorphic.sol";
+import {LibExtrospectRegistryBeaconProxy} from "src/lib/LibExtrospectRegistryBeaconProxy.sol";
 
 /// @dev Test-only concrete binding `IExtrospectV2` to the libraries: every
 /// function forwards to the library function it names, the shape the
@@ -61,6 +62,12 @@ contract ExtrospectV2Fixture is IExtrospectV2 {
         // this function's own return, nothing discarded.
         // slither-disable-next-line unused-return
         return LibExtrospectERC1167Proxy.isERC1167Proxy(bytecode);
+    }
+
+    /// @inheritdoc IExtrospectV2
+    function isRegistryBeaconProxy(bytes memory bytecode) external pure returns (bool, address) {
+        // slither-disable-next-line unused-return
+        return LibExtrospectRegistryBeaconProxy.isRegistryBeaconProxy(bytecode);
     }
 
     /// @inheritdoc IExtrospectV2

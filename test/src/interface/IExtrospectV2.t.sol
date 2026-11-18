@@ -2,13 +2,14 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std-1.16.1/src/Test.sol";
+import {Test} from "forge-std-1.17.0/src/Test.sol";
 
 import {IExtrospectV1} from "src/interface/IExtrospectV1.sol";
 import {IExtrospectV2} from "src/interface/IExtrospectV2.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {LibExtrospectMetamorphic, EIP3541_RESERVED_LEAD_BYTE} from "src/lib/LibExtrospectMetamorphic.sol";
 import {EVM_OP_STOP, EVM_OP_ADD, EVM_OP_SELFDESTRUCT} from "src/lib/EVMOpcodes.sol";
+import {REGISTRY_BEACON_PROXY_PREFIX, REGISTRY_BEACON_PROXY_SUFFIX} from "src/lib/LibExtrospectRegistryBeaconProxy.sol";
 
 import {ExtrospectV2Fixture} from "test/concrete/ExtrospectV2Fixture.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
@@ -64,7 +65,7 @@ contract IExtrospectV2Test is Test {
         (bool ok, bytes memory ret) = address(iExtrospect)
             .staticcall(abi.encodeWithSelector(IExtrospectV1.scanMetamorphicRisk.selector, bytes(hex"ff")));
         assertTrue(ok);
-        assertEq(abi.decode(ret, (uint256)), 1 << EVM_OP_SELFDESTRUCT);
+        assertEq(abi.decode(ret, (uint256)), uint256(1) << EVM_OP_SELFDESTRUCT);
 
         (ok, ret) = address(iExtrospect)
             .staticcall(abi.encodeWithSelector(IExtrospectV1.checkNotMetamorphic.selector, bytes(hex"0001")));
@@ -76,14 +77,14 @@ contract IExtrospectV2Test is Test {
                 abi.encodeWithSelector(IExtrospectV1.scanEVMOpcodesPresentInBytecode.selector, bytes(hex"0001"))
             );
         assertTrue(ok);
-        assertEq(abi.decode(ret, (uint256)), (1 << EVM_OP_STOP) | (1 << EVM_OP_ADD));
+        assertEq(abi.decode(ret, (uint256)), (uint256(1) << EVM_OP_STOP) | (uint256(1) << EVM_OP_ADD));
 
         (ok, ret) = address(iExtrospect)
             .staticcall(
                 abi.encodeWithSelector(IExtrospectV1.scanEVMOpcodesReachableInBytecode.selector, bytes(hex"0001"))
             );
         assertTrue(ok);
-        assertEq(abi.decode(ret, (uint256)), 1 << EVM_OP_STOP);
+        assertEq(abi.decode(ret, (uint256)), uint256(1) << EVM_OP_STOP);
     }
 
     /// Carried surface: `checkCBORTrimmedBytecodeHash` passes on the trimmed
@@ -181,6 +182,21 @@ contract IExtrospectV2Test is Test {
         assertEq(extracted, implementation);
 
         (result, extracted) = iExtrospect.isERC1167Proxy(hex"00");
+        assertFalse(result);
+        assertEq(extracted, address(0));
+    }
+
+    function testIExtrospectV2IsRegistryBeaconProxy(address beacon) external view {
+        vm.assume(beacon != address(0));
+        (bool result, address extracted) = iExtrospect.isRegistryBeaconProxy(
+            abi.encodePacked(
+                REGISTRY_BEACON_PROXY_PREFIX, bytes32(uint256(uint160(beacon))), REGISTRY_BEACON_PROXY_SUFFIX
+            )
+        );
+        assertTrue(result);
+        assertEq(extracted, beacon);
+
+        (result, extracted) = iExtrospect.isRegistryBeaconProxy(hex"00");
         assertFalse(result);
         assertEq(extracted, address(0));
     }

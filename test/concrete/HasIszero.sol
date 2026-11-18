@@ -5,7 +5,6 @@ pragma solidity =0.8.25;
 /// @dev Contract that uses the ISZERO opcode.
 contract HasIszero {
     function iszero(uint256 a) external pure returns (bool result) {
-        //forge-lint: disable-next-line(assembly-usage)
         assembly ("memory-safe") {
             result := iszero(a)
         }
