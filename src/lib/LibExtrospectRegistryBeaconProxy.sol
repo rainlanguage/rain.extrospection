@@ -80,10 +80,21 @@ library LibExtrospectRegistryBeaconProxy {
 
     /// @notice The runtime code hash of a `RegistryBeaconProxy` holding `beacon`.
     function codehash(address beacon) internal pure returns (bytes32) {
-        return keccak256(
-            abi.encodePacked(
-                REGISTRY_BEACON_PROXY_PREFIX, bytes32(uint256(uint160(beacon))), REGISTRY_BEACON_PROXY_SUFFIX
-            )
-        );
+        bytes memory prefix = REGISTRY_BEACON_PROXY_PREFIX;
+        bytes memory suffix = REGISTRY_BEACON_PROXY_SUFFIX;
+        uint256 beaconWord = uint256(uint160(beacon));
+        bytes32 result;
+        assembly ("memory-safe") {
+            let start := mload(0x40)
+            let prefixLength := mload(prefix)
+            mcopy(start, add(prefix, 0x20), prefixLength)
+            let cursor := add(start, prefixLength)
+            mstore(cursor, beaconWord)
+            cursor := add(cursor, 0x20)
+            let suffixLength := mload(suffix)
+            mcopy(cursor, add(suffix, 0x20), suffixLength)
+            result := keccak256(start, sub(add(cursor, suffixLength), start))
+        }
+        return result;
     }
 }
