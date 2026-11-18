@@ -131,15 +131,15 @@ beacon at all.
 
 The same file exports `ERC1967_IMPLEMENTATION_SLOT`, `ERC1967_ADMIN_SLOT` and
 `ERC1967_BEACON_SLOT`, derived in source from the EIP-1967 formula. ERC-1967
-specifies those slots but no getter for them, so reading a proxy's beacon
-*slot* needs storage access a runtime contract context does not have —
-`vm.load`, `eth_getStorageAt`, or an `sload` from a delegatecall running as
-the proxy. The slot is not the only place a proxy holds its beacon:
-OpenZeppelin v5 `BeaconProxy` also keeps it in `address private immutable
-_beacon`, which solc inlines into the proxy's runtime bytecode, so any
-contract can read those 20 bytes from `proxy.code`. OpenZeppelin v4 has no
-such immutable. `LibExtrospectERC1967BeaconProxy` extracts a beacon address
-from neither.
+specifies those slots but no getter for them, so reading a proxy's beacon _slot_
+needs storage access a runtime contract context does not have — `vm.load`,
+`eth_getStorageAt`, or an `sload` from a delegatecall running as the proxy. The
+slot is not the only place a proxy holds its beacon: OpenZeppelin v5
+`BeaconProxy` also keeps it in `address private immutable
+_beacon`, which solc
+inlines into the proxy's runtime bytecode, so any contract can read those 20
+bytes from `proxy.code`. OpenZeppelin v4 has no such immutable.
+`LibExtrospectERC1967BeaconProxy` extracts a beacon address from neither.
 
 ### Metamorphic risk
 
