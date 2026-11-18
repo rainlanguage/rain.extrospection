@@ -68,7 +68,8 @@ uint8 constant EVM_OP_BLOCKHASH = 0x40;
 uint8 constant EVM_OP_COINBASE = 0x41;
 uint8 constant EVM_OP_TIMESTAMP = 0x42;
 uint8 constant EVM_OP_NUMBER = 0x43;
-uint8 constant EVM_OP_DIFFICULTY = 0x44;
+/// @dev EIP-4399 (Paris) renamed `DIFFICULTY` to `PREVRANDAO` as the previous block's RANDAO mix.
+uint8 constant EVM_OP_PREVRANDAO = 0x44;
 uint8 constant EVM_OP_GASLIMIT = 0x45;
 uint8 constant EVM_OP_CHAINID = 0x46;
 
