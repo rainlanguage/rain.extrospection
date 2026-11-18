@@ -53,7 +53,7 @@ import {
     EVM_OP_COINBASE,
     EVM_OP_TIMESTAMP,
     EVM_OP_NUMBER,
-    EVM_OP_DIFFICULTY,
+    EVM_OP_PREVRANDAO,
     EVM_OP_GASLIMIT,
     EVM_OP_CHAINID,
     EVM_OP_SELFBALANCE,
@@ -164,7 +164,7 @@ import {
 contract EVMOpcodesTest is Test {
     using LibCtPop for uint256;
 
-    /// Validate all 135 opcode constants against raw hex values.
+    /// Validate every opcode constant against its raw hex value.
     function testOpcodeValues() external pure {
         // Arithmetic
         assertEq(EVM_OP_STOP, 0x00);
@@ -224,7 +224,7 @@ contract EVMOpcodesTest is Test {
         assertEq(EVM_OP_COINBASE, 0x41);
         assertEq(EVM_OP_TIMESTAMP, 0x42);
         assertEq(EVM_OP_NUMBER, 0x43);
-        assertEq(EVM_OP_DIFFICULTY, 0x44);
+        assertEq(EVM_OP_PREVRANDAO, 0x44);
         assertEq(EVM_OP_GASLIMIT, 0x45);
         assertEq(EVM_OP_CHAINID, 0x46);
         assertEq(EVM_OP_SELFBALANCE, 0x47);
