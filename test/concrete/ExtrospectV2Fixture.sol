@@ -17,6 +17,12 @@ import {LibExtrospectRegistryBeaconProxy} from "src/lib/LibExtrospectRegistryBea
 /// address.
 contract ExtrospectV2Fixture is IExtrospectV2 {
     /// @inheritdoc IExtrospectV2
+    function beaconImplementation(address beacon) external view returns (bool, address) {
+        // slither-disable-next-line unused-return
+        return LibExtrospectERC1967BeaconProxy.beaconImplementation(beacon);
+    }
+
+    /// @inheritdoc IExtrospectV2
     function checkCBORTrimmedBytecodeHash(address account, bytes32 expectedTrimmedHash) external view {
         LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(account, expectedTrimmedHash);
     }
@@ -68,6 +74,11 @@ contract ExtrospectV2Fixture is IExtrospectV2 {
     function isRegistryBeaconProxy(bytes memory bytecode) external pure returns (bool, address) {
         // slither-disable-next-line unused-return
         return LibExtrospectRegistryBeaconProxy.isRegistryBeaconProxy(bytecode);
+    }
+
+    /// @inheritdoc IExtrospectV2
+    function scanConstantsReachableInBytecode(bytes memory bytecode) external pure returns (uint256[] memory) {
+        return LibExtrospectBytecode.scanConstantsReachableInBytecode(bytecode);
     }
 
     /// @inheritdoc IExtrospectV2
