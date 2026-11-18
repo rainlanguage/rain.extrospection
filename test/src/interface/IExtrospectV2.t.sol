@@ -54,7 +54,7 @@ contract IExtrospectV2Test is Test {
             for (uint256 j = 0; j < signatures.length; j++) {
                 bool found = false;
                 for (uint256 k = 0; k < declared.length; k++) {
-                    found = found || keccak256(bytes(declared[k])) == keccak256(bytes(signatures[j]));
+                    found = found || eq(declared[k], signatures[j]);
                 }
                 assertTrue(found, string.concat("IExtrospectV2 does not declare ", signatures[j]));
             }
