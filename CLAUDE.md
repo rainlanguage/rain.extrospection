@@ -31,8 +31,10 @@ nix develop -c forge soldeer install
 # Run tests (2048 fuzz runs by default)
 nix develop -c forge test -vvv
 
-# Static analysis (Slither)
+# Static checks, as CI runs them
 nix develop -c slither .
+nix develop -c forge fmt --check
+nix develop -c forge lint -D warnings
 
 # License/legal checks
 nix develop -c reuse lint
