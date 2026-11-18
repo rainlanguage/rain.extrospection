@@ -80,10 +80,11 @@ for property-based fuzz verification.
 ## Dependencies
 
 Soldeer packages, declared in `foundry.toml` `[dependencies]` and pinned in
-`soldeer.lock`, which are the source of truth for versions. `forge soldeer
-install` installs them under `dependencies/` (`libs = ["dependencies"]`), which
-is gitignored. Imports carry the pinned version in the path, e.g.
-`rain-solmem-<version>/src/lib/LibBytes.sol`.
+`soldeer.lock`, which are the source of truth for versions.
+`forge soldeer
+install` installs them under `dependencies/`
+(`libs = ["dependencies"]`), which is gitignored. Imports carry the pinned
+version in the path, e.g. `rain-solmem-<version>/src/lib/LibBytes.sol`.
 
 - `forge-std` — Foundry test framework
 - `rain-math-binary` — Binary math utilities (`LibCtPop`)
