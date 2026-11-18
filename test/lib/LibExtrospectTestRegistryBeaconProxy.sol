@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 
+import {REGISTRY_BEACON_PROXY_PREFIX, REGISTRY_BEACON_PROXY_SUFFIX} from "src/lib/LibExtrospectRegistryBeaconProxy.sol";
 import {MockBeacon} from "test/concrete/MockBeacon.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 import {RegistryBeaconSourceFixture} from "test/concrete/RegistryBeaconSourceFixture.sol";
@@ -29,5 +30,14 @@ library LibExtrospectTestRegistryBeaconProxy {
             revert RegistryBeaconProxyDeployFailed();
         }
         return proxy;
+    }
+
+    /// KISS implementation of `LibExtrospectRegistryBeaconProxy.codehash`.
+    function codehashSlow(address beacon) internal pure returns (bytes32) {
+        return keccak256(
+            abi.encodePacked(
+                REGISTRY_BEACON_PROXY_PREFIX, bytes32(uint256(uint160(beacon))), REGISTRY_BEACON_PROXY_SUFFIX
+            )
+        );
     }
 }

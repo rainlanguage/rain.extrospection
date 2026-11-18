@@ -31,4 +31,25 @@ contract LibExtrospectRegistryBeaconProxyCodehashTest is Test {
         assertTrue(result);
         assertEq(extracted, beacon);
     }
+
+    /// Fuzz `codehash` against the reference implementation.
+    function testCodehashSlow(address beacon) external pure {
+        assertEq(
+            LibExtrospectRegistryBeaconProxy.codehash(beacon), LibExtrospectTestRegistryBeaconProxy.codehashSlow(beacon)
+        );
+    }
+
+    function testCodehashSlowZeroBeacon() external pure {
+        assertEq(
+            LibExtrospectRegistryBeaconProxy.codehash(address(0)),
+            LibExtrospectTestRegistryBeaconProxy.codehashSlow(address(0))
+        );
+    }
+
+    function testCodehashSlowMaxBeacon() external pure {
+        address beacon = address(type(uint160).max);
+        assertEq(
+            LibExtrospectRegistryBeaconProxy.codehash(beacon), LibExtrospectTestRegistryBeaconProxy.codehashSlow(beacon)
+        );
+    }
 }
