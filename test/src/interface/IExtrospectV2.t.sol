@@ -39,49 +39,57 @@ contract IExtrospectV2Test is Test {
         iExtrospect = IExtrospectV2(address(new ExtrospectV2Fixture()));
     }
 
-    /// `IExtrospectV2` declares exactly the library entry points: every
-    /// non-`private` function of every `LibExtrospect*` library under
-    /// `src/lib/`, by signature. A function taking a `contract Vm` parameter
-    /// is a cheatcode reader no on-chain concrete can expose, so it is not an
-    /// entry point. The libraries and their functions are read from the
-    /// build's ASTs and the interface's signatures from its compiled ABI, so
-    /// neither list is written down here.
-    function testIExtrospectV2DeclaresEveryLibraryEntryPoint() external view {
+    /// Every non-`private` function of every `LibExtrospect<Subject>` library
+    /// under `src/lib/` binds exactly one `IExtrospectV2` function and every
+    /// `IExtrospectV2` function binds exactly one of them. An interface
+    /// function binds a library function when the parameter types are
+    /// identical and, ignoring case, the interface name is the library name
+    /// with one contiguous run of `Subject` inserted at one point, possibly
+    /// empty. A function taking a `contract Vm` parameter is a cheatcode reader
+    /// no on-chain concrete can expose, so it is not an entry point. Both
+    /// sides are read from the build's ASTs and ABIs.
+    function testIExtrospectV2BindsEveryLibraryEntryPointOnce() external view {
         string[] memory declared =
             vm.parseJsonKeys(vm.readFile("out/IExtrospectV2.sol/IExtrospectV2.json"), ".methodIdentifiers");
-        uint256 entryPoints = 0;
+        uint256[] memory bound = new uint256[](declared.length);
         Vm.DirEntry[] memory artifacts = vm.readDir("out", 2);
         for (uint256 i = 0; i < artifacts.length; i++) {
-            string[] memory signatures = this.libraryEntryPoints(artifacts[i].path);
+            (string memory subject, string[] memory signatures) = this.libraryEntryPoints(artifacts[i].path);
             for (uint256 j = 0; j < signatures.length; j++) {
-                bool found = false;
+                uint256 matches = 0;
                 for (uint256 k = 0; k < declared.length; k++) {
-                    found = found || eq(declared[k], signatures[j]);
+                    if (binds(declared[k], subject, signatures[j])) {
+                        matches++;
+                        bound[k]++;
+                    }
                 }
-                assertTrue(found, string.concat("IExtrospectV2 does not declare ", signatures[j]));
+                assertEq(matches, 1, string.concat("IExtrospectV2 does not bind exactly once ", signatures[j]));
             }
-            entryPoints += signatures.length;
         }
-        assertEq(entryPoints, declared.length);
+        for (uint256 k = 0; k < declared.length; k++) {
+            assertEq(bound[k], 1, string.concat("IExtrospectV2 binds other than one entry point to ", declared[k]));
+        }
     }
 
-    /// The signatures of the entry points of the library a build artifact
+    /// The subject and entry point signatures of the library a build artifact
     /// describes, when that library is a `LibExtrospect*` under `src/lib/`;
     /// empty for any other path.
-    function libraryEntryPoints(string memory path) external view returns (string[] memory) {
+    function libraryEntryPoints(string memory path) external view returns (string memory, string[] memory) {
         bytes memory pathBytes = bytes(path);
         uint256 nameStart = pathBytes.length;
         while (nameStart > 0 && pathBytes[nameStart - 1] != "/") {
             nameStart--;
         }
         if (!hasPrefix(path, nameStart, "LibExtrospect") || !hasSuffix(path, ".json")) {
-            return new string[](0);
+            return ("", new string[](0));
         }
         string memory artifact = vm.readFile(path);
         if (!hasPrefix(vm.parseJsonString(artifact, ".ast.absolutePath"), 0, "src/lib/")) {
-            return new string[](0);
+            return ("", new string[](0));
         }
         string memory name = string(slice(pathBytes, nameStart, pathBytes.length - 5));
+        string memory subject =
+            string(slice(pathBytes, nameStart + bytes("LibExtrospect").length, pathBytes.length - 5));
 
         string memory functions = "";
         for (uint256 i = 0; vm.keyExistsJson(artifact, node(".ast.nodes", i)); i++) {
@@ -95,7 +103,7 @@ contract IExtrospectV2Test is Test {
             }
         }
         if (bytes(functions).length == 0) {
-            return new string[](0);
+            return ("", new string[](0));
         }
 
         uint256 count = 0;
@@ -129,7 +137,54 @@ contract IExtrospectV2Test is Test {
         assembly ("memory-safe") {
             mstore(signatures, count)
         }
-        return signatures;
+        return (subject, signatures);
+    }
+
+    function binds(string memory declared, string memory subject, string memory signature)
+        internal
+        pure
+        returns (bool)
+    {
+        bytes memory d = lower(declared);
+        bytes memory s = lower(signature);
+        bytes memory subjectRun = lower(subject);
+        if (d.length < s.length) {
+            return false;
+        }
+        uint256 inserted = d.length - s.length;
+        uint256 nameLength = 0;
+        while (nameLength < s.length && s[nameLength] != "(") {
+            nameLength++;
+        }
+        for (uint256 at = 0; at <= nameLength; at++) {
+            if (
+                eq(string(slice(d, 0, at)), string(slice(s, 0, at)))
+                    && eq(string(slice(d, at + inserted, d.length)), string(slice(s, at, s.length)))
+                    && contains(subjectRun, slice(d, at, at + inserted))
+            ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function contains(bytes memory haystack, bytes memory needle) internal pure returns (bool) {
+        for (uint256 i = 0; i + needle.length <= haystack.length; i++) {
+            if (eq(string(slice(haystack, i, i + needle.length)), string(needle))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function lower(string memory s) internal pure returns (bytes memory) {
+        bytes memory result = bytes(string.concat(s));
+        for (uint256 i = 0; i < result.length; i++) {
+            if (result[i] >= "A" && result[i] <= "Z") {
+                result[i] = bytes1(uint8(result[i]) + 32);
+            }
+        }
+        return result;
     }
 
     function node(string memory array, uint256 index) internal pure returns (string memory) {
@@ -171,10 +226,6 @@ contract IExtrospectV2Test is Test {
         );
         assertEq(IExtrospectV2.checkNoSolidityCBORMetadata.selector, IExtrospectV1.checkNoSolidityCBORMetadata.selector);
         assertEq(IExtrospectV2.checkNotEOFBytecode.selector, IExtrospectV1.checkNotEOFBytecode.selector);
-        assertEq(
-            IExtrospectV2.isBeaconImplementationBytecode.selector, IExtrospectV1.isBeaconImplementationBytecode.selector
-        );
-        assertEq(IExtrospectV2.isBeaconOwner.selector, IExtrospectV1.isBeaconOwner.selector);
         assertEq(IExtrospectV2.isEOFBytecode.selector, IExtrospectV1.isEOFBytecode.selector);
         assertEq(IExtrospectV2.isERC1167Proxy.selector, IExtrospectV1.isERC1167Proxy.selector);
         assertEq(IExtrospectV2.tryTrimSolidityCBORMetadata.selector, IExtrospectV1.tryTrimSolidityCBORMetadata.selector);
@@ -329,11 +380,13 @@ contract IExtrospectV2Test is Test {
         address owner = address(0x0111);
         MockBeacon beacon = new MockBeacon(address(implementation), owner);
 
-        assertTrue(iExtrospect.isBeaconImplementationBytecode(address(beacon), keccak256(address(implementation).code)));
-        assertFalse(iExtrospect.isBeaconImplementationBytecode(address(beacon), keccak256("wrong")));
+        assertTrue(
+            iExtrospect.isERC1967BeaconImplementationBytecode(address(beacon), keccak256(address(implementation).code))
+        );
+        assertFalse(iExtrospect.isERC1967BeaconImplementationBytecode(address(beacon), keccak256("wrong")));
 
-        assertTrue(iExtrospect.isBeaconOwner(address(beacon), owner));
-        assertFalse(iExtrospect.isBeaconOwner(address(beacon), address(0x0222)));
+        assertTrue(iExtrospect.isERC1967BeaconOwner(address(beacon), owner));
+        assertFalse(iExtrospect.isERC1967BeaconOwner(address(beacon), address(0x0222)));
     }
 
     /// Carried surface: `tryTrimSolidityCBORMetadata` trims the standard
