@@ -16,39 +16,17 @@ import {
     REGISTRY_BEACON_PROXY_SUFFIX_HASH
 } from "src/lib/LibExtrospectRegistryBeaconProxy.sol";
 import {ERC1167_PREFIX, ERC1167_SUFFIX} from "src/lib/LibExtrospectERC1167Proxy.sol";
-import {MockBeacon} from "test/concrete/MockBeacon.sol";
-import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
-import {RegistryBeaconSourceFixture} from "test/concrete/RegistryBeaconSourceFixture.sol";
-import {
-    REGISTRY_BEACON_PROXY_CREATION_CODE,
-    BEACON_PROXY_CREATION_CODE
-} from "test/lib/LibExtrospectRegistryBeaconProxy.testConstants.sol";
+import {BEACON_PROXY_CREATION_CODE} from "test/lib/LibExtrospectRegistryBeaconProxy.testConstants.sol";
+import {LibExtrospectTestRegistryBeaconProxy} from "test/lib/LibExtrospectTestRegistryBeaconProxy.sol";
 
 /// @title LibExtrospectRegistryBeaconProxyIsRegistryBeaconProxyTest
 /// @notice The oracle is the runtime bytecode of a `RegistryBeaconProxy`
 /// deployed from rain-factory 0.2.12's creation code.
 contract LibExtrospectRegistryBeaconProxyIsRegistryBeaconProxyTest is Test {
-    function deployBeaconAt(address beacon) internal {
-        MockBeacon mock = new MockBeacon(address(new NonMetamorphic()), address(0));
-        vm.etch(beacon, address(mock).code);
-    }
-
-    function deployRegistryBeaconProxy(address beacon) internal returns (address) {
-        RegistryBeaconSourceFixture registry = new RegistryBeaconSourceFixture(beacon);
-        bytes memory creationCode =
-            bytes.concat(REGISTRY_BEACON_PROXY_CREATION_CODE, abi.encode(address(registry), address(1), bytes32(0)));
-        address proxy;
-        assembly ("memory-safe") {
-            proxy := create(0, add(creationCode, 0x20), mload(creationCode))
-        }
-        assertTrue(proxy != address(0));
-        return proxy;
-    }
-
     function realRuntime() internal returns (bytes memory) {
         address beacon = makeAddr("beacon");
-        deployBeaconAt(beacon);
-        return deployRegistryBeaconProxy(beacon).code;
+        LibExtrospectTestRegistryBeaconProxy.etchBeacon(vm, beacon);
+        return LibExtrospectTestRegistryBeaconProxy.deployProxy(beacon).code;
     }
 
     function template(bytes32 beaconWord) internal pure returns (bytes memory) {
@@ -74,8 +52,8 @@ contract LibExtrospectRegistryBeaconProxyIsRegistryBeaconProxyTest is Test {
     /// suffix.
     function testDeployedRegistryBeaconProxyIsTemplateWithBeacon() external {
         address beacon = makeAddr("beacon");
-        deployBeaconAt(beacon);
-        bytes memory code = deployRegistryBeaconProxy(beacon).code;
+        LibExtrospectTestRegistryBeaconProxy.etchBeacon(vm, beacon);
+        bytes memory code = LibExtrospectTestRegistryBeaconProxy.deployProxy(beacon).code;
         assertEq(code, template(bytes32(uint256(uint160(beacon)))));
     }
 
@@ -84,9 +62,10 @@ contract LibExtrospectRegistryBeaconProxyIsRegistryBeaconProxyTest is Test {
         assumeNotForgeAddress(beacon);
         vm.assume(beacon != address(0));
         vm.assume(beacon.code.length == 0);
-        deployBeaconAt(beacon);
-        (bool result, address extracted) =
-            LibExtrospectRegistryBeaconProxy.isRegistryBeaconProxy(deployRegistryBeaconProxy(beacon).code);
+        LibExtrospectTestRegistryBeaconProxy.etchBeacon(vm, beacon);
+        (bool result, address extracted) = LibExtrospectRegistryBeaconProxy.isRegistryBeaconProxy(
+            LibExtrospectTestRegistryBeaconProxy.deployProxy(beacon).code
+        );
         assertTrue(result);
         assertEq(extracted, beacon);
     }
@@ -164,7 +143,7 @@ contract LibExtrospectRegistryBeaconProxyIsRegistryBeaconProxyTest is Test {
     /// runtime bytecode as `RegistryBeaconProxy`.
     function testRainFactoryOpenZeppelinBeaconProxyYieldsItsBeacon() external {
         address beacon = makeAddr("beacon");
-        deployBeaconAt(beacon);
+        LibExtrospectTestRegistryBeaconProxy.etchBeacon(vm, beacon);
         bytes memory creationCode = bytes.concat(BEACON_PROXY_CREATION_CODE, abi.encode(beacon, bytes("")));
         address proxy;
         assembly ("memory-safe") {

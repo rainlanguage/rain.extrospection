@@ -8,6 +8,7 @@
 .soldeerignore
 .vscode
 CLAUDE.md
+/test
 /audit
 /cache
 /dependencies

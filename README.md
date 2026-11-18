@@ -1,7 +1,5 @@
 # rain.extrospection
 
-Docs at https://rainprotocol.github.io/rain.extrospection
-
 ## Extrospection
 
 Extrospection is a collection of interfaces and libraries that expose onchain
