@@ -4,14 +4,13 @@ pragma solidity ^0.8.25;
 
 /// @title IExtrospectV2
 /// @notice External interface to the extrospection libraries. Each function
-/// forwards to the library function of the same name, whose NatSpec is the
-/// behaviour, revert and hazard reference. The concrete lives in
-/// rain.extrospection.deploy.
+/// forwards to one library function, whose NatSpec is the behaviour, revert
+/// and hazard reference. The concrete lives in rain.extrospection.deploy.
 /// @dev The custom errors are declared by the libraries. `Metamorphic` is
 /// `LibExtrospectMetamorphic`'s; every other is `LibExtrospectBytecode`'s.
 interface IExtrospectV2 {
     /// @dev `LibExtrospectERC1967BeaconProxy.beaconImplementation`.
-    function beaconImplementation(address beacon) external view returns (bool, address);
+    function erc1967BeaconImplementation(address beacon) external view returns (bool, address);
 
     /// @dev `LibExtrospectBytecode.checkCBORTrimmedBytecodeHash`.
     function checkCBORTrimmedBytecodeHash(address account, bytes32 expectedTrimmedHash) external view;
@@ -29,13 +28,16 @@ interface IExtrospectV2 {
     function checkNotMetamorphic(address account) external view;
 
     /// @dev `LibExtrospectRegistryBeaconProxy.codehash`.
-    function codehash(address beacon) external pure returns (bytes32);
+    function registryBeaconProxyCodehash(address beacon) external pure returns (bytes32);
 
     /// @dev `LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode`.
-    function isBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash) external view returns (bool);
+    function isERC1967BeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash)
+        external
+        view
+        returns (bool);
 
     /// @dev `LibExtrospectERC1967BeaconProxy.isBeaconOwner`.
-    function isBeaconOwner(address beacon, address expectedOwner) external view returns (bool);
+    function isERC1967BeaconOwner(address beacon, address expectedOwner) external view returns (bool);
 
     /// @dev `LibExtrospectBytecode.isEOFBytecode`.
     function isEOFBytecode(bytes memory bytecode) external pure returns (bool);

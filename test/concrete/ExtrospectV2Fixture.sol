@@ -17,7 +17,7 @@ import {LibExtrospectRegistryBeaconProxy} from "src/lib/LibExtrospectRegistryBea
 /// address.
 contract ExtrospectV2Fixture is IExtrospectV2 {
     /// @inheritdoc IExtrospectV2
-    function beaconImplementation(address beacon) external view returns (bool, address) {
+    function erc1967BeaconImplementation(address beacon) external view returns (bool, address) {
         // slither-disable-next-line unused-return
         return LibExtrospectERC1967BeaconProxy.beaconImplementation(beacon);
     }
@@ -48,17 +48,21 @@ contract ExtrospectV2Fixture is IExtrospectV2 {
     }
 
     /// @inheritdoc IExtrospectV2
-    function codehash(address beacon) external pure returns (bytes32) {
+    function registryBeaconProxyCodehash(address beacon) external pure returns (bytes32) {
         return LibExtrospectRegistryBeaconProxy.codehash(beacon);
     }
 
     /// @inheritdoc IExtrospectV2
-    function isBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash) external view returns (bool) {
+    function isERC1967BeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash)
+        external
+        view
+        returns (bool)
+    {
         return LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(beacon, expectedRuntimeHash);
     }
 
     /// @inheritdoc IExtrospectV2
-    function isBeaconOwner(address beacon, address expectedOwner) external view returns (bool) {
+    function isERC1967BeaconOwner(address beacon, address expectedOwner) external view returns (bool) {
         return LibExtrospectERC1967BeaconProxy.isBeaconOwner(beacon, expectedOwner);
     }
 
