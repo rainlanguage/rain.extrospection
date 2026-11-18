@@ -8,6 +8,7 @@ path = [
   ".github/workflows/**/",
   ".vscode/**/",
   ".gitignore",
+  ".audit/**/",
   "audit/**/",
   "CLAUDE.md",
   "README.md",
