@@ -7,7 +7,7 @@ import {
     ERC1967_IMPLEMENTATION_SLOT,
     ERC1967_ADMIN_SLOT,
     ERC1967_BEACON_SLOT
-} from "src/lib/LibExtrospectERC1967BeaconProxy.sol";
+} from "./LibExtrospectERC1967BeaconProxy.sol";
 
 /// @title LibExtrospectERC1967ProxySlots
 /// @notice Foundry-only test utilities that read the three EIP-1967
