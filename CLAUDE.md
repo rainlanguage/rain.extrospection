@@ -24,17 +24,20 @@ flake.
 # Enter dev shell
 nix develop
 
-# Setup step (must run before tests, both locally and in CI)
-nix develop -c rainix-sol-prelude
+# Setup step: dependencies/ and remappings.txt are gitignored, so a fresh
+# clone must install them before anything compiles.
+nix develop -c forge soldeer install
 
 # Run tests (2048 fuzz runs by default)
-nix develop -c rainix-sol-test
+nix develop -c forge test -vvv
 
-# Static analysis (Slither)
-nix develop -c rainix-sol-static
+# Static checks, as CI runs them
+nix develop -c slither .
+nix develop -c forge fmt --check
+nix develop -c forge lint -D warnings
 
 # License/legal checks
-nix develop -c rainix-sol-legal
+nix develop -c reuse lint
 
 # Run forge directly inside nix shell
 nix develop -c forge test

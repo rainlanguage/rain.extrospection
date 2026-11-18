@@ -2,8 +2,6 @@ version = 1
 
 [[annotations]]
 path = [
-  ".claude/**/",
-  ".gas-snapshot",
   ".github/pull_request_template.md",
   ".github/workflows/**/",
   ".vscode/**/",
