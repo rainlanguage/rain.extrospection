@@ -13,7 +13,7 @@ import {EVM_OP_JUMP, EVM_OP_JUMPI, EVM_OP_JUMPDEST, HALTING_BITMAP} from "./EVMO
 /// together.
 uint256 constant SOLIDITY_CBOR_METADATA_LENGTH = 53;
 
-/// @dev Mask for the first of the two overlapping 32-byte words that cover the
+/// @dev Mask for the first of the two adjacent 32-byte words that cover the
 /// final `SOLIDITY_CBOR_METADATA_LENGTH` bytes of bytecode. That word holds the
 /// 11 bytes preceding the metadata in memory, which are bytecode unless the
 /// bytecode is shorter than 64 bytes, followed by metadata bytes 0-20. The mask
@@ -24,7 +24,7 @@ uint256 constant SOLIDITY_CBOR_METADATA_LENGTH = 53;
 //slither-disable-next-line too-many-digits
 uint256 constant SOLIDITY_CBOR_METADATA_HEAD_MASK = 0xFFFFFFFFFFFFFFFF00000000000000000000000000;
 
-/// @dev Mask for the second of the two overlapping 32-byte words that cover the
+/// @dev Mask for the second of the two adjacent 32-byte words that cover the
 /// final `SOLIDITY_CBOR_METADATA_LENGTH` bytes of bytecode. That word holds
 /// metadata bytes 21-52. The mask keeps metadata bytes 42-47 (`64` text header,
 /// `736f6c63` as `solc`, `43` byte string header) and metadata bytes 51-52 (the
