@@ -6,7 +6,7 @@ import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 import {SOLIDITY_CBOR_RUNTIME_FIXTURE} from "test/concrete/SolidityCBORFixture.sol";
-import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
+import {LibTestEtch} from "src/lib/LibTestEtch.sol";
 
 /// @dev Total length of standard Solidity CBOR metadata, from the CBOR map
 /// header to the 2 byte length suffix.
@@ -132,7 +132,7 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
         bytes memory withMetadata = bytes.concat(code, solidityCBORMetadata(keccak256(code)));
 
         address target = address(0xBEEF);
-        LibExtrospectTestEtch.assumeEtch(vm, target, withMetadata);
+        LibTestEtch.assumeEtch(vm, target, withMetadata);
         vm.expectRevert(LibExtrospectBytecode.UnexpectedMetadata.selector);
         this.checkNoSolidityCBORMetadataExternal(target);
     }

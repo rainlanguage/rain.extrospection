@@ -141,7 +141,7 @@ import {HasLog4} from "test/concrete/HasLog4.sol";
 import {HasStop} from "test/concrete/HasStop.sol";
 import {HasRevert} from "test/concrete/HasRevert.sol";
 import {HasInvalid} from "test/concrete/HasInvalid.sol";
-import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
+import {LibTestEtch} from "src/lib/LibTestEtch.sol";
 
 contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
     using LibBytes for bytes;
@@ -835,7 +835,7 @@ contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
         vm.assume(code.length > 0);
         vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
         address target = address(0xBEEF);
-        LibExtrospectTestEtch.assumeEtch(vm, target, code);
+        LibTestEtch.assumeEtch(vm, target, code);
 
         assertEq(
             LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(target),

@@ -8,7 +8,7 @@ import {
     SOLIDITY_CBOR_RUNTIME_FIXTURE,
     SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED
 } from "test/concrete/SolidityCBORFixture.sol";
-import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
+import {LibTestEtch} from "src/lib/LibTestEtch.sol";
 
 /// No test in this contract forks, so every test here runs without any RPC
 /// environment variable. The tests of `checkCBORTrimmedBytecodeHash` that fork
@@ -103,7 +103,7 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
 
         // Etch the bytecode onto an address.
         address target = address(0xBEEF);
-        LibExtrospectTestEtch.assumeEtch(vm, target, withMetadata);
+        LibTestEtch.assumeEtch(vm, target, withMetadata);
 
         // Correct hash should succeed.
         LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(target, expectedHash);
@@ -133,7 +133,7 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
         vm.assume(!LibExtrospectBytecode.tryTrimSolidityCBORMetadata(code));
 
         address target = address(0xBEEF);
-        LibExtrospectTestEtch.assumeEtch(vm, target, code);
+        LibTestEtch.assumeEtch(vm, target, code);
 
         vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.MetadataNotTrimmed.selector));
         this.externalCheckCBORTrimmedBytecodeHash(target, anyHash);

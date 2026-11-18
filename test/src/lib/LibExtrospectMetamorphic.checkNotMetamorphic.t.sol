@@ -15,7 +15,7 @@ import {HasCreate} from "test/concrete/HasCreate.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 import {CreateChildFactory} from "test/concrete/CreateChildFactory.sol";
 import {Create2ChildFactory} from "test/concrete/Create2ChildFactory.sol";
-import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
+import {LibTestEtch} from "src/lib/LibTestEtch.sol";
 
 contract LibExtrospectMetamorphicCheckNotMetamorphicTest is Test {
     /// External wrapper for revert tests.
@@ -205,7 +205,7 @@ contract LibExtrospectMetamorphicCheckNotMetamorphicTest is Test {
     function testCheckNotMetamorphicAddressEquivalenceFuzz(bytes memory code) external {
         vm.assume(code.length > 0);
         address target = address(0xBEEF);
-        LibExtrospectTestEtch.assumeEtch(vm, target, code);
+        LibTestEtch.assumeEtch(vm, target, code);
 
         uint256 risk = LibExtrospectMetamorphic.scanMetamorphicRisk(code);
         if (risk != 0) {

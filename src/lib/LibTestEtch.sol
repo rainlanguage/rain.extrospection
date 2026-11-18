@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 
 import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 
-library LibExtrospectTestEtch {
+library LibTestEtch {
     /// True when `vm.etch` accepts `code` as account code.
     ///
     /// `vm.etch` reads any `code` prefixed `0xEF01` as an EIP-7702 delegation

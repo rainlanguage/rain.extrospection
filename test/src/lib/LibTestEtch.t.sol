@@ -3,9 +3,9 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std-1.17.0/src/Test.sol";
-import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
+import {LibTestEtch} from "src/lib/LibTestEtch.sol";
 
-contract LibExtrospectTestEtchTest is Test {
+contract LibTestEtchTest is Test {
     address constant TARGET = address(0xBEEF);
 
     /// The 33 byte counterexample foundry produced for the CBOR metadata fuzz
@@ -18,13 +18,13 @@ contract LibExtrospectTestEtchTest is Test {
 
     /// External wrapper so a rejected run is observable as revert data.
     function assumeEtchExternal(address target, bytes memory code) external {
-        LibExtrospectTestEtch.assumeEtch(vm, target, code);
+        LibTestEtch.assumeEtch(vm, target, code);
     }
 
     /// Asserts the predicate says `expected` and that `vm.etch` agrees.
     //forge-lint: disable-next-line(mixed-case-function)
     function checkEtchAccepts(bytes memory code, bool expected) internal {
-        assertEq(LibExtrospectTestEtch.etchAcceptsEIP7702(code), expected, "predicate");
+        assertEq(LibTestEtch.etchAcceptsEIP7702(code), expected, "predicate");
         (bool ok,) = address(vm).call(abi.encodeWithSignature("etch(address,bytes)", TARGET, code));
         assertEq(ok, expected, "vm.etch");
     }
@@ -99,7 +99,7 @@ contract LibExtrospectTestEtchTest is Test {
     /// Accepted code is etched at the target.
     function testAssumeEtchSetsCode() external {
         bytes memory code = hex"6080604052600080fd";
-        LibExtrospectTestEtch.assumeEtch(vm, TARGET, code);
+        LibTestEtch.assumeEtch(vm, TARGET, code);
         assertEq(TARGET.code, code);
     }
 
@@ -107,7 +107,7 @@ contract LibExtrospectTestEtchTest is Test {
     //forge-lint: disable-next-line(mixed-case-function)
     function testAssumeEtchSetsEOFCode() external {
         bytes memory code = hex"ef00010203";
-        LibExtrospectTestEtch.assumeEtch(vm, TARGET, code);
+        LibTestEtch.assumeEtch(vm, TARGET, code);
         assertEq(TARGET.code, code);
     }
 

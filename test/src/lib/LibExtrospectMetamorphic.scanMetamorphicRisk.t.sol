@@ -23,7 +23,7 @@ import {CreateChildFactory} from "test/concrete/CreateChildFactory.sol";
 import {Create2ChildFactory} from "test/concrete/Create2ChildFactory.sol";
 import {ChildLeaf} from "test/concrete/ChildLeaf.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
-import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
+import {LibTestEtch} from "src/lib/LibTestEtch.sol";
 
 contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
     /// External wrapper for address entry point revert tests.
@@ -86,7 +86,7 @@ contract LibExtrospectMetamorphicScanMetamorphicRiskTest is Test {
     function testScanMetamorphicRiskAddressEquivalenceFuzz(bytes memory code) external {
         vm.assume(code.length > 0);
         address target = address(0xBEEF);
-        LibExtrospectTestEtch.assumeEtch(vm, target, code);
+        LibTestEtch.assumeEtch(vm, target, code);
 
         assertEq(
             LibExtrospectMetamorphic.scanMetamorphicRisk(target), LibExtrospectMetamorphic.scanMetamorphicRisk(code)

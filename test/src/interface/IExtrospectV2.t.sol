@@ -20,7 +20,7 @@ import {
     SOLIDITY_CBOR_RUNTIME_FIXTURE,
     SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED
 } from "test/concrete/SolidityCBORFixture.sol";
-import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
+import {LibTestEtch} from "src/lib/LibTestEtch.sol";
 import {LibEIP7702Designator} from "test/lib/LibEIP7702Designator.sol";
 
 /// @title IExtrospectV2Test
@@ -488,7 +488,7 @@ contract IExtrospectV2Test is Test {
         vm.assume(code.length > 0);
         vm.assume(!iExtrospect.isEOFBytecode(code));
         address target = address(0xBEEF);
-        LibExtrospectTestEtch.assumeEtch(vm, target, code);
+        LibTestEtch.assumeEtch(vm, target, code);
 
         assertEq(iExtrospect.scanEVMOpcodesPresentInBytecode(target), iExtrospect.scanEVMOpcodesPresentInBytecode(code));
         assertEq(
