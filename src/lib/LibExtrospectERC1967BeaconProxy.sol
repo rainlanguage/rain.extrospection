@@ -68,9 +68,8 @@ bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.
 library LibExtrospectERC1967BeaconProxy {
     /// @notice Read a beacon's current implementation address via
     /// `IBeacon.implementation()`. Yields `(false, address(0))` rather
-    /// than reverting for a target that doesn't expose
-    /// `implementation()`, whose call reverts, or whose return data is
-    /// not exactly 32 bytes holding a clean address. Callers that need
+    /// than reverting for a target whose call reverts, or whose return
+    /// data is not exactly 32 bytes holding a clean address. Callers that need
     /// the implementation's bytecode properties feed the returned
     /// address to `LibExtrospectMetamorphic` / `LibExtrospectBytecode`.
     /// @param beacon The beacon address to query.
