@@ -43,7 +43,7 @@ import {
     EVM_OP_COINBASE,
     EVM_OP_TIMESTAMP,
     EVM_OP_NUMBER,
-    EVM_OP_DIFFICULTY,
+    EVM_OP_PREVRANDAO,
     EVM_OP_GASLIMIT,
     EVM_OP_CHAINID,
     EVM_OP_SELFBALANCE,
@@ -654,7 +654,7 @@ contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
         HasDifficulty c = new HasDifficulty();
         uint256 scan = LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(address(c).code);
         //forge-lint: disable-next-line(incorrect-shift)
-        assertTrue(scan & (1 << uint256(EVM_OP_DIFFICULTY)) != 0);
+        assertTrue(scan & (1 << uint256(EVM_OP_PREVRANDAO)) != 0);
     }
 
     /// Scan a compiled contract with GASLIMIT.

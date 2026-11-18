@@ -10,6 +10,9 @@ pragma solidity ^0.8.25;
 /// @dev The custom errors are declared by the libraries. `Metamorphic` is
 /// `LibExtrospectMetamorphic`'s; every other is `LibExtrospectBytecode`'s.
 interface IExtrospectV2 {
+    /// @dev `LibExtrospectERC1967BeaconProxy.beaconImplementation`.
+    function beaconImplementation(address beacon) external view returns (bool, address);
+
     /// @dev `LibExtrospectBytecode.checkCBORTrimmedBytecodeHash`.
     function checkCBORTrimmedBytecodeHash(address account, bytes32 expectedTrimmedHash) external view;
 
@@ -39,6 +42,9 @@ interface IExtrospectV2 {
 
     /// @dev `LibExtrospectRegistryBeaconProxy.isRegistryBeaconProxy`.
     function isRegistryBeaconProxy(bytes memory bytecode) external pure returns (bool, address);
+
+    /// @dev `LibExtrospectBytecode.scanConstantsReachableInBytecode`.
+    function scanConstantsReachableInBytecode(bytes memory bytecode) external pure returns (uint256[] memory);
 
     /// @dev `LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(bytes)`.
     function scanEVMOpcodesPresentInBytecode(bytes memory bytecode) external pure returns (uint256);
