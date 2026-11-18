@@ -164,7 +164,7 @@ import {
 contract EVMOpcodesTest is Test {
     using LibCtPop for uint256;
 
-    /// Validate all 135 opcode constants against raw hex values.
+    /// Validate every opcode constant against its raw hex value.
     function testOpcodeValues() external pure {
         // Arithmetic
         assertEq(EVM_OP_STOP, 0x00);

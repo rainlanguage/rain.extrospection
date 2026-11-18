@@ -41,9 +41,11 @@ contract IExtrospectV2Test is Test {
 
     /// `IExtrospectV2` declares exactly the library entry points: every
     /// non-`private` function of every `LibExtrospect*` library under
-    /// `src/lib/`, by signature. The libraries and their functions are read
-    /// from the build's ASTs and the interface's signatures from its compiled
-    /// ABI, so neither list is written down here.
+    /// `src/lib/`, by signature. A function taking a `contract Vm` parameter
+    /// is a cheatcode reader no on-chain concrete can expose, so it is not an
+    /// entry point. The libraries and their functions are read from the
+    /// build's ASTs and the interface's signatures from its compiled ABI, so
+    /// neither list is written down here.
     function testIExtrospectV2DeclaresEveryLibraryEntryPoint() external view {
         string[] memory declared =
             vm.parseJsonKeys(vm.readFile("out/IExtrospectV2.sol/IExtrospectV2.json"), ".methodIdentifiers");
@@ -63,9 +65,9 @@ contract IExtrospectV2Test is Test {
         assertEq(entryPoints, declared.length);
     }
 
-    /// The signatures of the non-`private` functions of the library a build
-    /// artifact describes, when that library is a `LibExtrospect*` under
-    /// `src/lib/`; empty for any other path.
+    /// The signatures of the entry points of the library a build artifact
+    /// describes, when that library is a `LibExtrospect*` under `src/lib/`;
+    /// empty for any other path.
     function libraryEntryPoints(string memory path) external view returns (string[] memory) {
         bytes memory pathBytes = bytes(path);
         uint256 nameStart = pathBytes.length;
@@ -109,16 +111,19 @@ contract IExtrospectV2Test is Test {
                     && !eq(vm.parseJsonString(artifact, string.concat(fn, ".visibility")), "private")
             ) {
                 string memory params = "";
+                bool cheatcodeReader = false;
                 string memory parameters = string.concat(fn, ".parameters.parameters");
                 for (uint256 j = 0; vm.keyExistsJson(artifact, node(parameters, j)); j++) {
-                    params = string.concat(
-                        params,
-                        j == 0 ? "" : ",",
-                        vm.parseJsonString(artifact, string.concat(node(parameters, j), ".typeDescriptions.typeString"))
+                    string memory paramType = vm.parseJsonString(
+                        artifact, string.concat(node(parameters, j), ".typeDescriptions.typeString")
                     );
+                    cheatcodeReader = cheatcodeReader || eq(paramType, "contract Vm");
+                    params = string.concat(params, j == 0 ? "" : ",", paramType);
                 }
-                signatures[count++] =
-                    string.concat(vm.parseJsonString(artifact, string.concat(fn, ".name")), "(", params, ")");
+                if (!cheatcodeReader) {
+                    signatures[count++] =
+                        string.concat(vm.parseJsonString(artifact, string.concat(fn, ".name")), "(", params, ")");
+                }
             }
         }
         assembly ("memory-safe") {
