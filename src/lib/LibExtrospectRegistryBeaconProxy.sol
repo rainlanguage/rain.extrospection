@@ -8,6 +8,24 @@ bytes constant REGISTRY_BEACON_PROXY_PREFIX =
     hex"608060405261000c61000e565b005b61001e610019610020565b6100b3565b565b5f7f";
 bytes constant REGISTRY_BEACON_PROXY_SUFFIX =
     hex"73ffffffffffffffffffffffffffffffffffffffff16635c60da1b6040518163ffffffff1660e01b8152600401602060405180830381865afa15801561008a573d5f803e3d5ffd5b505050506040513d601f19601f820116820180604052508101906100ae91906100d1565b905090565b365f80375f80365f845af43d5f803e8080156100cd573d5ff35b3d5ffd5b5f602082840312156100e1575f80fd5b815173ffffffffffffffffffffffffffffffffffffffff81168114610104575f80fd5b939250505056";
+/// @dev Prefix bytes 0-31.
+bytes32 constant REGISTRY_BEACON_PROXY_PREFIX_WORD_0 = 0x608060405261000c61000e565b005b61001e610019610020565b6100b3565b56;
+/// @dev Prefix bytes 32-34, left aligned and zero padded.
+bytes32 constant REGISTRY_BEACON_PROXY_PREFIX_WORD_1 = 0x5b5f7f0000000000000000000000000000000000000000000000000000000000;
+/// @dev Suffix bytes 0-31.
+bytes32 constant REGISTRY_BEACON_PROXY_SUFFIX_WORD_0 = 0x73ffffffffffffffffffffffffffffffffffffffff16635c60da1b6040518163;
+/// @dev Suffix bytes 32-63.
+bytes32 constant REGISTRY_BEACON_PROXY_SUFFIX_WORD_1 = 0xffffffff1660e01b8152600401602060405180830381865afa15801561008a57;
+/// @dev Suffix bytes 64-95.
+bytes32 constant REGISTRY_BEACON_PROXY_SUFFIX_WORD_2 = 0x3d5f803e3d5ffd5b505050506040513d601f19601f8201168201806040525081;
+/// @dev Suffix bytes 96-127.
+bytes32 constant REGISTRY_BEACON_PROXY_SUFFIX_WORD_3 = 0x01906100ae91906100d1565b905090565b365f80375f80365f845af43d5f803e;
+/// @dev Suffix bytes 128-159.
+bytes32 constant REGISTRY_BEACON_PROXY_SUFFIX_WORD_4 = 0x8080156100cd573d5ff35b3d5ffd5b5f602082840312156100e1575f80fd5b81;
+/// @dev Suffix bytes 160-191.
+bytes32 constant REGISTRY_BEACON_PROXY_SUFFIX_WORD_5 = 0x5173ffffffffffffffffffffffffffffffffffffffff81168114610104575f80;
+/// @dev Suffix bytes 192-199, left aligned and zero padded.
+bytes32 constant REGISTRY_BEACON_PROXY_SUFFIX_WORD_6 = 0xfd5b939250505056000000000000000000000000000000000000000000000000;
 uint256 constant REGISTRY_BEACON_PROXY_PREFIX_LENGTH = 35;
 uint256 constant REGISTRY_BEACON_PROXY_SUFFIX_LENGTH = 200;
 /// @dev The beacon is an immutable, inlined as the full 32 byte word `PUSH32`
@@ -80,20 +98,25 @@ library LibExtrospectRegistryBeaconProxy {
 
     /// @notice The runtime code hash of a `RegistryBeaconProxy` holding `beacon`.
     function codehash(address beacon) internal pure returns (bytes32) {
-        bytes memory prefix = REGISTRY_BEACON_PROXY_PREFIX;
-        bytes memory suffix = REGISTRY_BEACON_PROXY_SUFFIX;
         uint256 beaconWord = uint256(uint160(beacon));
+        uint256 beaconWordOffset = REGISTRY_BEACON_PROXY_PREFIX_LENGTH;
+        uint256 suffixOffset = REGISTRY_BEACON_PROXY_PREFIX_LENGTH + REGISTRY_BEACON_PROXY_BEACON_WORD_LENGTH;
+        uint256 length = REGISTRY_BEACON_PROXY_LENGTH;
         bytes32 result;
         assembly ("memory-safe") {
             let start := mload(0x40)
-            let prefixLength := mload(prefix)
-            mcopy(start, add(prefix, 0x20), prefixLength)
-            let cursor := add(start, prefixLength)
-            mstore(cursor, beaconWord)
-            cursor := add(cursor, 0x20)
-            let suffixLength := mload(suffix)
-            mcopy(cursor, add(suffix, 0x20), suffixLength)
-            result := keccak256(start, sub(add(cursor, suffixLength), start))
+            mstore(start, REGISTRY_BEACON_PROXY_PREFIX_WORD_0)
+            mstore(add(start, 0x20), REGISTRY_BEACON_PROXY_PREFIX_WORD_1)
+            mstore(add(start, beaconWordOffset), beaconWord)
+            let suffixStart := add(start, suffixOffset)
+            mstore(suffixStart, REGISTRY_BEACON_PROXY_SUFFIX_WORD_0)
+            mstore(add(suffixStart, 0x20), REGISTRY_BEACON_PROXY_SUFFIX_WORD_1)
+            mstore(add(suffixStart, 0x40), REGISTRY_BEACON_PROXY_SUFFIX_WORD_2)
+            mstore(add(suffixStart, 0x60), REGISTRY_BEACON_PROXY_SUFFIX_WORD_3)
+            mstore(add(suffixStart, 0x80), REGISTRY_BEACON_PROXY_SUFFIX_WORD_4)
+            mstore(add(suffixStart, 0xa0), REGISTRY_BEACON_PROXY_SUFFIX_WORD_5)
+            mstore(add(suffixStart, 0xc0), REGISTRY_BEACON_PROXY_SUFFIX_WORD_6)
+            result := keccak256(start, length)
         }
         return result;
     }
