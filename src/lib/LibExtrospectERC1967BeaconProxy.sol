@@ -117,7 +117,8 @@ library LibExtrospectERC1967BeaconProxy {
     /// for any reason.
     function isBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash) internal view returns (bool) {
         (bool ok, address impl) = _tryGetAddress(beacon, IBeacon.implementation.selector);
-        return ok && keccak256(impl.code) == expectedRuntimeHash;
+        // EXTCODEHASH is 0 for a non-existent account, so codeless is keccak256("") explicitly.
+        return ok && (impl.code.length == 0 ? keccak256("") : impl.codehash) == expectedRuntimeHash;
     }
 
     /// @notice Verify that `beacon`'s current owner equals
