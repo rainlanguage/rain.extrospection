@@ -70,11 +70,13 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
         LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(targetB, keccak256(""));
     }
 
-    /// Test that an empty account (no deployed code) reverts with
-    /// MetadataNotTrimmed since there is no metadata to trim.
+    /// An account with no code reverts with `CodelessAccount` carrying the
+    /// address.
     function testCheckCBORTrimmedBytecodeHashEmptyAccount() external {
-        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.MetadataNotTrimmed.selector));
-        this.externalCheckCBORTrimmedBytecodeHash(address(0xdead), bytes32(0));
+        address codeless = address(0xdead);
+        assertEq(codeless.code.length, 0);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.CodelessAccount.selector, codeless));
+        this.externalCheckCBORTrimmedBytecodeHash(codeless, bytes32(0));
     }
 
     /// Fuzz test: etch bytecode not beginning with `0xEF` with valid CBOR
