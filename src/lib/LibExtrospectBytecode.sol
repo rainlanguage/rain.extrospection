@@ -42,6 +42,17 @@ uint256 constant SOLIDITY_CBOR_METADATA_TAIL_MASK = 0x00000000000000000000000000
 bytes32 constant SOLIDITY_CBOR_METADATA_MASKED_HASH =
     0x0e55864b80a56accebaca64500e23598f6acfb743a5475323f0b7f2d0d268c62;
 
+/// @dev The lead byte EIP-3541 reserves: since the London hard fork no
+/// ordinary deployment can produce code whose first byte is `0xEF`. On a
+/// post-London chain new code beginning with it comes from protocol
+/// features — an EOF container (`0xEF00`), an EIP-7702 delegation
+/// designator (`0xEF0100 || address`), or whatever the prefix is assigned
+/// next — none of which a legacy opcode scan can reason about; pre-London
+/// deployments and chains without EIP-3541 can carry it as plain legacy
+/// code the scan cannot tell apart by inspection. Address-taking entry points
+/// fail closed on the first byte alone.
+uint8 constant EIP3541_RESERVED_LEAD_BYTE = 0xEF;
+
 /// @title LibExtrospectBytecode
 /// @notice Internal algorithms for extrospecting bytecode. Notably the EVM
 /// opcode scanning needs special care, as the other bytecode functions are mere
@@ -72,6 +83,31 @@ library LibExtrospectBytecode {
     /// as a pass.
     /// @param account The account that has no code.
     error CodelessAccount(address account);
+
+    /// Thrown when an address-taking entry point is asked about an account
+    /// whose code begins with the EIP-3541 reserved `0xEF`: an EOF container,
+    /// an EIP-7702 delegation designator whose executed code is the
+    /// delegate's and is repointable, or a future assignment of the prefix.
+    /// No verdict over such bytes describes the code the account runs.
+    /// @param account The account whose code begins with `0xEF`.
+    error EIP3541ReservedLeadByte(address account);
+
+    /// Reverts with `CodelessAccount` if `bytecode`, read from `account`, is
+    /// empty, else with `EIP3541ReservedLeadByte` if it begins with `0xEF`.
+    /// @param account The account `bytecode` was read from.
+    /// @param bytecode The account's code.
+    function checkAccountCode(address account, bytes memory bytecode) private pure {
+        if (bytecode.length == 0) {
+            revert CodelessAccount(account);
+        }
+        uint256 leadByte;
+        assembly ("memory-safe") {
+            leadByte := byte(0, mload(add(bytecode, 0x20)))
+        }
+        if (leadByte == EIP3541_RESERVED_LEAD_BYTE) {
+            revert EIP3541ReservedLeadByte(account);
+        }
+    }
 
     /// Returns whether the first two bytes of the bytecode are the EOF magic
     /// `0xEF00`. The version byte that follows the magic in an EIP-3540
@@ -168,8 +204,9 @@ library LibExtrospectBytecode {
     /// the metadata was not trimmed, or with `BytecodeHashMismatch` if the hash
     /// does not match after trimming.
     ///
-    /// NOTE EOF bytecode is not supported by this function and reverts with
-    /// `EOFBytecodeNotSupported` before either of the above is reached.
+    /// NOTE an account with no code reverts with `CodelessAccount`, and code
+    /// beginning with `0xEF`, including EOF and EIP-7702, reverts with
+    /// `EIP3541ReservedLeadByte`, before either of the above is reached.
     ///
     /// NOTE `expectedTrimmedHash` covers only the bytecode left after
     /// trimming. The 53 trimmed bytes are runtime code that the EVM executes
@@ -190,6 +227,7 @@ library LibExtrospectBytecode {
     /// `expectedRuntimeHash`, which hashes runtime bytecode whole.
     function checkCBORTrimmedBytecodeHash(address account, bytes32 expectedTrimmedHash) internal view {
         bytes memory bytecode = account.code;
+        checkAccountCode(account, bytecode);
         bool didTrim = tryTrimSolidityCBORMetadata(bytecode);
         if (!didTrim) {
             revert MetadataNotTrimmed();
@@ -207,8 +245,8 @@ library LibExtrospectBytecode {
     /// `cbor_metadata = false` in foundry.toml) as a defense against the
     /// metamorphic metadata attack.
     ///
-    /// NOTE EOF bytecode is not supported by this function. An account whose
-    /// bytecode is EOF reverts with `EOFBytecodeNotSupported`, so for such an
+    /// NOTE an account whose code begins with `0xEF`, including EOF and
+    /// EIP-7702, reverts with `EIP3541ReservedLeadByte`, so for such an
     /// account neither the passing case nor `UnexpectedMetadata` is reached.
     ///
     /// NOTE detection is `tryTrimSolidityCBORMetadata`, which constrains only
@@ -233,9 +271,7 @@ library LibExtrospectBytecode {
     //forge-lint: disable-next-line(mixed-case-function)
     function checkNoSolidityCBORMetadata(address account) internal view {
         bytes memory bytecode = account.code;
-        if (bytecode.length == 0) {
-            revert CodelessAccount(account);
-        }
+        checkAccountCode(account, bytecode);
         bool didTrim = tryTrimSolidityCBORMetadata(bytecode);
         if (didTrim) {
             revert UnexpectedMetadata();
@@ -381,17 +417,15 @@ library LibExtrospectBytecode {
     /// an account with no code can gain any code later — an unoccupied
     /// `CREATE2` target, a self-destructed account between incarnations, or
     /// an EOA that can gain code by EIP-7702 delegation — so a zero bitmap
-    /// for it would vouch for nothing. Reverts with `EOFBytecodeNotSupported`
-    /// if the account's code is EOF, as the bytes scan does.
+    /// for it would vouch for nothing. Reverts with `EIP3541ReservedLeadByte`
+    /// if the account's code begins with `0xEF`, including EOF and EIP-7702.
     /// @param account The account whose code to scan.
     /// @return A `uint256` where each bit represents the presence of a
     /// reachable opcode in the account's code.
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesReachableInBytecode(address account) internal view returns (uint256) {
         bytes memory bytecode = account.code;
-        if (bytecode.length == 0) {
-            revert CodelessAccount(account);
-        }
+        checkAccountCode(account, bytecode);
         return scanEVMOpcodesReachableInBytecode(bytecode);
     }
 
@@ -442,17 +476,15 @@ library LibExtrospectBytecode {
     /// an account with no code can gain any code later — an unoccupied
     /// `CREATE2` target, a self-destructed account between incarnations, or
     /// an EOA that can gain code by EIP-7702 delegation — so a zero bitmap
-    /// for it would vouch for nothing. Reverts with `EOFBytecodeNotSupported`
-    /// if the account's code is EOF, as the bytes scan does.
+    /// for it would vouch for nothing. Reverts with `EIP3541ReservedLeadByte`
+    /// if the account's code begins with `0xEF`, including EOF and EIP-7702.
     /// @param account The account whose code to scan.
     /// @return A `uint256` where each bit represents the presence of an
     /// opcode in the account's code.
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesPresentInBytecode(address account) internal view returns (uint256) {
         bytes memory bytecode = account.code;
-        if (bytecode.length == 0) {
-            revert CodelessAccount(account);
-        }
+        checkAccountCode(account, bytecode);
         return scanEVMOpcodesPresentInBytecode(bytecode);
     }
 }

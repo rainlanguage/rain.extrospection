@@ -7,6 +7,7 @@ import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {NonMetamorphic} from "test/concrete/NonMetamorphic.sol";
 import {SOLIDITY_CBOR_RUNTIME_FIXTURE} from "test/concrete/SolidityCBORFixture.sol";
 import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
+import {LibEIP7702Designator} from "test/lib/LibEIP7702Designator.sol";
 
 /// @dev Total length of standard Solidity CBOR metadata, from the CBOR map
 /// header to the 2 byte length suffix.
@@ -78,16 +79,52 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
         this.checkNoSolidityCBORMetadataExternal(deployed);
     }
 
-    /// EOF bytecode etched onto an account reverts with EOFBytecodeNotSupported.
+    /// EOF bytecode etched onto an account reverts with
+    /// `EIP3541ReservedLeadByte` carrying the account.
     function testCheckNoMetadataEOF() external {
         address target = address(0xBEEF);
         vm.etch(target, hex"EF00010203");
-        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, target));
+        this.checkNoSolidityCBORMetadataExternal(target);
+    }
+
+    /// Fuzz: an account whose code is an EIP-7702 delegation designator
+    /// reverts with `EIP3541ReservedLeadByte` carrying the account.
+    function testCheckNoMetadataRevertsOnEIP7702DesignatorFuzz(address account, address delegate) external {
+        assumeUnusedAddress(account);
+        vm.etch(account, LibEIP7702Designator.designator(delegate));
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, account));
+        this.checkNoSolidityCBORMetadataExternal(account);
+    }
+
+    /// Fuzz: an account whose code begins with `0xEF` reverts with
+    /// `EIP3541ReservedLeadByte` carrying the account, with or without
+    /// metadata after it.
+    function testCheckNoMetadataRevertsOn0xEFLeadFuzz(address account, bytes memory tail, bool withMetadata) external {
+        assumeUnusedAddress(account);
+        bytes memory code = bytes.concat(hex"EF", tail);
+        if (withMetadata) {
+            code = bytes.concat(code, solidityCBORMetadata(keccak256(code)));
+        }
+        LibExtrospectTestEtch.assumeEtch(vm, account, code);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, account));
+        this.checkNoSolidityCBORMetadataExternal(account);
+    }
+
+    /// Fuzz: an account whose nonempty code does not begin with `0xEF` reverts
+    /// with `UnexpectedMetadata` exactly when the code trims, else passes.
+    function testCheckNoMetadataLegacyLeadFuzz(bytes memory code) external {
+        vm.assume(code.length > 0 && code[0] != 0xEF);
+        address target = address(0xBEEF);
+        LibExtrospectTestEtch.assumeEtch(vm, target, code);
+        if (LibExtrospectBytecode.tryTrimSolidityCBORMetadata(code)) {
+            vm.expectRevert(LibExtrospectBytecode.UnexpectedMetadata.selector);
+        }
         this.checkNoSolidityCBORMetadataExternal(target);
     }
 
     /// Fuzz: nonempty bytecode shorter than Solidity CBOR metadata passes.
-    /// The leading `STOP` keeps the bytecode out of the EOF format. Empty
+    /// The leading `STOP` keeps the first byte off `0xEF`. Empty
     /// bytecode is excluded: an account etched with empty code is codeless
     /// and reverts with `CodelessAccount`, pinned deterministically above.
     function testCheckNoMetadataPassesShortBytecode(bytes memory code) external {
@@ -111,7 +148,7 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
 
     /// Fuzz: bytecode ending in Solidity CBOR metadata with exactly one of
     /// its fixed structure bytes corrupted passes. The leading `STOP` keeps
-    /// the bytecode out of the EOF format.
+    /// the first byte off `0xEF`.
     function testCheckNoMetadataPassesCorruptedMetadata(bytes memory code, uint256 offsetIndex, uint8 corruption)
         external
     {
@@ -125,9 +162,10 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
         LibExtrospectBytecode.checkNoSolidityCBORMetadata(target);
     }
 
-    /// Fuzz: bytecode with valid CBOR metadata appended reverts.
+    /// Fuzz: bytecode not beginning with `0xEF` with valid CBOR metadata
+    /// appended reverts.
     function testCheckNoMetadataRevertsFuzz(bytes memory code) external {
-        vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
+        vm.assume(code.length == 0 || code[0] != 0xEF);
 
         bytes memory withMetadata = bytes.concat(code, solidityCBORMetadata(keccak256(code)));
 

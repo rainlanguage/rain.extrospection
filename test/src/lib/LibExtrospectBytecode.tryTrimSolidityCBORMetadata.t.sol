@@ -5,6 +5,7 @@ pragma solidity =0.8.25;
 import {Test} from "forge-std-1.17.0/src/Test.sol";
 import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
 import {SOLIDITY_CBOR_RUNTIME_FIXTURE} from "test/concrete/SolidityCBORFixture.sol";
+import {LibEIP7702Designator} from "test/lib/LibEIP7702Designator.sol";
 
 contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
     /// External version of tryTrimSolidityCBORMetadata for testing.
@@ -174,6 +175,38 @@ contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
         bytes memory eofBytecode = hex"EF00010203";
         vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
         this.tryTrimSolidityCBORMetadataExternal(eofBytecode);
+    }
+
+    /// Fuzz: `0xEF`-led bytes other than EOF trim as legacy code.
+    function testTryTrimSolidityCBORMetadata0xEFLeadFuzz(
+        bytes memory tail,
+        bytes32 ipfsHashHigh,
+        bytes2 ipfsHashLow,
+        bytes3 solcVersion
+    ) external pure {
+        vm.assume(tail.length == 0 || tail[0] != 0x00);
+        bytes memory code = bytes.concat(hex"EF", tail);
+        bytes memory bytecode = bytes.concat(
+            code, hex"a264697066735822", ipfsHashHigh, ipfsHashLow, hex"64736f6c6343", solcVersion, hex"0033"
+        );
+        assertTrue(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
+        assertEq(bytecode, code);
+    }
+
+    /// Fuzz: an EIP-7702 delegation designator followed by metadata trims to
+    /// the designator.
+    function testTryTrimSolidityCBORMetadataEIP7702DesignatorFuzz(
+        address delegate,
+        bytes32 ipfsHashHigh,
+        bytes2 ipfsHashLow,
+        bytes3 solcVersion
+    ) external pure {
+        bytes memory designator = LibEIP7702Designator.designator(delegate);
+        bytes memory bytecode = bytes.concat(
+            designator, hex"a264697066735822", ipfsHashHigh, ipfsHashLow, hex"64736f6c6343", solcVersion, hex"0033"
+        );
+        assertTrue(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
+        assertEq(bytecode, designator);
     }
 
     /// Exactly 16 of the 53 trailer bytes are constrained: offsets 0-7, 42-47

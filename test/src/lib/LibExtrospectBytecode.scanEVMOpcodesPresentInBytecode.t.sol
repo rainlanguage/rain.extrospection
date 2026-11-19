@@ -142,6 +142,7 @@ import {HasStop} from "test/concrete/HasStop.sol";
 import {HasRevert} from "test/concrete/HasRevert.sol";
 import {HasInvalid} from "test/concrete/HasInvalid.sol";
 import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
+import {LibEIP7702Designator} from "test/lib/LibEIP7702Designator.sol";
 
 contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
     using LibBytes for bytes;
@@ -821,19 +822,59 @@ contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
     }
 
     /// Address entry point: EOF code etched onto an account reverts with
-    /// `EOFBytecodeNotSupported` via delegation to the bytes entry point.
+    /// `EIP3541ReservedLeadByte` carrying the account.
     function testScanEVMOpcodesPresentAddressRevertsOnEOF() public {
         address target = address(0xBEEF);
         vm.etch(target, hex"EF00010203");
-        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, target));
         this.scanEVMOpcodesPresentInBytecodeAddressExternal(target);
     }
 
-    /// Fuzz: for an account with nonempty non-EOF code, the address entry
-    /// point returns exactly what the bytes entry point returns for that code.
+    /// Fuzz: an account whose code is an EIP-7702 delegation designator
+    /// reverts with `EIP3541ReservedLeadByte` carrying the account.
+    function testScanEVMOpcodesPresentAddressRevertsOnEIP7702DesignatorFuzz(address account, address delegate) public {
+        assumeUnusedAddress(account);
+        vm.etch(account, LibEIP7702Designator.designator(delegate));
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, account));
+        this.scanEVMOpcodesPresentInBytecodeAddressExternal(account);
+    }
+
+    /// Fuzz: an account whose code begins with `0xEF` reverts with
+    /// `EIP3541ReservedLeadByte` carrying the account, whatever follows.
+    function testScanEVMOpcodesPresentAddressRevertsOn0xEFLeadFuzz(address account, bytes memory tail) public {
+        assumeUnusedAddress(account);
+        LibExtrospectTestEtch.assumeEtch(vm, account, bytes.concat(hex"EF", tail));
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, account));
+        this.scanEVMOpcodesPresentInBytecodeAddressExternal(account);
+    }
+
+    /// Fuzz: the bytes entry point has no lead byte gate, so `0xEF`-led bytes
+    /// other than EOF scan as legacy code, with `0xEF` itself present.
+    function testScanEVMOpcodesPresentBytes0xEFLeadFuzz(bytes memory tail) public pure {
+        vm.assume(tail.length == 0 || tail[0] != 0x00);
+        bytes memory code = bytes.concat(hex"EF", tail);
+        uint256 scan = LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(code);
+        assertEq(scan, LibExtrospectionSlow.scanEVMOpcodesPresentInBytecodeSlow(code));
+        //forge-lint: disable-next-line(incorrect-shift)
+        assertTrue(scan & (1 << 0xEF) != 0);
+    }
+
+    /// Fuzz: the bytes entry point scans an EIP-7702 delegation designator as
+    /// legacy code.
+    function testScanEVMOpcodesPresentBytesEIP7702DesignatorFuzz(address delegate) public pure {
+        bytes memory designator = LibEIP7702Designator.designator(delegate);
+        assertEq(
+            LibExtrospectBytecode.scanEVMOpcodesPresentInBytecode(designator),
+            LibExtrospectionSlow.scanEVMOpcodesPresentInBytecodeSlow(designator)
+        );
+    }
+
+    /// Fuzz: for an account with nonempty code not beginning with `0xEF`, the
+    /// address entry point returns exactly what the bytes entry point returns
+    /// for that code.
     function testScanEVMOpcodesPresentAddressEquivalenceFuzz(bytes memory code) public {
         vm.assume(code.length > 0);
-        vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
+        vm.assume(code[0] != 0xEF);
         address target = address(0xBEEF);
         LibExtrospectTestEtch.assumeEtch(vm, target, code);
 

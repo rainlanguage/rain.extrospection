@@ -9,6 +9,7 @@ import {
     SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED
 } from "test/concrete/SolidityCBORFixture.sol";
 import {LibExtrospectTestEtch} from "test/lib/LibExtrospectTestEtch.sol";
+import {LibEIP7702Designator} from "test/lib/LibEIP7702Designator.sol";
 
 /// No test in this contract forks, so every test here runs without any RPC
 /// environment variable. The tests of `checkCBORTrimmedBytecodeHash` that fork
@@ -69,18 +70,20 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
         LibExtrospectBytecode.checkCBORTrimmedBytecodeHash(targetB, keccak256(""));
     }
 
-    /// Test that an empty account (no deployed code) reverts with
-    /// MetadataNotTrimmed since there is no metadata to trim.
+    /// An account with no code reverts with `CodelessAccount` carrying the
+    /// address.
     function testCheckCBORTrimmedBytecodeHashEmptyAccount() external {
-        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.MetadataNotTrimmed.selector));
-        this.externalCheckCBORTrimmedBytecodeHash(address(0xdead), bytes32(0));
+        address codeless = address(0xdead);
+        assertEq(codeless.code.length, 0);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.CodelessAccount.selector, codeless));
+        this.externalCheckCBORTrimmedBytecodeHash(codeless, bytes32(0));
     }
 
-    /// Fuzz test: etch bytecode with valid CBOR metadata onto an address,
-    /// then verify checkCBORTrimmedBytecodeHash accepts the correct trimmed
-    /// hash and rejects incorrect hashes.
+    /// Fuzz test: etch bytecode not beginning with `0xEF` with valid CBOR
+    /// metadata onto an address, then verify checkCBORTrimmedBytecodeHash
+    /// accepts the correct trimmed hash and rejects incorrect hashes.
     function testCheckCBORTrimmedBytecodeHashFuzz(bytes memory code, bytes32 wrongHash) external {
-        vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
+        vm.assume(code.length == 0 || code[0] != 0xEF);
 
         // Build a synthetic IPFS hash and solc version from the fuzz input.
         bytes32 seed = keccak256(code);
@@ -116,19 +119,56 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
         this.externalCheckCBORTrimmedBytecodeHash(target, wrongHash);
     }
 
-    /// EOF bytecode etched onto an account reverts with EOFBytecodeNotSupported.
+    /// EOF bytecode etched onto an account reverts with
+    /// `EIP3541ReservedLeadByte` carrying the account.
     function testCheckCBORTrimmedBytecodeHashEOF() external {
         address target = address(0xBEEF);
         vm.etch(target, hex"EF00010203");
-        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, target));
         this.externalCheckCBORTrimmedBytecodeHash(target, bytes32(0));
     }
 
-    /// Fuzz test: etch bytecode WITHOUT valid metadata and verify it reverts
-    /// with MetadataNotTrimmed.
+    /// Fuzz: an account whose code is an EIP-7702 delegation designator
+    /// reverts with `EIP3541ReservedLeadByte` carrying the account.
+    function testCheckCBORTrimmedBytecodeHashRevertsOnEIP7702DesignatorFuzz(
+        address account,
+        address delegate,
+        bytes32 anyHash
+    ) external {
+        assumeUnusedAddress(account);
+        vm.etch(account, LibEIP7702Designator.designator(delegate));
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, account));
+        this.externalCheckCBORTrimmedBytecodeHash(account, anyHash);
+    }
+
+    /// Fuzz: an account whose code begins with `0xEF` reverts with
+    /// `EIP3541ReservedLeadByte` carrying the account, including when the
+    /// code ends in metadata and the expected hash is its trimmed hash.
+    function testCheckCBORTrimmedBytecodeHashRevertsOn0xEFLeadFuzz(
+        address account,
+        bytes memory tail,
+        bool withMetadata,
+        bytes32 anyHash,
+        bytes2 ipfsHashLow,
+        bytes3 solcVersion
+    ) external {
+        assumeUnusedAddress(account);
+        bytes memory code = bytes.concat(hex"EF", tail);
+        bytes32 expectedTrimmedHash = anyHash;
+        if (withMetadata) {
+            expectedTrimmedHash = keccak256(code);
+            code = bytes.concat(code, trailer(anyHash, ipfsHashLow, solcVersion));
+        }
+        LibExtrospectTestEtch.assumeEtch(vm, account, code);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, account));
+        this.externalCheckCBORTrimmedBytecodeHash(account, expectedTrimmedHash);
+    }
+
+    /// Fuzz test: etch bytecode not beginning with `0xEF` WITHOUT valid
+    /// metadata and verify it reverts with MetadataNotTrimmed.
     function testCheckCBORTrimmedBytecodeHashNoMetadataFuzz(bytes memory code, bytes32 anyHash) external {
         vm.assume(code.length > 0);
-        vm.assume(!LibExtrospectBytecode.isEOFBytecode(code));
+        vm.assume(code[0] != 0xEF);
         // Ensure the code does not already contain valid CBOR metadata.
         vm.assume(!LibExtrospectBytecode.tryTrimSolidityCBORMetadata(code));
 
