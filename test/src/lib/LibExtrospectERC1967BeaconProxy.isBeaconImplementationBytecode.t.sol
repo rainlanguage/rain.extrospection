@@ -7,7 +7,7 @@ import {
     SOLIDITY_CBOR_RUNTIME_FIXTURE,
     SOLIDITY_CBOR_RUNTIME_FIXTURE_TRIMMED
 } from "test/concrete/SolidityCBORFixture.sol";
-import {LibExtrospectERC1967BeaconProxy} from "src/lib/LibExtrospectERC1967BeaconProxy.sol";
+import {LibExtrospectERC1967BeaconProxy, EMPTY_CODE_HASH} from "src/lib/LibExtrospectERC1967BeaconProxy.sol";
 import {MockBeacon} from "test/concrete/MockBeacon.sol";
 import {EmptyContract} from "test/concrete/EmptyContract.sol";
 import {RevertingBeacon} from "test/concrete/RevertingBeacon.sol";
@@ -434,5 +434,9 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         returns (bool)
     {
         return LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(beacon, expectedRuntimeHash);
+    }
+
+    function testEmptyCodeHashIsKeccakOfNoBytes() external pure {
+        assertEq(EMPTY_CODE_HASH, keccak256(""));
     }
 }
