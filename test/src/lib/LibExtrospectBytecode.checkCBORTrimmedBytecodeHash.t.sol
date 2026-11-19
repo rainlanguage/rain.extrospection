@@ -148,14 +148,16 @@ contract LibExtrospectBytecodeCheckCBORTrimmedBytecodeHashTest is Test {
         address account,
         bytes memory tail,
         bool withMetadata,
-        bytes32 anyHash
+        bytes32 anyHash,
+        bytes2 ipfsHashLow,
+        bytes3 solcVersion
     ) external {
         assumeUnusedAddress(account);
         bytes memory code = bytes.concat(hex"EF", tail);
         bytes32 expectedTrimmedHash = anyHash;
         if (withMetadata) {
             expectedTrimmedHash = keccak256(code);
-            code = bytes.concat(code, trailer(anyHash, bytes2(anyHash), bytes3(anyHash)));
+            code = bytes.concat(code, trailer(anyHash, ipfsHashLow, solcVersion));
         }
         LibExtrospectTestEtch.assumeEtch(vm, account, code);
         vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, account));
