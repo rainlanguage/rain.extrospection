@@ -7,8 +7,8 @@ import {Vm} from "forge-std-1.17.0/src/Vm.sol";
 
 import {IExtrospectV1} from "src/interface/IExtrospectV1.sol";
 import {IExtrospectV2} from "src/interface/IExtrospectV2.sol";
-import {LibExtrospectBytecode} from "src/lib/LibExtrospectBytecode.sol";
-import {LibExtrospectMetamorphic, EIP3541_RESERVED_LEAD_BYTE} from "src/lib/LibExtrospectMetamorphic.sol";
+import {LibExtrospectBytecode, EIP3541_RESERVED_LEAD_BYTE} from "src/lib/LibExtrospectBytecode.sol";
+import {LibExtrospectMetamorphic} from "src/lib/LibExtrospectMetamorphic.sol";
 import {EVM_OP_STOP, EVM_OP_ADD, EVM_OP_SELFDESTRUCT} from "src/lib/EVMOpcodes.sol";
 import {REGISTRY_BEACON_PROXY_PREFIX, REGISTRY_BEACON_PROXY_SUFFIX} from "src/lib/LibExtrospectRegistryBeaconProxy.sol";
 
@@ -31,7 +31,8 @@ import {LibEIP7702Designator} from "test/lib/LibEIP7702Designator.sol";
 /// selector-identical and behaviourally live; the address-taking verdict
 /// entry points added in V2 are pinned to revert `CodelessAccount` on an
 /// account with no code and to agree with the bytes entry points over an
-/// account's code otherwise.
+/// account's code otherwise, except that the raw opcode scans revert
+/// `EIP3541ReservedLeadByte` on code beginning with `0xEF`.
 contract IExtrospectV2Test is Test {
     IExtrospectV2 internal immutable iExtrospect;
 
@@ -484,17 +485,16 @@ contract IExtrospectV2Test is Test {
     }
 
     /// V2 surface: the same account code splits the two verdict families.
-    /// EOF code (`0xEF00` lead) reverts `EOFBytecodeNotSupported` on the raw
-    /// opcode scans, which gate on the two byte EOF magic only, while the
-    /// metamorphic pair fails closed to `Metamorphic(1 << 0xEF)` on the lead
-    /// byte alone and never reverts `EOFBytecodeNotSupported`.
+    /// EOF code (`0xEF00` lead) reverts `EIP3541ReservedLeadByte` on the raw
+    /// opcode scans, while the metamorphic pair fails closed to
+    /// `Metamorphic(1 << 0xEF)` on the lead byte alone.
     function testIExtrospectV2AddressEntryPointsSplitOnEOFCode() external {
         address target = address(0xBEEF);
         vm.etch(target, hex"ef00");
 
-        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, target));
         iExtrospect.scanEVMOpcodesPresentInBytecode(target);
-        vm.expectRevert(LibExtrospectBytecode.EOFBytecodeNotSupported.selector);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, target));
         iExtrospect.scanEVMOpcodesReachableInBytecode(target);
 
         assertEq(iExtrospect.scanMetamorphicRisk(target), uint256(1) << EIP3541_RESERVED_LEAD_BYTE);
@@ -506,15 +506,19 @@ contract IExtrospectV2Test is Test {
         iExtrospect.checkNotMetamorphic(target);
     }
 
-    /// V2 surface: a bare `0xEF` lead byte that is not the EOF magic does not
-    /// trip the raw scans' EOF gate — the byte scans as an ordinary unassigned
-    /// opcode — while the metamorphic pair still fails closed on it.
+    /// V2 surface: a bare `0xEF` lead byte reverts `EIP3541ReservedLeadByte`
+    /// on the raw address scans, the raw bytes scans read it as an ordinary
+    /// unassigned opcode, and the metamorphic pair fails closed on it.
     function testIExtrospectV2AddressEntryPointsSplitOnBare0xEF() external {
         address target = address(0xBEEF);
         vm.etch(target, hex"ef");
 
-        assertEq(iExtrospect.scanEVMOpcodesPresentInBytecode(target), uint256(1) << EIP3541_RESERVED_LEAD_BYTE);
-        assertEq(iExtrospect.scanEVMOpcodesReachableInBytecode(target), uint256(1) << EIP3541_RESERVED_LEAD_BYTE);
+        assertEq(iExtrospect.scanEVMOpcodesPresentInBytecode(hex"ef"), uint256(1) << EIP3541_RESERVED_LEAD_BYTE);
+        assertEq(iExtrospect.scanEVMOpcodesReachableInBytecode(hex"ef"), uint256(1) << EIP3541_RESERVED_LEAD_BYTE);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, target));
+        iExtrospect.scanEVMOpcodesPresentInBytecode(target);
+        vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, target));
+        iExtrospect.scanEVMOpcodesReachableInBytecode(target);
         assertEq(iExtrospect.scanMetamorphicRisk(target), uint256(1) << EIP3541_RESERVED_LEAD_BYTE);
     }
 
@@ -534,19 +538,29 @@ contract IExtrospectV2Test is Test {
         assertEq(iExtrospect.scanEVMOpcodesReachableInBytecode(target), reachable);
     }
 
-    /// Fuzz: for an account with nonempty etchable non-EOF code, every V2
-    /// address entry point agrees with its bytes entry point over the
-    /// account's code.
+    /// Fuzz: for an account with nonempty etchable code, the metamorphic
+    /// scan agrees with its bytes entry point over the account's code, and
+    /// the raw opcode scans agree with theirs unless the code begins with
+    /// `0xEF`, where they revert `EIP3541ReservedLeadByte`.
     function testIExtrospectV2AddressEntryPointsAgreeWithBytesFuzz(bytes memory code) external {
         vm.assume(code.length > 0);
-        vm.assume(!iExtrospect.isEOFBytecode(code));
         address target = address(0xBEEF);
         LibExtrospectTestEtch.assumeEtch(vm, target, code);
 
-        assertEq(iExtrospect.scanEVMOpcodesPresentInBytecode(target), iExtrospect.scanEVMOpcodesPresentInBytecode(code));
-        assertEq(
-            iExtrospect.scanEVMOpcodesReachableInBytecode(target), iExtrospect.scanEVMOpcodesReachableInBytecode(code)
-        );
+        if (code[0] == 0xEF) {
+            vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, target));
+            iExtrospect.scanEVMOpcodesPresentInBytecode(target);
+            vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, target));
+            iExtrospect.scanEVMOpcodesReachableInBytecode(target);
+        } else {
+            assertEq(
+                iExtrospect.scanEVMOpcodesPresentInBytecode(target), iExtrospect.scanEVMOpcodesPresentInBytecode(code)
+            );
+            assertEq(
+                iExtrospect.scanEVMOpcodesReachableInBytecode(target),
+                iExtrospect.scanEVMOpcodesReachableInBytecode(code)
+            );
+        }
         assertEq(iExtrospect.scanMetamorphicRisk(target), iExtrospect.scanMetamorphicRisk(code));
     }
 }
