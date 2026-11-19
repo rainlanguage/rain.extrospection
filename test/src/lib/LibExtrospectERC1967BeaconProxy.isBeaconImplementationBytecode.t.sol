@@ -95,6 +95,8 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
 
     /// Whatever code the implementation holds, the predicate agrees with `keccak256(impl.code)`.
     function testAgreesWithKeccakOfEtchedImplementationCode(bytes memory code, bytes32 wrongHash) external {
+        // EIP-3541 forbids code starting 0xEF and vm.etch rejects malformed 7702 designators.
+        vm.assume(code.length == 0 || code[0] != 0xef);
         address impl = address(uint160(uint256(keccak256("etched implementation"))));
         vm.etch(impl, code);
         MockBeacon beacon = new MockBeacon(impl, address(this));
