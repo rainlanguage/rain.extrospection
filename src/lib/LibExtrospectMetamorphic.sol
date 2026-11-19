@@ -2,19 +2,8 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {LibExtrospectBytecode} from "./LibExtrospectBytecode.sol";
+import {LibExtrospectBytecode, EIP3541_RESERVED_LEAD_BYTE} from "./LibExtrospectBytecode.sol";
 import {METAMORPHIC_OPS} from "./EVMOpcodes.sol";
-
-/// @dev The lead byte EIP-3541 reserves: since the London hard fork no
-/// ordinary deployment can produce code whose first byte is `0xEF`. On a
-/// post-London chain new code beginning with it comes from protocol
-/// features — an EOF container (`0xEF00`), an EIP-7702 delegation
-/// designator (`0xEF0100 || address`), or whatever the prefix is assigned
-/// next — none of which a legacy opcode scan can reason about; pre-London
-/// deployments and chains without EIP-3541 can carry it as plain legacy
-/// code the scan cannot tell apart by inspection. The metamorphic scan
-/// fails closed on the first byte alone.
-uint8 constant EIP3541_RESERVED_LEAD_BYTE = 0xEF;
 
 /// @title LibExtrospectMetamorphic
 /// @notice Detection and guarding against metamorphic contract risk. Scans
