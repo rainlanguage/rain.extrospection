@@ -100,7 +100,11 @@ library LibExtrospectBytecode {
         if (bytecode.length == 0) {
             revert CodelessAccount(account);
         }
-        if (uint8(bytecode[0]) == EIP3541_RESERVED_LEAD_BYTE) {
+        uint256 leadByte;
+        assembly ("memory-safe") {
+            leadByte := byte(0, mload(add(bytecode, 0x20)))
+        }
+        if (leadByte == EIP3541_RESERVED_LEAD_BYTE) {
             revert EIP3541ReservedLeadByte(account);
         }
     }
