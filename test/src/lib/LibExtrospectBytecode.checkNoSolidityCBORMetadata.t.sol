@@ -100,9 +100,7 @@ contract LibExtrospectBytecodeCheckNoSolidityCBORMetadataTest is Test {
     /// Fuzz: an account whose code begins with `0xEF` reverts with
     /// `EIP3541ReservedLeadByte` carrying the account, with or without
     /// metadata after it.
-    function testCheckNoMetadataRevertsOn0xEFLeadFuzz(address account, bytes memory tail, bool withMetadata)
-        external
-    {
+    function testCheckNoMetadataRevertsOn0xEFLeadFuzz(address account, bytes memory tail, bool withMetadata) external {
         assumeUnusedAddress(account);
         bytes memory code = bytes.concat(hex"EF", tail);
         if (withMetadata) {

@@ -181,9 +181,8 @@ contract LibExtrospectBytecodeTryTrimSolidityCBORMetadataTest is Test {
     function testTryTrimSolidityCBORMetadata0xEFLeadFuzz(bytes memory tail, bytes32 seed) external pure {
         vm.assume(tail.length == 0 || tail[0] != 0x00);
         bytes memory code = bytes.concat(hex"EF", tail);
-        bytes memory bytecode = bytes.concat(
-            code, hex"a264697066735822", seed, bytes2(seed), hex"64736f6c6343", bytes3(seed), hex"0033"
-        );
+        bytes memory bytecode =
+            bytes.concat(code, hex"a264697066735822", seed, bytes2(seed), hex"64736f6c6343", bytes3(seed), hex"0033");
         assertTrue(LibExtrospectBytecode.tryTrimSolidityCBORMetadata(bytecode));
         assertEq(bytecode, code);
     }

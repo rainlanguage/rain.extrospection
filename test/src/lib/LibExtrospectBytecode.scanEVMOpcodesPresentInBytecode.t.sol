@@ -832,9 +832,7 @@ contract LibExtrospectBytecodeScanEVMOpcodesPresentInBytecodeTest is Test {
 
     /// Fuzz: an account whose code is an EIP-7702 delegation designator
     /// reverts with `EIP3541ReservedLeadByte` carrying the account.
-    function testScanEVMOpcodesPresentAddressRevertsOnEIP7702DesignatorFuzz(address account, address delegate)
-        public
-    {
+    function testScanEVMOpcodesPresentAddressRevertsOnEIP7702DesignatorFuzz(address account, address delegate) public {
         assumeUnusedAddress(account);
         vm.etch(account, LibEIP7702Designator.designator(delegate));
         vm.expectRevert(abi.encodeWithSelector(LibExtrospectBytecode.EIP3541ReservedLeadByte.selector, account));
