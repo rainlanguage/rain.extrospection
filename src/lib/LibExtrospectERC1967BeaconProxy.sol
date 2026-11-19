@@ -17,6 +17,9 @@ bytes32 constant ERC1967_ADMIN_SLOT = bytes32(uint256(keccak256("eip1967.proxy.a
 /// formula.
 bytes32 constant ERC1967_BEACON_SLOT = bytes32(uint256(keccak256("eip1967.proxy.beacon")) - 1);
 
+/// @dev `keccak256("")`, the code hash of an account with no code.
+bytes32 constant EMPTY_CODE_HASH = bytes32(0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470);
+
 /// @title LibExtrospectERC1967BeaconProxy
 /// @notice Extrospection of ERC-1967 beacon proxies and the beacons
 /// they point at.
@@ -118,7 +121,7 @@ library LibExtrospectERC1967BeaconProxy {
     function isBeaconImplementationBytecode(address beacon, bytes32 expectedRuntimeHash) internal view returns (bool) {
         (bool ok, address impl) = _tryGetAddress(beacon, IBeacon.implementation.selector);
         // EXTCODEHASH is 0 for a non-existent account, so codeless is keccak256("") explicitly.
-        return ok && (impl.code.length == 0 ? keccak256("") : impl.codehash) == expectedRuntimeHash;
+        return ok && (impl.code.length == 0 ? EMPTY_CODE_HASH : impl.codehash) == expectedRuntimeHash;
     }
 
     /// @notice Verify that `beacon`'s current owner equals
