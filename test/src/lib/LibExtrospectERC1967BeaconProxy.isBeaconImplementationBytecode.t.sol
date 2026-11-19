@@ -93,6 +93,78 @@ contract LibExtrospectERC1967BeaconProxyIsBeaconImplementationBytecodeTest is Te
         );
     }
 
+    /// Whatever code the implementation holds, the predicate agrees with `keccak256(impl.code)`.
+    function testAgreesWithKeccakOfEtchedImplementationCode(bytes memory code, bytes32 wrongHash) external {
+        address impl = address(uint160(uint256(keccak256("etched implementation"))));
+        vm.etch(impl, code);
+        MockBeacon beacon = new MockBeacon(impl, address(this));
+        bytes32 codeHash = keccak256(impl.code);
+        vm.assume(wrongHash != codeHash);
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), codeHash));
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), wrongHash));
+    }
+
+    /// EXTCODEHASH of a non-existent implementation is 0, yet the predicate matches `keccak256("")`, not 0.
+    function testNonExistentImplementationMatchesEmptyHash(address impl, bytes32 wrongHash) external {
+        vm.assume(impl != vm.computeCreateAddress(address(this), vm.getNonce(address(this))));
+        vm.assume(impl.codehash == bytes32(0));
+        vm.assume(wrongHash != keccak256(""));
+        MockBeacon beacon = new MockBeacon(impl, address(this));
+        assertEq(impl.codehash, bytes32(0));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), bytes32(0)));
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), wrongHash));
+    }
+
+    /// A funded implementation with no code exists, so its EXTCODEHASH is `keccak256("")`, which it matches.
+    function testFundedCodelessImplementationMatchesEmptyHash(address impl, uint256 balance, bytes32 wrongHash)
+        external
+    {
+        balance = bound(balance, 1, type(uint256).max);
+        vm.assume(impl != vm.computeCreateAddress(address(this), vm.getNonce(address(this))));
+        vm.assume(impl.code.length == 0);
+        vm.assume(wrongHash != keccak256(""));
+        vm.deal(impl, balance);
+        MockBeacon beacon = new MockBeacon(impl, address(this));
+        assertEq(impl.code.length, 0);
+        assertEq(impl.codehash, keccak256(""));
+        assertTrue(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), keccak256("")));
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), bytes32(0)));
+        assertFalse(LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(address(beacon), wrongHash));
+    }
+
+    /// Gas does not grow with implementation size, so the implementation's code is never copied.
+    function testGasIndependentOfImplementationSize() external {
+        address small = address(uint160(uint256(keccak256("small implementation"))));
+        address large = address(uint160(uint256(keccak256("large implementation"))));
+        vm.etch(small, hex"00");
+        vm.etch(large, new bytes(0x6000));
+        assertEq(small.code.length, 1);
+        assertEq(large.code.length, 0x6000);
+        MockBeacon smallBeacon = new MockBeacon(small, address(this));
+        MockBeacon largeBeacon = new MockBeacon(large, address(this));
+
+        (bool smallMatches, uint256 smallGas) =
+            this.externalIsBeaconImplementationBytecodeGas(address(smallBeacon), keccak256(small.code));
+        (bool largeMatches, uint256 largeGas) =
+            this.externalIsBeaconImplementationBytecodeGas(address(largeBeacon), keccak256(large.code));
+
+        assertTrue(smallMatches);
+        assertTrue(largeMatches);
+        assertEq(largeGas, smallGas);
+    }
+
+    /// A single measured call site, so both implementation sizes run identical opcodes.
+    function externalIsBeaconImplementationBytecodeGas(address beacon, bytes32 expectedRuntimeHash)
+        external
+        view
+        returns (bool, uint256)
+    {
+        uint256 gasBefore = gasleft();
+        bool result = LibExtrospectERC1967BeaconProxy.isBeaconImplementationBytecode(beacon, expectedRuntimeHash);
+        return (result, gasBefore - gasleft());
+    }
+
     /// A target with no `implementation()` function and no fallback
     /// reverts the staticcall, so it fails the predicate. Returns false
     /// rather than reverting so integrators can collapse the check to a
