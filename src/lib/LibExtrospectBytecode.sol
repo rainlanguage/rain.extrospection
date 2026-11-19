@@ -92,12 +92,19 @@ library LibExtrospectBytecode {
     /// @param account The account whose code begins with `0xEF`.
     error EIP3541ReservedLeadByte(address account);
 
-    /// Reverts with `EIP3541ReservedLeadByte` if `bytecode`, read from
-    /// `account`, begins with `0xEF`.
+    /// Reverts with `CodelessAccount` if `bytecode`, read from `account`, is
+    /// empty, else with `EIP3541ReservedLeadByte` if it begins with `0xEF`.
     /// @param account The account `bytecode` was read from.
     /// @param bytecode The account's code.
-    function checkNoEIP3541ReservedLeadByte(address account, bytes memory bytecode) private pure {
-        if (bytecode.length > 0 && uint8(bytecode[0]) == EIP3541_RESERVED_LEAD_BYTE) {
+    function checkAccountCode(address account, bytes memory bytecode) private pure {
+        if (bytecode.length == 0) {
+            revert CodelessAccount(account);
+        }
+        uint256 leadByte;
+        assembly ("memory-safe") {
+            leadByte := byte(0, mload(add(bytecode, 0x20)))
+        }
+        if (leadByte == EIP3541_RESERVED_LEAD_BYTE) {
             revert EIP3541ReservedLeadByte(account);
         }
     }
@@ -197,8 +204,9 @@ library LibExtrospectBytecode {
     /// the metadata was not trimmed, or with `BytecodeHashMismatch` if the hash
     /// does not match after trimming.
     ///
-    /// NOTE code beginning with `0xEF`, including EOF and EIP-7702, reverts with
-    /// `EIP3541ReservedLeadByte` before either of the above is reached.
+    /// NOTE an account with no code reverts with `CodelessAccount`, and code
+    /// beginning with `0xEF`, including EOF and EIP-7702, reverts with
+    /// `EIP3541ReservedLeadByte`, before either of the above is reached.
     ///
     /// NOTE `expectedTrimmedHash` covers only the bytecode left after
     /// trimming. The 53 trimmed bytes are runtime code that the EVM executes
@@ -219,7 +227,7 @@ library LibExtrospectBytecode {
     /// `expectedRuntimeHash`, which hashes runtime bytecode whole.
     function checkCBORTrimmedBytecodeHash(address account, bytes32 expectedTrimmedHash) internal view {
         bytes memory bytecode = account.code;
-        checkNoEIP3541ReservedLeadByte(account, bytecode);
+        checkAccountCode(account, bytecode);
         bool didTrim = tryTrimSolidityCBORMetadata(bytecode);
         if (!didTrim) {
             revert MetadataNotTrimmed();
@@ -263,10 +271,7 @@ library LibExtrospectBytecode {
     //forge-lint: disable-next-line(mixed-case-function)
     function checkNoSolidityCBORMetadata(address account) internal view {
         bytes memory bytecode = account.code;
-        checkNoEIP3541ReservedLeadByte(account, bytecode);
-        if (bytecode.length == 0) {
-            revert CodelessAccount(account);
-        }
+        checkAccountCode(account, bytecode);
         bool didTrim = tryTrimSolidityCBORMetadata(bytecode);
         if (didTrim) {
             revert UnexpectedMetadata();
@@ -420,10 +425,7 @@ library LibExtrospectBytecode {
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesReachableInBytecode(address account) internal view returns (uint256) {
         bytes memory bytecode = account.code;
-        checkNoEIP3541ReservedLeadByte(account, bytecode);
-        if (bytecode.length == 0) {
-            revert CodelessAccount(account);
-        }
+        checkAccountCode(account, bytecode);
         return scanEVMOpcodesReachableInBytecode(bytecode);
     }
 
@@ -482,10 +484,7 @@ library LibExtrospectBytecode {
     //forge-lint: disable-next-line(mixed-case-function)
     function scanEVMOpcodesPresentInBytecode(address account) internal view returns (uint256) {
         bytes memory bytecode = account.code;
-        checkNoEIP3541ReservedLeadByte(account, bytecode);
-        if (bytecode.length == 0) {
-            revert CodelessAccount(account);
-        }
+        checkAccountCode(account, bytecode);
         return scanEVMOpcodesPresentInBytecode(bytecode);
     }
 }
